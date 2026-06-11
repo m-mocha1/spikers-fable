@@ -20,10 +20,9 @@ import '../features/players/presentation/screens/player_profile_screen.dart';
 import '../features/coaches/presentation/screens/coaches_list_screen.dart';
 import '../features/announcements/presentation/screens/announcements_screen.dart';
 import '../features/announcements/presentation/screens/create_announcement_screen.dart';
-import '../controller/recurring_session_controller.dart';
 import '../features/leaderboard/presentation/screens/leaderboard_screen.dart';
-import '../screens/sessions/recurring_sessions_screen.dart';
-import '../screens/sessions/create_recurring_session_screen.dart';
+import '../features/sessions/presentation/screens/recurring_sessions_screen.dart';
+import '../features/sessions/presentation/screens/create_recurring_session_screen.dart';
 
 abstract class Routes {
   static const splash         = '/';
@@ -103,21 +102,11 @@ final List<GetPage> appPages = [
     name: Routes.recurringSessions,
     page: () => const RecurringSessionsScreen(),
     middlewares: [CoachOnlyMiddleware()],
-    binding: BindingsBuilder(() {
-      if (!Get.isRegistered<RecurringSessionController>()) {
-        Get.put(RecurringSessionController());
-      }
-    }),
   ),
   GetPage(
     name: Routes.createRecurring,
     page: () => const CreateRecurringSessionScreen(),
     middlewares: [CoachOnlyMiddleware()],
-    binding: BindingsBuilder(() {
-      if (!Get.isRegistered<RecurringSessionController>()) {
-        Get.put(RecurringSessionController());
-      }
-    }),
   ),
   GetPage(
     name: Routes.coachesList,

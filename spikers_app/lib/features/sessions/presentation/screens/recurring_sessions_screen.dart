@@ -1,19 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import '../../controller/recurring_session_controller.dart';
-import '../../core/constants/app_colors.dart';
-import '../../l10n/app_localizations.dart';
-import '../../models/recurring_session_model.dart';
-import '../../routes/app_routes.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get/get.dart'
+    show ExtensionSnackbar, Get, GetNavigation, SnackPosition;
 
-class RecurringSessionsScreen extends StatelessWidget {
+import '../../../../core/constants/app_colors.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../../../../models/recurring_session_model.dart';
+import '../../../../routes/app_routes.dart';
+import '../providers/sessions_providers.dart';
+
+class RecurringSessionsScreen extends ConsumerWidget {
   const RecurringSessionsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context)!;
-    final c = Get.find<RecurringSessionController>();
     final dayLabels = [l.sun, l.mon, l.tue, l.wed, l.thu, l.fri, l.sat];
+    final recurringAsync = ref.watch(recurringSessionsProvider);
 
     return Scaffold(
       appBar: AppBar(title: Text(l.recurringSessions)),
@@ -21,49 +24,54 @@ class RecurringSessionsScreen extends StatelessWidget {
         onPressed: () => Get.toNamed(Routes.createRecurring),
         child: const Icon(Icons.add),
       ),
-      body: Obx(() {
-        final items = c.recurringSessions;
-
-        if (items.isEmpty) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(32),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.repeat, size: 64, color: AppColors.grey),
-                  const SizedBox(height: 16),
-                  Text(l.noRecurringSessions,
-                      style: const TextStyle(
-                          color: AppColors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 8),
-                  Text(l.noRecurringSessionsDesc,
-                      style:
-                          const TextStyle(color: AppColors.grey, fontSize: 14),
-                      textAlign: TextAlign.center),
-                ],
+      body: recurringAsync.when(
+        loading: () => const Center(
+            child: CircularProgressIndicator(color: AppColors.gold)),
+        error: (e, _) => Center(
+          child: Text(l.errorOccurred,
+              style: const TextStyle(color: AppColors.grey, fontSize: 15)),
+        ),
+        data: (items) {
+          if (items.isEmpty) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.repeat, size: 64, color: AppColors.grey),
+                    const SizedBox(height: 16),
+                    Text(l.noRecurringSessions,
+                        style: const TextStyle(
+                            color: AppColors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 8),
+                    Text(l.noRecurringSessionsDesc,
+                        style: const TextStyle(
+                            color: AppColors.grey, fontSize: 14),
+                        textAlign: TextAlign.center),
+                  ],
+                ),
               ),
+            );
+          }
+          return ListView.builder(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
+            itemCount: items.length,
+            itemBuilder: (_, i) => _RecurringCard(
+              model: items[i],
+              dayLabels: dayLabels,
+              l: l,
             ),
           );
-        }
-
-        return ListView.builder(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
-          itemCount: items.length,
-          itemBuilder: (_, i) => _RecurringCard(
-            model: items[i],
-            dayLabels: dayLabels,
-            l: l,
-          ),
-        );
-      }),
+        },
+      ),
     );
   }
 }
 
-class _RecurringCard extends StatelessWidget {
+class _RecurringCard extends ConsumerWidget {
   final RecurringSessionModel model;
   final List<String> dayLabels;
   final AppLocalizations l;
@@ -76,7 +84,7 @@ class _RecurringCard extends StatelessWidget {
   String _fmtTime(int h, int m) =>
       '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}';
 
-  Future<void> _confirmDelete(BuildContext context) async {
+  Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -97,7 +105,7 @@ class _RecurringCard extends StatelessWidget {
     );
     if (ok != true) return;
     try {
-      await Get.find<RecurringSessionController>().delete(model.id);
+      await ref.read(recurringSessionsRepositoryProvider).delete(model.id);
       Get.snackbar('', l.recurringDeleted,
           snackPosition: SnackPosition.BOTTOM,
           duration: const Duration(seconds: 2));
@@ -107,8 +115,7 @@ class _RecurringCard extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final c = Get.find<RecurringSessionController>();
+  Widget build(BuildContext context, WidgetRef ref) {
     final timeStr =
         '${_fmtTime(model.startHour, model.startMinute)} – ${_fmtTime(model.endHour, model.endMinute)}';
 
@@ -135,7 +142,9 @@ class _RecurringCard extends StatelessWidget {
                 ),
                 Switch(
                   value: model.enabled,
-                  onChanged: (v) => c.toggleEnabled(model.id, v),
+                  onChanged: (v) => ref
+                      .read(recurringSessionsRepositoryProvider)
+                      .toggleEnabled(model.id, v),
                   activeThumbColor: AppColors.gold,
                 ),
               ],
@@ -153,7 +162,8 @@ class _RecurringCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis),
                 ),
                 const SizedBox(width: 12),
-                const Icon(Icons.access_time, size: 13, color: AppColors.grey),
+                const Icon(Icons.access_time,
+                    size: 13, color: AppColors.grey),
                 const SizedBox(width: 3),
                 Text(timeStr,
                     style:
@@ -198,7 +208,7 @@ class _RecurringCard extends StatelessWidget {
                 IconButton(
                   icon: const Icon(Icons.delete_outline,
                       size: 20, color: AppColors.grey),
-                  onPressed: () => _confirmDelete(context),
+                  onPressed: () => _confirmDelete(context, ref),
                 ),
               ],
             ),

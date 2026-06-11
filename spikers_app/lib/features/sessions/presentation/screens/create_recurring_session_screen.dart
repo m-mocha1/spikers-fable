@@ -1,24 +1,27 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import '../../controller/auth_controller.dart';
-import '../../controller/recurring_session_controller.dart';
-import '../../core/constants/app_colors.dart';
-import '../../core/utils/validators.dart';
-import '../../l10n/app_localizations.dart';
-import '../../models/recurring_session_model.dart';
-import '../widgets/branded_button.dart';
-import '../widgets/branded_text_field.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get/get.dart'
+    show ExtensionSnackbar, Get, GetNavigation, SnackPosition;
 
-class CreateRecurringSessionScreen extends StatefulWidget {
+import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/validators.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../../../../models/recurring_session_model.dart';
+import '../../../../screens/widgets/branded_button.dart';
+import '../../../../screens/widgets/branded_text_field.dart';
+import '../../../auth/presentation/providers/auth_providers.dart';
+import '../providers/sessions_providers.dart';
+
+class CreateRecurringSessionScreen extends ConsumerStatefulWidget {
   const CreateRecurringSessionScreen({super.key});
 
   @override
-  State<CreateRecurringSessionScreen> createState() =>
+  ConsumerState<CreateRecurringSessionScreen> createState() =>
       _CreateRecurringSessionScreenState();
 }
 
 class _CreateRecurringSessionScreenState
-    extends State<CreateRecurringSessionScreen> {
+    extends ConsumerState<CreateRecurringSessionScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleCtrl = TextEditingController();
   final _locationCtrl = TextEditingController();
@@ -97,21 +100,21 @@ class _CreateRecurringSessionScreenState
   }
 
   Future<void> _submit() async {
+    final l = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) return;
     if (_selectedDays.isEmpty) {
-      Get.snackbar('', AppLocalizations.of(context)!.selectDays,
-          snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar('', l.selectDays, snackPosition: SnackPosition.BOTTOM);
       return;
     }
 
-    final user = Get.find<AuthController>().currentUser.value!;
-    final c = Get.find<RecurringSessionController>();
-    final l = AppLocalizations.of(context)!;
+    final user = ref.read(currentUserProvider).value;
+    if (user == null) return;
+    final repo = ref.read(recurringSessionsRepositoryProvider);
     setState(() => _isSubmitting = true);
 
     try {
       if (_editing != null) {
-        await c.edit(_editing!.id, {
+        await repo.edit(_editing!.id, {
           'title': _titleCtrl.text.trim(),
           'location': _locationCtrl.text.trim(),
           'gender': _gender,
@@ -147,15 +150,14 @@ class _CreateRecurringSessionScreenState
           endMinute: _endTime.minute,
           createdAt: DateTime.now(),
         );
-        await c.create(model);
+        await repo.create(model);
         Get.back();
         Get.snackbar('', l.recurringCreated,
             snackPosition: SnackPosition.BOTTOM,
             duration: const Duration(seconds: 2));
       }
     } catch (_) {
-      Get.snackbar('', l.errorOccurred,
-          snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar('', l.errorOccurred, snackPosition: SnackPosition.BOTTOM);
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
@@ -229,7 +231,8 @@ class _CreateRecurringSessionScreenState
                       label: l.minAge,
                       controller: _minAgeCtrl,
                       keyboardType: TextInputType.number,
-                      validator: (v) => Validators.required(v, l.requiredField),
+                      validator: (v) =>
+                          Validators.required(v, l.requiredField),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -238,7 +241,8 @@ class _CreateRecurringSessionScreenState
                       label: l.maxAge,
                       controller: _maxAgeCtrl,
                       keyboardType: TextInputType.number,
-                      validator: (v) => Validators.required(v, l.requiredField),
+                      validator: (v) =>
+                          Validators.required(v, l.requiredField),
                     ),
                   ),
                 ],
@@ -253,7 +257,8 @@ class _CreateRecurringSessionScreenState
                       label: l.maxPlayers,
                       controller: _maxPlayersCtrl,
                       keyboardType: TextInputType.number,
-                      validator: (v) => Validators.required(v, l.requiredField),
+                      validator: (v) =>
+                          Validators.required(v, l.requiredField),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -262,7 +267,8 @@ class _CreateRecurringSessionScreenState
                       label: l.waitlistSize,
                       controller: _waitlistSizeCtrl,
                       keyboardType: TextInputType.number,
-                      validator: (v) => Validators.required(v, l.requiredField),
+                      validator: (v) =>
+                          Validators.required(v, l.requiredField),
                     ),
                   ),
                 ],
@@ -292,8 +298,7 @@ class _CreateRecurringSessionScreenState
                       width: 44,
                       height: 40,
                       decoration: BoxDecoration(
-                        color:
-                            active ? AppColors.gold : AppColors.navyLight,
+                        color: active ? AppColors.gold : AppColors.navyLight,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                             color: active ? AppColors.gold : AppColors.grey),

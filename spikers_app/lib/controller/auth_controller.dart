@@ -7,7 +7,6 @@ import '../features/auth/data/repositories/auth_repository_impl.dart';
 import '../models/user_model.dart';
 import '../routes/app_routes.dart';
 import 'notification_controller.dart';
-import 'recurring_session_controller.dart';
 import 'session_controller.dart';
 import 'template_controller.dart';
 
@@ -75,9 +74,6 @@ class AuthController extends GetxController {
     }
     if (Get.isRegistered<NotificationController>()) {
       Get.delete<NotificationController>(force: true);
-    }
-    if (Get.isRegistered<RecurringSessionController>()) {
-      Get.delete<RecurringSessionController>(force: true);
     }
     Get.offAllNamed(Routes.login);
   }
