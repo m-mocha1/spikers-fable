@@ -8,8 +8,8 @@ import '../../routes/app_routes.dart';
 import '../widgets/floating_nav_bar.dart';
 import '../../features/players/presentation/screens/players_peer_tab.dart';
 import '../../features/players/presentation/screens/players_tab.dart';
+import '../../features/sessions/presentation/screens/sessions_tab.dart';
 import 'profile_tab.dart';
-import 'sessions_tab.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});

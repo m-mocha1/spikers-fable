@@ -1,76 +1,61 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get/get.dart' show Get, GetNavigation;
 import 'package:intl/intl.dart';
-import '../../core/constants/app_colors.dart';
-import '../../l10n/app_localizations.dart';
-import '../../models/session_model.dart';
-import '../../routes/app_routes.dart';
 
-class SessionsHistoryScreen extends StatefulWidget {
+import '../../../../core/constants/app_colors.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../../../../models/session_model.dart';
+import '../../../../routes/app_routes.dart';
+import '../providers/sessions_providers.dart';
+
+class SessionsHistoryScreen extends ConsumerStatefulWidget {
   const SessionsHistoryScreen({super.key});
 
   @override
-  State<SessionsHistoryScreen> createState() => _SessionsHistoryScreenState();
+  ConsumerState<SessionsHistoryScreen> createState() =>
+      _SessionsHistoryScreenState();
 }
 
-class _SessionsHistoryScreenState extends State<SessionsHistoryScreen> {
+class _SessionsHistoryScreenState
+    extends ConsumerState<SessionsHistoryScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _archiveNow());
-  }
-
-  Future<void> _archiveNow() async {
-    try {
-      await FirebaseFunctions.instanceFor(region: 'europe-west1')
-          .httpsCallable('archiveExpiredSessionsNow')
-          .call();
-    } catch (_) {
-      // Silent: page still renders any existing history. The 15-min
-      // sessionCleanup cron will catch anything missed.
-    }
+    // Best-effort: archives anything the 15-min sessionCleanup cron hasn't
+    // caught yet so the page is as fresh as possible. Never throws.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(sessionsRepositoryProvider).archiveExpiredNow();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
+    final historyAsync = ref.watch(sessionsHistoryProvider);
 
     return Scaffold(
       appBar: AppBar(title: Text(l.sessionsHistory)),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('sessions_history')
-            .orderBy('endTime', descending: true)
-            .limit(100)
-            .snapshots(),
-        builder: (context, snap) {
-          if (snap.connectionState == ConnectionState.waiting) {
-            return const Center(
-                child: CircularProgressIndicator(color: AppColors.gold));
-          }
-          if (snap.hasError) {
-            return Center(
-              child: Text(l.errorOccurred,
-                  style: const TextStyle(
-                      color: AppColors.grey, fontSize: 15)),
-            );
-          }
-          final docs = snap.data?.docs ?? [];
-          if (docs.isEmpty) {
+      body: historyAsync.when(
+        loading: () => const Center(
+            child: CircularProgressIndicator(color: AppColors.gold)),
+        error: (e, _) => Center(
+          child: Text(l.errorOccurred,
+              style: const TextStyle(color: AppColors.grey, fontSize: 15)),
+        ),
+        data: (sessions) {
+          if (sessions.isEmpty) {
             return Center(
               child: Text(l.noSessionsHistory,
-                  style: const TextStyle(
-                      color: AppColors.grey, fontSize: 15)),
+                  style:
+                      const TextStyle(color: AppColors.grey, fontSize: 15)),
             );
           }
           return ListView.builder(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-            itemCount: docs.length,
-            itemBuilder: (_, i) =>
-                _HistoryCard(session: SessionModel.fromDoc(docs[i])),
+            itemCount: sessions.length,
+            itemBuilder: (_, i) => _HistoryCard(session: sessions[i]),
           );
         },
       ),
@@ -84,15 +69,15 @@ class _AvatarData {
   const _AvatarData({required this.name, required this.photoUrl});
 }
 
-class _HistoryCard extends StatefulWidget {
+class _HistoryCard extends ConsumerStatefulWidget {
   final SessionModel session;
   const _HistoryCard({required this.session});
 
   @override
-  State<_HistoryCard> createState() => _HistoryCardState();
+  ConsumerState<_HistoryCard> createState() => _HistoryCardState();
 }
 
-class _HistoryCardState extends State<_HistoryCard> {
+class _HistoryCardState extends ConsumerState<_HistoryCard> {
   static const _maxVisible = 4;
   static const _avatarRadius = 14.0;
   static const _avatarOverlap = 18.0;
@@ -114,21 +99,17 @@ class _HistoryCardState extends State<_HistoryCard> {
     }
     final ids = attended.take(_maxVisible).toList();
     try {
-      final snap = await FirebaseFirestore.instance
-          .collection('users_public')
-          .where(FieldPath.documentId, whereIn: ids)
-          .get();
+      final profiles = await ref
+          .read(sessionsRepositoryProvider)
+          .fetchPublicProfiles(ids);
       // Preserve attendedIds order so avatars don't reshuffle by doc order.
-      final byId = {
-        for (final d in snap.docs)
-          d.id: _AvatarData(
-            name: (d.data()['name'] ?? '') as String,
-            photoUrl: (d.data()['photoUrl'] ?? '') as String,
-          ),
-      };
       final ordered = [
         for (final uid in ids)
-          if (byId.containsKey(uid)) byId[uid]!,
+          if (profiles.containsKey(uid))
+            _AvatarData(
+              name: profiles[uid]!.name,
+              photoUrl: profiles[uid]!.photoUrl,
+            ),
       ];
       if (mounted) {
         setState(() {
@@ -150,54 +131,53 @@ class _HistoryCardState extends State<_HistoryCard> {
     return GestureDetector(
       onTap: () => Get.toNamed(Routes.sessionDetail, arguments: session),
       child: Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: AppColors.navyLight,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(session.title,
-              style: const TextStyle(
-                  fontWeight: FontWeight.w700, fontSize: 16)),
-          const SizedBox(height: 6),
-          Row(
-            children: [
-              const Icon(Icons.place_outlined,
-                  size: 13, color: AppColors.grey),
-              const SizedBox(width: 4),
-              Flexible(
-                child: Text(session.location,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                        color: AppColors.grey, fontSize: 12)),
-              ),
-              const SizedBox(width: 10),
-              Text('· ${fmt.format(session.startTime)}',
-                  style: const TextStyle(
-                      color: AppColors.grey, fontSize: 12)),
-            ],
-          ),
-          if (session.attendedIds.isNotEmpty) ...[
-            const SizedBox(height: 10),
-            _buildAvatarRow(),
-          ],
-          const SizedBox(height: 6),
-          Text(
-            l.historyAttendanceSummary(
-              session.attendedIds.length,
-              session.attendeeIds.length,
-              session.maxPlayers,
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: AppColors.navyLight,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(session.title,
+                style: const TextStyle(
+                    fontWeight: FontWeight.w700, fontSize: 16)),
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                const Icon(Icons.place_outlined,
+                    size: 13, color: AppColors.grey),
+                const SizedBox(width: 4),
+                Flexible(
+                  child: Text(session.location,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                          color: AppColors.grey, fontSize: 12)),
+                ),
+                const SizedBox(width: 10),
+                Text('· ${fmt.format(session.startTime)}',
+                    style:
+                        const TextStyle(color: AppColors.grey, fontSize: 12)),
+              ],
             ),
-            style: const TextStyle(
-                color: AppColors.grey, fontSize: 12),
-          ),
-        ],
+            if (session.attendedIds.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              _buildAvatarRow(),
+            ],
+            const SizedBox(height: 6),
+            Text(
+              l.historyAttendanceSummary(
+                session.attendedIds.length,
+                session.attendeeIds.length,
+                session.maxPlayers,
+              ),
+              style: const TextStyle(color: AppColors.grey, fontSize: 12),
+            ),
+          ],
+        ),
       ),
-    ),
     );
   }
 
@@ -240,7 +220,13 @@ class _HistoryCardState extends State<_HistoryCard> {
   Widget _avatarCircle(_AvatarData a) {
     final initials = a.name.trim().isEmpty
         ? '?'
-        : a.name.trim().split(' ').map((w) => w[0]).take(2).join().toUpperCase();
+        : a.name
+            .trim()
+            .split(' ')
+            .map((w) => w[0])
+            .take(2)
+            .join()
+            .toUpperCase();
     return Container(
       decoration: BoxDecoration(
         shape: BoxShape.circle,

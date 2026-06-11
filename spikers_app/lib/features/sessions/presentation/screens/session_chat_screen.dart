@@ -1,40 +1,40 @@
 import 'dart:async';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../../controller/auth_controller.dart';
-import '../../controller/session_controller.dart';
-import '../../core/constants/app_colors.dart';
-import '../../l10n/app_localizations.dart';
-import '../../models/chat_message_model.dart';
 
-class SessionChatScreen extends StatefulWidget {
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get/get.dart' show Get, GetNavigation;
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../../../core/constants/app_colors.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../../../../models/chat_message_model.dart';
+import '../../../auth/presentation/providers/auth_providers.dart';
+import '../providers/sessions_providers.dart';
+
+class SessionChatScreen extends ConsumerStatefulWidget {
   const SessionChatScreen({super.key});
 
   @override
-  State<SessionChatScreen> createState() => _SessionChatScreenState();
+  ConsumerState<SessionChatScreen> createState() => _SessionChatScreenState();
 }
 
-class _SessionChatScreenState extends State<SessionChatScreen> {
+class _SessionChatScreenState extends ConsumerState<SessionChatScreen> {
   static const _pageSize = 50;
 
   late final String _sessionId;
   late final String _sessionTitle;
   final _inputCtrl = TextEditingController();
   final _scroll = ScrollController();
-  final _auth = Get.find<AuthController>();
-  final _sessionCtrl = Get.find<SessionController>();
   bool _sending = false;
 
-  // Live window: newest _pageSize messages, kept fresh via Firestore snapshots.
-  List<QueryDocumentSnapshot> _live = [];
-  // Older history: fetched once via .get() in descending order, never re-streamed.
-  final List<QueryDocumentSnapshot> _older = [];
-  // uid -> { 'name': ..., 'photoUrl': ... } for resolving senders at render time.
-  final Map<String, Map<String, String>> _senderInfo = {};
-  StreamSubscription<QuerySnapshot>? _liveSub;
+  // Live window: newest _pageSize messages, kept fresh via the repository
+  // stream. Older history: fetched once per page, never re-streamed.
+  List<ChatMessage> _live = [];
+  final List<ChatMessage> _older = [];
+  // uid -> profile for resolving senders at render time.
+  final Map<String, ({String name, String photoUrl})> _senderInfo = {};
+  StreamSubscription<List<ChatMessage>>? _liveSub;
   bool _initialLoaded = false;
   bool _loadingMore = false;
   bool _hasMore = true;
@@ -80,21 +80,17 @@ class _SessionChatScreenState extends State<SessionChatScreen> {
   }
 
   void _listen() {
-    _liveSub = FirebaseFirestore.instance
-        .collection('sessions')
-        .doc(_sessionId)
-        .collection('messages')
-        .orderBy('createdAt', descending: true)
-        .limit(_pageSize)
-        .snapshots()
-        .listen((snap) {
+    _liveSub = ref
+        .read(sessionChatRepositoryProvider)
+        .watchLatest(_sessionId, limit: _pageSize)
+        .listen((messages) {
       if (!mounted) return;
       setState(() {
-        _live = snap.docs;
+        _live = messages;
         _initialLoaded = true;
         _streamError = null;
         // If the live window itself is short, the history is short too.
-        if (snap.docs.length < _pageSize) _hasMore = false;
+        if (messages.length < _pageSize) _hasMore = false;
       });
       _refreshSenderInfo();
     }, onError: (e) {
@@ -107,35 +103,23 @@ class _SessionChatScreenState extends State<SessionChatScreen> {
   }
 
   Future<void> _refreshSenderInfo() async {
-    final needed = <String>{};
-    for (final doc in _live) {
-      final id = doc.get('senderId') as String? ?? '';
-      if (id.isNotEmpty && !_senderInfo.containsKey(id)) needed.add(id);
-    }
-    for (final doc in _older) {
-      final id = doc.get('senderId') as String? ?? '';
-      if (id.isNotEmpty && !_senderInfo.containsKey(id)) needed.add(id);
-    }
+    final needed = <String>{
+      for (final msg in _live)
+        if (msg.senderId.isNotEmpty && !_senderInfo.containsKey(msg.senderId))
+          msg.senderId,
+      for (final msg in _older)
+        if (msg.senderId.isNotEmpty && !_senderInfo.containsKey(msg.senderId))
+          msg.senderId,
+    };
     if (needed.isEmpty) return;
 
-    final uids = needed.toList();
-    for (var i = 0; i < uids.length; i += 30) {
-      final chunk = uids.sublist(i, (i + 30).clamp(0, uids.length));
-      try {
-        final snap = await FirebaseFirestore.instance
-            .collection('users_public')
-            .where(FieldPath.documentId, whereIn: chunk)
-            .get();
-        for (final doc in snap.docs) {
-          final data = doc.data();
-          _senderInfo[doc.id] = {
-            'name': (data['name'] ?? '') as String,
-            'photoUrl': (data['photoUrl'] ?? '') as String,
-          };
-        }
-      } catch (_) {
-        // Leave missing senders unresolved; bubbles render with empty name.
-      }
+    try {
+      final profiles = await ref
+          .read(sessionsRepositoryProvider)
+          .fetchPublicProfiles(needed.toList());
+      _senderInfo.addAll(profiles);
+    } catch (_) {
+      // Leave missing senders unresolved; bubbles render with empty name.
     }
     if (mounted) setState(() {});
   }
@@ -143,33 +127,27 @@ class _SessionChatScreenState extends State<SessionChatScreen> {
   void _onScroll() {
     if (_loadingMore || !_hasMore || !_scroll.hasClients) return;
     // reverse: true → maxScrollExtent is the visual top (oldest messages).
-    if (_scroll.position.pixels >=
-        _scroll.position.maxScrollExtent - 200) {
+    if (_scroll.position.pixels >= _scroll.position.maxScrollExtent - 200) {
       _loadMore();
     }
   }
 
   Future<void> _loadMore() async {
     if (_loadingMore || !_hasMore) return;
-    final cursor = _older.isNotEmpty
+    final oldest = _older.isNotEmpty
         ? _older.last
         : (_live.isNotEmpty ? _live.last : null);
-    if (cursor == null) return;
+    if (oldest == null) return;
 
     setState(() => _loadingMore = true);
     try {
-      final snap = await FirebaseFirestore.instance
-          .collection('sessions')
-          .doc(_sessionId)
-          .collection('messages')
-          .orderBy('createdAt', descending: true)
-          .startAfterDocument(cursor)
-          .limit(_pageSize)
-          .get();
+      final page = await ref
+          .read(sessionChatRepositoryProvider)
+          .fetchOlder(_sessionId, before: oldest.createdAt, limit: _pageSize);
       if (!mounted) return;
       setState(() {
-        _older.addAll(snap.docs);
-        if (snap.docs.length < _pageSize) _hasMore = false;
+        _older.addAll(page);
+        if (page.length < _pageSize) _hasMore = false;
         _loadingMore = false;
       });
       _refreshSenderInfo();
@@ -182,10 +160,17 @@ class _SessionChatScreenState extends State<SessionChatScreen> {
   Future<void> _send() async {
     final text = _inputCtrl.text.trim();
     if (text.isEmpty) return;
+    final uid = ref.read(currentUserProvider).value?.uid;
+    if (uid == null) return;
     setState(() => _sending = true);
     _inputCtrl.clear();
-    await _sessionCtrl.sendMessage(_sessionId, text);
-    if (mounted) setState(() => _sending = false);
+    try {
+      await ref
+          .read(sessionChatRepositoryProvider)
+          .send(_sessionId, senderId: uid, text: text);
+    } finally {
+      if (mounted) setState(() => _sending = false);
+    }
     _scrollToBottom();
   }
 
@@ -203,12 +188,12 @@ class _SessionChatScreenState extends State<SessionChatScreen> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    final uid = _auth.currentUser.value!.uid;
+    final uid = ref.watch(currentUserProvider).value?.uid ?? '';
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_sessionTitle,
-            maxLines: 1, overflow: TextOverflow.ellipsis),
+        title:
+            Text(_sessionTitle, maxLines: 1, overflow: TextOverflow.ellipsis),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
           child: Container(height: 1, color: AppColors.navyLight),
@@ -243,8 +228,8 @@ class _SessionChatScreenState extends State<SessionChatScreen> {
     }
     if (_live.isEmpty && _older.isEmpty) {
       return Center(
-        child: Text(l.chatEmpty,
-            style: const TextStyle(color: AppColors.grey)),
+        child:
+            Text(l.chatEmpty, style: const TextStyle(color: AppColors.grey)),
       );
     }
 
@@ -271,15 +256,14 @@ class _SessionChatScreenState extends State<SessionChatScreen> {
             ),
           );
         }
-        final doc = i < _live.length ? _live[i] : _older[i - _live.length];
-        final msg = ChatMessage.fromDoc(doc);
+        final msg = i < _live.length ? _live[i] : _older[i - _live.length];
         final isMe = msg.senderId == uid;
         final info = _senderInfo[msg.senderId];
         return _MessageBubble(
           message: msg,
           isMe: isMe,
-          senderName: info?['name'] ?? '',
-          senderPhotoUrl: info?['photoUrl'] ?? '',
+          senderName: info?.name ?? '',
+          senderPhotoUrl: info?.photoUrl ?? '',
         );
       },
     );
@@ -307,8 +291,8 @@ class _SessionChatScreenState extends State<SessionChatScreen> {
                 hintStyle: const TextStyle(color: AppColors.grey),
                 filled: true,
                 fillColor: AppColors.navyBlue,
-                contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 10),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(24),
                   borderSide: BorderSide.none,
@@ -338,8 +322,7 @@ class _SessionChatScreenState extends State<SessionChatScreen> {
                 )
               : IconButton(
                   onPressed: _send,
-                  icon: const Icon(Icons.send_rounded,
-                      color: AppColors.gold),
+                  icon: const Icon(Icons.send_rounded, color: AppColors.gold),
                 ),
         ],
       ),
@@ -373,21 +356,17 @@ class _MessageBubble extends StatelessWidget {
         children: [
           if (!isMe) ...[
             _ChatAvatar(
-                photoUrl: senderPhotoUrl,
-                name: senderName,
-                size: avatarSize),
+                photoUrl: senderPhotoUrl, name: senderName, size: avatarSize),
             const SizedBox(width: avatarGap),
           ],
           Flexible(
             child: ConstrainedBox(
               constraints: BoxConstraints(
-                maxWidth:
-                    MediaQuery.of(context).size.width * 0.65,
+                maxWidth: MediaQuery.of(context).size.width * 0.65,
               ),
               child: Column(
-                crossAxisAlignment: isMe
-                    ? CrossAxisAlignment.end
-                    : CrossAxisAlignment.start,
+                crossAxisAlignment:
+                    isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
                 children: [
                   if (!isMe)
                     Padding(
@@ -405,24 +384,18 @@ class _MessageBubble extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 14, vertical: 10),
                     decoration: BoxDecoration(
-                      color: isMe
-                          ? AppColors.gold
-                          : AppColors.navyLight,
+                      color: isMe ? AppColors.gold : AppColors.navyLight,
                       borderRadius: BorderRadiusDirectional.only(
                         topStart: const Radius.circular(18),
                         topEnd: const Radius.circular(18),
-                        bottomStart:
-                            Radius.circular(isMe ? 18 : 4),
-                        bottomEnd:
-                            Radius.circular(isMe ? 4 : 18),
+                        bottomStart: Radius.circular(isMe ? 18 : 4),
+                        bottomEnd: Radius.circular(isMe ? 4 : 18),
                       ),
                     ),
                     child: Text(
                       message.text,
                       style: TextStyle(
-                        color: isMe
-                            ? AppColors.navyBlue
-                            : AppColors.white,
+                        color: isMe ? AppColors.navyBlue : AppColors.white,
                         fontSize: 14,
                       ),
                     ),
@@ -442,9 +415,7 @@ class _ChatAvatar extends StatelessWidget {
   final String name;
   final double size;
   const _ChatAvatar(
-      {required this.photoUrl,
-      required this.name,
-      required this.size});
+      {required this.photoUrl, required this.name, required this.size});
 
   @override
   Widget build(BuildContext context) {
@@ -461,9 +432,8 @@ class _ChatAvatar extends StatelessWidget {
     return CircleAvatar(
       radius: size / 2,
       backgroundColor: AppColors.gold,
-      backgroundImage: photoUrl.isNotEmpty
-          ? CachedNetworkImageProvider(photoUrl)
-          : null,
+      backgroundImage:
+          photoUrl.isNotEmpty ? CachedNetworkImageProvider(photoUrl) : null,
       child: photoUrl.isEmpty
           ? Text(
               initials,
