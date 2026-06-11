@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart' show Get, GetNavigation, Inst;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get/get.dart' show Get, GetNavigation;
 
-import '../../../../controller/auth_controller.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../screens/widgets/branded_button.dart';
+import '../providers/auth_providers.dart';
 
-class EmailChangeNoticeScreen extends StatelessWidget {
+class EmailChangeNoticeScreen extends ConsumerWidget {
   const EmailChangeNoticeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context)!;
     final newEmail = Get.arguments is String ? Get.arguments as String : '';
 
@@ -51,9 +52,7 @@ class EmailChangeNoticeScreen extends StatelessWidget {
                       const Spacer(),
                       BrandedButton(
                         label: l.emailChangeNoticeButton,
-                        // Full sign-out (GetX teardown + navigation) lives on
-                        // the shim until the last GetX consumers migrate.
-                        onPressed: Get.find<AuthController>().signOut,
+                        onPressed: () => signOutToLogin(ref),
                       ),
                     ],
                   ),

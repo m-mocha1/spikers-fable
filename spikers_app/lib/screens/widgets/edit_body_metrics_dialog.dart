@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import '../../controller/auth_controller.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get/get.dart' show ExtensionSnackbar, Get, SnackPosition;
 import '../../core/constants/app_colors.dart';
 import '../../core/utils/validators.dart';
+import '../../features/auth/presentation/providers/auth_providers.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/user_model.dart';
 import 'branded_text_field.dart';
@@ -18,15 +19,17 @@ Future<void> showEditBodyMetricsDialog(
   );
 }
 
-class _EditBodyMetricsDialog extends StatefulWidget {
+class _EditBodyMetricsDialog extends ConsumerStatefulWidget {
   final UserModel user;
   const _EditBodyMetricsDialog({required this.user});
 
   @override
-  State<_EditBodyMetricsDialog> createState() => _EditBodyMetricsDialogState();
+  ConsumerState<_EditBodyMetricsDialog> createState() =>
+      _EditBodyMetricsDialogState();
 }
 
-class _EditBodyMetricsDialogState extends State<_EditBodyMetricsDialog> {
+class _EditBodyMetricsDialogState
+    extends ConsumerState<_EditBodyMetricsDialog> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _heightCtrl;
   late final TextEditingController _weightCtrl;
@@ -53,10 +56,10 @@ class _EditBodyMetricsDialogState extends State<_EditBodyMetricsDialog> {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     setState(() => _saving = true);
     try {
-      await Get.find<AuthController>().updateBodyMetrics(
-        heightCm: int.parse(_heightCtrl.text.trim()),
-        weightKg: int.parse(_weightCtrl.text.trim()),
-      );
+      await ref.read(authRepositoryProvider).updateBodyMetrics(
+            heightCm: int.parse(_heightCtrl.text.trim()),
+            weightKg: int.parse(_weightCtrl.text.trim()),
+          );
       if (!mounted) return;
       Navigator.of(context).pop();
     } catch (_) {

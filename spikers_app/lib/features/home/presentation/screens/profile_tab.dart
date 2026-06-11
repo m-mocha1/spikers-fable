@@ -1,19 +1,28 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get/get.dart'
+    show ExtensionSnackbar, Get, GetNavigation, Inst, Obx, SnackPosition;
 import 'package:image_picker/image_picker.dart';
-import '../../controller/auth_controller.dart';
-import '../../controller/locale_controller.dart';
-import '../../core/constants/app_colors.dart';
-import '../../l10n/app_localizations.dart';
-import '../widgets/edit_body_metrics_dialog.dart';
-import '../widgets/profile_info.dart';
 
-class ProfileTab extends StatelessWidget {
+import '../../../../controller/locale_controller.dart';
+import '../../../../core/constants/app_colors.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../../../../screens/widgets/edit_body_metrics_dialog.dart';
+import '../../../../screens/widgets/profile_info.dart';
+import '../../../auth/presentation/providers/auth_providers.dart';
+
+class ProfileTab extends ConsumerStatefulWidget {
   const ProfileTab({super.key});
 
-  static void _showAvatarPicker(
-      BuildContext context, AppLocalizations l, AuthController auth) {
+  @override
+  ConsumerState<ProfileTab> createState() => _ProfileTabState();
+}
+
+class _ProfileTabState extends ConsumerState<ProfileTab> {
+  bool _uploading = false;
+
+  void _showAvatarPicker(AppLocalizations l) {
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.navyLight,
@@ -35,21 +44,21 @@ class ProfileTab extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             ListTile(
-              leading:
-                  const Icon(Icons.photo_library_outlined, color: AppColors.gold),
+              leading: const Icon(Icons.photo_library_outlined,
+                  color: AppColors.gold),
               title: Text(l.pickFromGallery),
               onTap: () {
                 Get.back();
-                _pickAndUpload(ImageSource.gallery, auth, l);
+                _pickAndUpload(ImageSource.gallery, l);
               },
             ),
             ListTile(
-              leading:
-                  const Icon(Icons.camera_alt_outlined, color: AppColors.gold),
+              leading: const Icon(Icons.camera_alt_outlined,
+                  color: AppColors.gold),
               title: Text(l.takePhoto),
               onTap: () {
                 Get.back();
-                _pickAndUpload(ImageSource.camera, auth, l);
+                _pickAndUpload(ImageSource.camera, l);
               },
             ),
             const SizedBox(height: 8),
@@ -59,8 +68,7 @@ class ProfileTab extends StatelessWidget {
     );
   }
 
-  static Future<void> _pickAndUpload(
-      ImageSource source, AuthController auth, AppLocalizations l) async {
+  Future<void> _pickAndUpload(ImageSource source, AppLocalizations l) async {
     final file = await ImagePicker().pickImage(
       source: source,
       maxWidth: 512,
@@ -68,76 +76,75 @@ class ProfileTab extends StatelessWidget {
       imageQuality: 80,
     );
     if (file == null) return;
+    setState(() => _uploading = true);
     try {
-      await auth.updateProfilePhoto(file);
+      await ref.read(authRepositoryProvider).updateProfilePhoto(file);
       Get.snackbar('', l.photoUpdated, snackPosition: SnackPosition.BOTTOM);
     } catch (_) {
       Get.snackbar('', l.unknownError, snackPosition: SnackPosition.BOTTOM);
+    } finally {
+      if (mounted) setState(() => _uploading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    final auth = Get.find<AuthController>();
+    final user = ref.watch(currentUserProvider).value;
+    final email = ref.watch(authRepositoryProvider).currentEmail;
     final locale = Get.find<LocaleController>();
 
-    return Obx(() {
-      final user = auth.currentUser.value;
-      if (user == null) return const SizedBox.shrink();
+    if (user == null) return const SizedBox.shrink();
 
-      return SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(24, 24, 24, 100),
-        child: Column(
-          children: [
-            const SizedBox(height: 16),
-            _Avatar(
-              name: user.name,
-              photoUrl: user.photoUrl,
-              isUploading: auth.isLoading.value,
-              onTap: () => _showAvatarPicker(context, l, auth),
-            ),
-            const SizedBox(height: 16),
-            Text(user.name,
-                style: const TextStyle(
-                    fontSize: 22, fontWeight: FontWeight.w700)),
-            const SizedBox(height: 4),
-            Text(auth.currentEmail,
-                style:
-                    const TextStyle(color: AppColors.grey, fontSize: 14)),
-            const SizedBox(height: 12),
-            ProfileRoleBadge(isCoach: user.isCoach, l: l),
-            const SizedBox(height: 24),
-            ProfileStatsRow(
-              user: user,
-              l: l,
-              onEdit: () => showEditBodyMetricsDialog(context, user),
-            ),
-            const SizedBox(height: 16),
-            ProfileInfoCard(user: user, l: l),
-            const SizedBox(height: 24),
-            _LanguageToggle(locale: locale, l: l),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: auth.signOut,
-                icon: const Icon(Icons.logout, color: AppColors.errorRed),
-                label: Text(l.signOut,
-                    style:
-                        const TextStyle(color: AppColors.errorRed)),
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: AppColors.errorRed),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                ),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 100),
+      child: Column(
+        children: [
+          const SizedBox(height: 16),
+          _Avatar(
+            name: user.name,
+            photoUrl: user.photoUrl,
+            isUploading: _uploading,
+            onTap: () => _showAvatarPicker(l),
+          ),
+          const SizedBox(height: 16),
+          Text(user.name,
+              style:
+                  const TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
+          const SizedBox(height: 4),
+          Text(email,
+              style: const TextStyle(color: AppColors.grey, fontSize: 14)),
+          const SizedBox(height: 12),
+          ProfileRoleBadge(isCoach: user.isCoach, l: l),
+          const SizedBox(height: 24),
+          ProfileStatsRow(
+            user: user,
+            l: l,
+            onEdit: () => showEditBodyMetricsDialog(context, user),
+          ),
+          const SizedBox(height: 16),
+          ProfileInfoCard(user: user, l: l),
+          const SizedBox(height: 24),
+          _LanguageToggle(locale: locale, l: l),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => signOutToLogin(ref),
+              icon: const Icon(Icons.logout, color: AppColors.errorRed),
+              label: Text(l.signOut,
+                  style: const TextStyle(color: AppColors.errorRed)),
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: AppColors.errorRed),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
               ),
             ),
-          ],
-        ),
-      );
-    });
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -189,7 +196,7 @@ class _Avatar extends StatelessWidget {
             Container(
               width: 128,
               height: 128,
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: Colors.black45,
                 shape: BoxShape.circle,
               ),
@@ -242,8 +249,7 @@ class _LanguageToggle extends StatelessWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(l.switchLanguage,
-                      style:
-                          const TextStyle(fontWeight: FontWeight.w600)),
+                      style: const TextStyle(fontWeight: FontWeight.w600)),
                 ),
                 Icon(
                   locale.isArabic

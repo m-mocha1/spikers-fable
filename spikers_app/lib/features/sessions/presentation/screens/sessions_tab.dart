@@ -4,9 +4,8 @@ import 'package:shimmer/shimmer.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../../screens/home/home_screen.dart'
-    show SessionShimmer, buildEmptyState;
 import '../../../../screens/widgets/session_card.dart';
+import '../widgets/session_list_states.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../providers/sessions_providers.dart';
 

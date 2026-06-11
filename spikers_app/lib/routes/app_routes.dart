@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart' show RouteSettings;
 import 'package:get/get.dart';
-import '../controller/auth_controller.dart';
-import '../controller/notification_controller.dart';
+import '../features/auth/data/repositories/auth_repository_impl.dart';
 import '../features/auth/presentation/screens/splash_screen.dart';
 import '../features/auth/presentation/screens/login_screen.dart';
 import '../features/auth/presentation/screens/register_screen.dart';
 import '../features/auth/presentation/screens/email_change_notice_screen.dart';
 import '../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../features/auth/presentation/screens/verify_email_screen.dart';
-import '../screens/home/home_screen.dart';
+import '../features/home/presentation/screens/home_screen.dart';
 import '../features/sessions/presentation/screens/session_detail_screen.dart';
 import '../features/sessions/presentation/screens/create_session_screen.dart';
 import '../features/sessions/presentation/screens/quick_session_screen.dart';
@@ -54,9 +53,6 @@ final List<GetPage> appPages = [
   GetPage(
     name: Routes.home,
     page: () => const HomeScreen(),
-    binding: BindingsBuilder(() {
-      Get.put(NotificationController(), permanent: true);
-    }),
   ),
   GetPage(name: Routes.sessionDetail,  page: () => const SessionDetailScreen()),
   GetPage(
@@ -113,11 +109,10 @@ final List<GetPage> appPages = [
 class CoachOnlyMiddleware extends GetMiddleware {
   @override
   RouteSettings? redirect(String? route) {
-    try {
-      final auth = Get.find<AuthController>();
-      if (!auth.isCoach) return RouteSettings(name: Routes.home);
-    } catch (_) {
-      return RouteSettings(name: Routes.login);
+    final repo = AuthRepositoryImpl.instance;
+    if (!repo.isSignedIn) return RouteSettings(name: Routes.login);
+    if (repo.currentUserNow?.isCoach != true) {
+      return RouteSettings(name: Routes.home);
     }
     return null;
   }

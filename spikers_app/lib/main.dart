@@ -6,8 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get/get.dart';
-import 'controller/auth_controller.dart';
 import 'controller/locale_controller.dart';
+import 'features/auth/data/repositories/auth_repository_impl.dart';
 import 'core/constants/app_colors.dart';
 import 'core/theme/app_theme.dart';
 import 'firebase_options.dart';
@@ -45,7 +45,8 @@ class SpikersApp extends StatelessWidget {
       getPages: appPages,
       initialBinding: BindingsBuilder(() {
         Get.put(LocaleController(), permanent: true);
-        Get.put(AuthController(), permanent: true);
+        // Kick off session restore early so splash's `ready` await is short.
+        AuthRepositoryImpl.instance;
       }),
       locale: const Locale('en'),
       fallbackLocale: const Locale('ar'),

@@ -1,24 +1,27 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import '../../controller/auth_controller.dart';
-import '../../features/announcements/presentation/widgets/announcements_bell.dart';
-import '../../core/constants/app_colors.dart';
-import '../../l10n/app_localizations.dart';
-import '../../routes/app_routes.dart';
-import '../widgets/floating_nav_bar.dart';
-import '../../features/players/presentation/screens/players_peer_tab.dart';
-import '../../features/players/presentation/screens/players_tab.dart';
-import '../../features/sessions/presentation/screens/sessions_tab.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get/get.dart' show Get, GetNavigation;
+
+import '../../../../core/constants/app_colors.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../../../../routes/app_routes.dart';
+import '../../../../screens/widgets/floating_nav_bar.dart';
+import '../../../announcements/presentation/widgets/announcements_bell.dart';
+import '../../../auth/presentation/providers/auth_providers.dart';
+import '../../../notifications/application/notifications_service.dart';
+import '../../../players/presentation/screens/players_peer_tab.dart';
+import '../../../players/presentation/screens/players_tab.dart';
+import '../../../sessions/presentation/screens/sessions_tab.dart';
 import 'profile_tab.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _index = 0;
 
   void _showSessionOptions(BuildContext context, AppLocalizations l) {
@@ -50,7 +53,8 @@ class _HomeScreenState extends State<HomeScreen> {
               title: Text(l.newSession,
                   style: const TextStyle(fontWeight: FontWeight.w600)),
               subtitle: Text(l.createSession,
-                  style: const TextStyle(color: AppColors.grey, fontSize: 12)),
+                  style:
+                      const TextStyle(color: AppColors.grey, fontSize: 12)),
               onTap: () {
                 Get.back();
                 Get.toNamed(Routes.createSession);
@@ -64,7 +68,8 @@ class _HomeScreenState extends State<HomeScreen> {
               title: Text(l.quickSession,
                   style: const TextStyle(fontWeight: FontWeight.w600)),
               subtitle: Text(l.selectTemplate,
-                  style: const TextStyle(color: AppColors.grey, fontSize: 12)),
+                  style:
+                      const TextStyle(color: AppColors.grey, fontSize: 12)),
               onTap: () {
                 Get.back();
                 Get.toNamed(Routes.quickSession);
@@ -78,7 +83,8 @@ class _HomeScreenState extends State<HomeScreen> {
               title: Text(l.recurringSessions,
                   style: const TextStyle(fontWeight: FontWeight.w600)),
               subtitle: Text(l.recurringSessionsDesc,
-                  style: const TextStyle(color: AppColors.grey, fontSize: 12)),
+                  style:
+                      const TextStyle(color: AppColors.grey, fontSize: 12)),
               onTap: () {
                 Get.back();
                 Get.toNamed(Routes.recurringSessions);
@@ -94,21 +100,26 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    final auth = Get.find<AuthController>();
+    final isCoach = ref.watch(isCoachProvider);
+    // Keeps the FCM tap-routing service alive while the home shell exists.
+    ref.watch(notificationsServiceProvider);
+
+    final tabs = isCoach
+        ? const [SessionsTab(), PlayersTab(), ProfileTab()]
+        : const [SessionsTab(), PlayersPeerTab(), ProfileTab()];
+    final safeIndex = _index >= tabs.length ? 0 : _index;
 
     return Scaffold(
       extendBody: true,
       appBar: AppBar(
         title: Text(l.appName),
         actions: [
-          if (_index == 0)
-            Obx(() => auth.isCoach
-                ? IconButton(
-                    tooltip: l.sessionsHistory,
-                    icon: const Icon(Icons.history),
-                    onPressed: () => Get.toNamed(Routes.sessionsHistory),
-                  )
-                : const SizedBox.shrink()),
+          if (_index == 0 && isCoach)
+            IconButton(
+              tooltip: l.sessionsHistory,
+              icon: const Icon(Icons.history),
+              onPressed: () => Get.toNamed(Routes.sessionsHistory),
+            ),
           if (_index == 1)
             IconButton(
               tooltip: l.coachesTab,
@@ -123,20 +134,13 @@ class _HomeScreenState extends State<HomeScreen> {
           const AnnouncementsBell(),
         ],
       ),
-      body: Obx(() {
-        final isCoach = auth.isCoach;
-        final tabs = isCoach
-            ? const [SessionsTab(), PlayersTab(), ProfileTab()]
-            : const [SessionsTab(), PlayersPeerTab(), ProfileTab()];
-        final safeIndex = _index >= tabs.length ? 0 : _index;
-        return IndexedStack(index: safeIndex, children: tabs);
-      }),
-      floatingActionButton: Obx(() => auth.isCoach
+      body: IndexedStack(index: safeIndex, children: tabs),
+      floatingActionButton: isCoach
           ? FloatingActionButton(
               onPressed: () => _showSessionOptions(context, l),
               child: const Icon(Icons.add),
             )
-          : const SizedBox.shrink()),
+          : null,
       bottomNavigationBar: FloatingNavBar(
         currentIndex: _index >= 3 ? 0 : _index,
         onTap: (i) => setState(() => _index = i),
@@ -160,45 +164,4 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-}
-
-// Shimmer skeleton for session list (used in SessionsTab)
-class SessionShimmer extends StatelessWidget {
-  const SessionShimmer({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      height: 100,
-      decoration: BoxDecoration(
-        color: AppColors.navyLight,
-        borderRadius: BorderRadius.circular(16),
-      ),
-    );
-  }
-}
-
-// Helper used by SessionsTab and SessionController
-Widget buildEmptyState(BuildContext context) {
-  final l = AppLocalizations.of(context)!;
-  return Center(
-    child: Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        const Icon(Icons.sports_volleyball_outlined,
-            size: 64, color: AppColors.grey),
-        const SizedBox(height: 16),
-        Text(l.noSessions,
-            style: const TextStyle(
-                color: AppColors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.w600)),
-        const SizedBox(height: 8),
-        Text(l.noSessionsDesc,
-            style: const TextStyle(color: AppColors.grey, fontSize: 14),
-            textAlign: TextAlign.center),
-      ],
-    ),
-  );
 }

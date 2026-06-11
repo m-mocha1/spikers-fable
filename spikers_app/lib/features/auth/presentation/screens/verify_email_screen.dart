@@ -3,9 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get/get.dart'
-    show ExtensionSnackbar, Get, GetNavigation, Inst, SnackPosition;
+    show ExtensionSnackbar, Get, GetNavigation, SnackPosition;
 
-import '../../../../controller/auth_controller.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -197,9 +196,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
                             style: const TextStyle(color: AppColors.gold)),
                       ),
                       TextButton(
-                        // Full sign-out (GetX teardown + navigation) lives on
-                        // the shim until the last GetX consumers migrate.
-                        onPressed: Get.find<AuthController>().signOut,
+                        onPressed: () => signOutToLogin(ref),
                         child: Text(l.signOut,
                             style: const TextStyle(color: AppColors.grey)),
                       ),
