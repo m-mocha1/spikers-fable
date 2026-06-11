@@ -4,6 +4,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get/get.dart';
 import 'controller/auth_controller.dart';
 import 'controller/locale_controller.dart';
@@ -26,7 +27,7 @@ Future<void> main() async {
     webProvider: ReCaptchaV3Provider('6LfUyvUsAAAAABb7HEdQnNne18CUEiPOCqCOSjCR'),
   );
   FirebaseMessaging.onBackgroundMessage(_bgMessageHandler);
-  runApp(const SpikersApp());
+  runApp(const ProviderScope(child: SpikersApp()));
 }
 
 class SpikersApp extends StatelessWidget {
