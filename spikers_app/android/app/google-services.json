@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "733768447663",
+    "project_id": "spikers-13db7",
+    "storage_bucket": "spikers-13db7.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:733768447663:android:6755f15b4184fb46a8865a",
+        "android_client_info": {
+          "package_name": "com.jerusalem.spikers"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "733768447663-61qi4hkaipvdrcceahjocbqrjnimq06f.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.jerusalem.spikers",
+            "certificate_hash": "0c3722b47eb3bb192cf97c560aec678b5ffe48f0"
+          }
+        },
+        {
+          "client_id": "733768447663-i3s2ut7jvo44kbunvm34n3g0eqm7klu5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCxt7HrLeRTelIUrksZiRgXvUXkjNoc7tU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "733768447663-i3s2ut7jvo44kbunvm34n3g0eqm7klu5.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "733768447663-peouo2oumovjbpb1f7g4j7nado2nkkt8.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.jerusalem.spikers"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

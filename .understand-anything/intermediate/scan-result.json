@@ -1,0 +1,637 @@
+{
+  "name": "spikers_app",
+  "description": "Jerusalem Spikers Volleyball Club App: a bilingual (Arabic/English) Flutter mobile app for a volleyball club, backed by Firebase (Auth, Firestore, Storage, Messaging, Cloud Functions, App Check). Features include sessions and recurring sessions, announcements, leaderboards, notifications, player profiles, session chat, and templates.",
+  "languages": [
+    "arb",
+    "dart",
+    "json",
+    "markdown",
+    "rules",
+    "tldr",
+    "txt",
+    "typescript",
+    "unknown",
+    "yaml"
+  ],
+  "frameworks": [
+    "Flutter",
+    "GetX",
+    "Firebase Auth",
+    "Cloud Firestore",
+    "Firebase Storage",
+    "Firebase Messaging",
+    "Cloud Functions",
+    "Firebase App Check",
+    "Firebase Admin",
+    "TypeScript"
+  ],
+  "files": [
+    {
+      "path": ".claude/settings.local.json",
+      "language": "json",
+      "sizeLines": 42,
+      "fileCategory": "config"
+    },
+    {
+      "path": ".firebaserc",
+      "language": "unknown",
+      "sizeLines": 5,
+      "fileCategory": "code"
+    },
+    {
+      "path": ".understand-anything/.understandignore",
+      "language": "unknown",
+      "sizeLines": 59,
+      "fileCategory": "code"
+    },
+    {
+      "path": "Claude_next_app.md",
+      "language": "markdown",
+      "sizeLines": 141,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "Claude.md",
+      "language": "markdown",
+      "sizeLines": 695,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "cors.json",
+      "language": "json",
+      "sizeLines": 3,
+      "fileCategory": "config"
+    },
+    {
+      "path": "firebase.json",
+      "language": "json",
+      "sizeLines": 21,
+      "fileCategory": "config"
+    },
+    {
+      "path": "firestore.indexes.json",
+      "language": "json",
+      "sizeLines": 38,
+      "fileCategory": "config"
+    },
+    {
+      "path": "firestore.rules",
+      "language": "rules",
+      "sizeLines": 168,
+      "fileCategory": "code"
+    },
+    {
+      "path": "FIXES_TO_BE_MADE.md",
+      "language": "markdown",
+      "sizeLines": 184,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "FixesToBeMade.txt",
+      "language": "txt",
+      "sizeLines": 300,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "functions/package.json",
+      "language": "json",
+      "sizeLines": 19,
+      "fileCategory": "config"
+    },
+    {
+      "path": "functions/src/index.ts",
+      "language": "typescript",
+      "sizeLines": 893,
+      "fileCategory": "code"
+    },
+    {
+      "path": "functions/tsconfig.json",
+      "language": "json",
+      "sizeLines": 13,
+      "fileCategory": "config"
+    },
+    {
+      "path": "plan.tldr",
+      "language": "tldr",
+      "sizeLines": 1642,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/analysis_options.yaml",
+      "language": "yaml",
+      "sizeLines": 28,
+      "fileCategory": "config"
+    },
+    {
+      "path": "spikers_app/appPlan.txt",
+      "language": "txt",
+      "sizeLines": 377,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "spikers_app/firebase.json",
+      "language": "json",
+      "sizeLines": 0,
+      "fileCategory": "config"
+    },
+    {
+      "path": "spikers_app/l10n.yaml",
+      "language": "yaml",
+      "sizeLines": 4,
+      "fileCategory": "config"
+    },
+    {
+      "path": "spikers_app/lib/controller/announcement_controller.dart",
+      "language": "dart",
+      "sizeLines": 89,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/controller/auth_controller.dart",
+      "language": "dart",
+      "sizeLines": 467,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/controller/leaderboard_controller.dart",
+      "language": "dart",
+      "sizeLines": 135,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/controller/locale_controller.dart",
+      "language": "dart",
+      "sizeLines": 33,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/controller/notification_controller.dart",
+      "language": "dart",
+      "sizeLines": 57,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/controller/payment_controller.dart",
+      "language": "dart",
+      "sizeLines": 62,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/controller/recurring_session_controller.dart",
+      "language": "dart",
+      "sizeLines": 71,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/controller/session_controller.dart",
+      "language": "dart",
+      "sizeLines": 256,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/controller/template_controller.dart",
+      "language": "dart",
+      "sizeLines": 65,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/core/constants/app_assets.dart",
+      "language": "dart",
+      "sizeLines": 11,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/core/constants/app_colors.dart",
+      "language": "dart",
+      "sizeLines": 12,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/core/services/fcm_service.dart",
+      "language": "dart",
+      "sizeLines": 19,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/core/services/local_notification_service.dart",
+      "language": "dart",
+      "sizeLines": 53,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/core/theme/app_theme.dart",
+      "language": "dart",
+      "sizeLines": 92,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/core/utils/age_calculator.dart",
+      "language": "dart",
+      "sizeLines": 10,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/core/utils/validators.dart",
+      "language": "dart",
+      "sizeLines": 36,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/firebase_options.dart",
+      "language": "dart",
+      "sizeLines": 90,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/l10n/app_ar.arb",
+      "language": "arb",
+      "sizeLines": 265,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/l10n/app_en.arb",
+      "language": "arb",
+      "sizeLines": 265,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/l10n/app_localizations_ar.dart",
+      "language": "dart",
+      "sizeLines": 647,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/l10n/app_localizations_en.dart",
+      "language": "dart",
+      "sizeLines": 651,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/l10n/app_localizations.dart",
+      "language": "dart",
+      "sizeLines": 1358,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/main.dart",
+      "language": "dart",
+      "sizeLines": 83,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/models/announcement_model.dart",
+      "language": "dart",
+      "sizeLines": 37,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/models/chat_message_model.dart",
+      "language": "dart",
+      "sizeLines": 33,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/models/recurring_session_model.dart",
+      "language": "dart",
+      "sizeLines": 89,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/models/session_model.dart",
+      "language": "dart",
+      "sizeLines": 99,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/models/session_template_model.dart",
+      "language": "dart",
+      "sizeLines": 51,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/models/user_model.dart",
+      "language": "dart",
+      "sizeLines": 96,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/routes/app_routes.dart",
+      "language": "dart",
+      "sizeLines": 146,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/screens/announcements/announcements_screen.dart",
+      "language": "dart",
+      "sizeLines": 244,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/screens/announcements/create_announcement_screen.dart",
+      "language": "dart",
+      "sizeLines": 114,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/screens/auth/email_change_notice_screen.dart",
+      "language": "dart",
+      "sizeLines": 67,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/screens/auth/forgot_password_screen.dart",
+      "language": "dart",
+      "sizeLines": 77,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/screens/auth/login_screen.dart",
+      "language": "dart",
+      "sizeLines": 141,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/screens/auth/register_screen.dart",
+      "language": "dart",
+      "sizeLines": 430,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/screens/auth/verify_email_screen.dart",
+      "language": "dart",
+      "sizeLines": 276,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/screens/coaches/coaches_list_screen.dart",
+      "language": "dart",
+      "sizeLines": 16,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/screens/home/coaches_tab.dart",
+      "language": "dart",
+      "sizeLines": 135,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/screens/home/home_screen.dart",
+      "language": "dart",
+      "sizeLines": 234,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/screens/home/players_peer_tab.dart",
+      "language": "dart",
+      "sizeLines": 161,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/screens/home/players_tab.dart",
+      "language": "dart",
+      "sizeLines": 368,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/screens/home/profile_tab.dart",
+      "language": "dart",
+      "sizeLines": 254,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/screens/home/sessions_tab.dart",
+      "language": "dart",
+      "sizeLines": 110,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/screens/leaderboard/leaderboard_screen.dart",
+      "language": "dart",
+      "sizeLines": 208,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/screens/players/payment_confirm_dialog.dart",
+      "language": "dart",
+      "sizeLines": 128,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/screens/players/player_profile_screen.dart",
+      "language": "dart",
+      "sizeLines": 175,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/screens/sessions/create_recurring_session_screen.dart",
+      "language": "dart",
+      "sizeLines": 400,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/screens/sessions/create_session_screen.dart",
+      "language": "dart",
+      "sizeLines": 339,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/screens/sessions/quick_session_screen.dart",
+      "language": "dart",
+      "sizeLines": 295,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/screens/sessions/recurring_sessions_screen.dart",
+      "language": "dart",
+      "sizeLines": 210,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/screens/sessions/session_chat_screen.dart",
+      "language": "dart",
+      "sizeLines": 479,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/screens/sessions/session_detail_screen.dart",
+      "language": "dart",
+      "sizeLines": 1171,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/screens/sessions/sessions_history_screen.dart",
+      "language": "dart",
+      "sizeLines": 283,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/screens/splash/splash_screen.dart",
+      "language": "dart",
+      "sizeLines": 62,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/screens/widgets/app_logo.dart",
+      "language": "dart",
+      "sizeLines": 12,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/screens/widgets/branded_button.dart",
+      "language": "dart",
+      "sizeLines": 36,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/screens/widgets/branded_text_field.dart",
+      "language": "dart",
+      "sizeLines": 49,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/screens/widgets/edit_body_metrics_dialog.dart",
+      "language": "dart",
+      "sizeLines": 178,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/screens/widgets/floating_nav_bar.dart",
+      "language": "dart",
+      "sizeLines": 112,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/screens/widgets/profile_info.dart",
+      "language": "dart",
+      "sizeLines": 250,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/lib/screens/widgets/session_card.dart",
+      "language": "dart",
+      "sizeLines": 221,
+      "fileCategory": "code"
+    },
+    {
+      "path": "spikers_app/pubspec.yaml",
+      "language": "yaml",
+      "sizeLines": 73,
+      "fileCategory": "config"
+    },
+    {
+      "path": "spikers_app/README.md",
+      "language": "markdown",
+      "sizeLines": 17,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "storage.rules",
+      "language": "rules",
+      "sizeLines": 19,
+      "fileCategory": "code"
+    },
+    {
+      "path": "thingsToadd.txt",
+      "language": "txt",
+      "sizeLines": 36,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "todoIOS.txt",
+      "language": "txt",
+      "sizeLines": 16,
+      "fileCategory": "docs"
+    }
+  ],
+  "totalFiles": 86,
+  "filteredByIgnore": 86,
+  "estimatedComplexity": "moderate",
+  "importMap": {
+    ".claude/settings.local.json": [],
+    ".firebaserc": [],
+    ".understand-anything/.understandignore": [],
+    "Claude_next_app.md": [],
+    "Claude.md": [],
+    "cors.json": [],
+    "firebase.json": [],
+    "firestore.indexes.json": [],
+    "firestore.rules": [],
+    "FIXES_TO_BE_MADE.md": [],
+    "FixesToBeMade.txt": [],
+    "functions/package.json": [],
+    "functions/src/index.ts": [],
+    "functions/tsconfig.json": [],
+    "plan.tldr": [],
+    "spikers_app/analysis_options.yaml": [],
+    "spikers_app/appPlan.txt": [],
+    "spikers_app/firebase.json": [],
+    "spikers_app/l10n.yaml": [],
+    "spikers_app/lib/controller/announcement_controller.dart": [],
+    "spikers_app/lib/controller/auth_controller.dart": [],
+    "spikers_app/lib/controller/leaderboard_controller.dart": [],
+    "spikers_app/lib/controller/locale_controller.dart": [],
+    "spikers_app/lib/controller/notification_controller.dart": [],
+    "spikers_app/lib/controller/payment_controller.dart": [],
+    "spikers_app/lib/controller/recurring_session_controller.dart": [],
+    "spikers_app/lib/controller/session_controller.dart": [],
+    "spikers_app/lib/controller/template_controller.dart": [],
+    "spikers_app/lib/core/constants/app_assets.dart": [],
+    "spikers_app/lib/core/constants/app_colors.dart": [],
+    "spikers_app/lib/core/services/fcm_service.dart": [],
+    "spikers_app/lib/core/services/local_notification_service.dart": [],
+    "spikers_app/lib/core/theme/app_theme.dart": [],
+    "spikers_app/lib/core/utils/age_calculator.dart": [],
+    "spikers_app/lib/core/utils/validators.dart": [],
+    "spikers_app/lib/firebase_options.dart": [],
+    "spikers_app/lib/l10n/app_ar.arb": [],
+    "spikers_app/lib/l10n/app_en.arb": [],
+    "spikers_app/lib/l10n/app_localizations_ar.dart": [],
+    "spikers_app/lib/l10n/app_localizations_en.dart": [],
+    "spikers_app/lib/l10n/app_localizations.dart": [],
+    "spikers_app/lib/main.dart": [],
+    "spikers_app/lib/models/announcement_model.dart": [],
+    "spikers_app/lib/models/chat_message_model.dart": [],
+    "spikers_app/lib/models/recurring_session_model.dart": [],
+    "spikers_app/lib/models/session_model.dart": [],
+    "spikers_app/lib/models/session_template_model.dart": [],
+    "spikers_app/lib/models/user_model.dart": [],
+    "spikers_app/lib/routes/app_routes.dart": [],
+    "spikers_app/lib/screens/announcements/announcements_screen.dart": [],
+    "spikers_app/lib/screens/announcements/create_announcement_screen.dart": [],
+    "spikers_app/lib/screens/auth/email_change_notice_screen.dart": [],
+    "spikers_app/lib/screens/auth/forgot_password_screen.dart": [],
+    "spikers_app/lib/screens/auth/login_screen.dart": [],
+    "spikers_app/lib/screens/auth/register_screen.dart": [],
+    "spikers_app/lib/screens/auth/verify_email_screen.dart": [],
+    "spikers_app/lib/screens/coaches/coaches_list_screen.dart": [],
+    "spikers_app/lib/screens/home/coaches_tab.dart": [],
+    "spikers_app/lib/screens/home/home_screen.dart": [],
+    "spikers_app/lib/screens/home/players_peer_tab.dart": [],
+    "spikers_app/lib/screens/home/players_tab.dart": [],
+    "spikers_app/lib/screens/home/profile_tab.dart": [],
+    "spikers_app/lib/screens/home/sessions_tab.dart": [],
+    "spikers_app/lib/screens/leaderboard/leaderboard_screen.dart": [],
+    "spikers_app/lib/screens/players/payment_confirm_dialog.dart": [],
+    "spikers_app/lib/screens/players/player_profile_screen.dart": [],
+    "spikers_app/lib/screens/sessions/create_recurring_session_screen.dart": [],
+    "spikers_app/lib/screens/sessions/create_session_screen.dart": [],
+    "spikers_app/lib/screens/sessions/quick_session_screen.dart": [],
+    "spikers_app/lib/screens/sessions/recurring_sessions_screen.dart": [],
+    "spikers_app/lib/screens/sessions/session_chat_screen.dart": [],
+    "spikers_app/lib/screens/sessions/session_detail_screen.dart": [],
+    "spikers_app/lib/screens/sessions/sessions_history_screen.dart": [],
+    "spikers_app/lib/screens/splash/splash_screen.dart": [],
+    "spikers_app/lib/screens/widgets/app_logo.dart": [],
+    "spikers_app/lib/screens/widgets/branded_button.dart": [],
+    "spikers_app/lib/screens/widgets/branded_text_field.dart": [],
+    "spikers_app/lib/screens/widgets/edit_body_metrics_dialog.dart": [],
+    "spikers_app/lib/screens/widgets/floating_nav_bar.dart": [],
+    "spikers_app/lib/screens/widgets/profile_info.dart": [],
+    "spikers_app/lib/screens/widgets/session_card.dart": [],
+    "spikers_app/pubspec.yaml": [],
+    "spikers_app/README.md": [],
+    "storage.rules": [],
+    "thingsToadd.txt": [],
+    "todoIOS.txt": []
+  }
+}

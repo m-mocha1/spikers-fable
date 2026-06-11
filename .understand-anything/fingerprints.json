@@ -1,0 +1,997 @@
+{
+  "version": "1.0.0",
+  "gitCommitHash": "474c33472473ecd0307bba7453a6bb249f4a7a0a",
+  "generatedAt": "2026-06-01T14:18:54.818Z",
+  "files": {
+    ".claude/settings.local.json": {
+      "filePath": ".claude/settings.local.json",
+      "contentHash": "7821033f50a69fe10088ad6164e7e2c48c11afc2becd6711677e05a96b2dd73f",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 50,
+      "hasStructuralAnalysis": true
+    },
+    ".firebaserc": {
+      "filePath": ".firebaserc",
+      "contentHash": "facda5d95386237b35e8bbf2f9ea84c5e9be2aacdcc160af8ef7e60fb343c623",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 6,
+      "hasStructuralAnalysis": false
+    },
+    ".understand-anything/.understandignore": {
+      "filePath": ".understand-anything/.understandignore",
+      "contentHash": "9f6de85a52b311b0621c21586e3cbf31463e065ff2fecfb6d0f5a1b27fcc326b",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 60,
+      "hasStructuralAnalysis": false
+    },
+    "Claude_next_app.md": {
+      "filePath": "Claude_next_app.md",
+      "contentHash": "cc953a752f6e685866fc12fe1f8bdc1ce37ad151da08c3114a4e29dfc1e8580e",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 142,
+      "hasStructuralAnalysis": true
+    },
+    "Claude.md": {
+      "filePath": "Claude.md",
+      "contentHash": "c7b5c6ac6125042ed5524c540375695ec56985d5c9c1662454f696b0a8793f8b",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 696,
+      "hasStructuralAnalysis": true
+    },
+    "cors.json": {
+      "filePath": "cors.json",
+      "contentHash": "1599cf0a05a5f3a3a8cafe9a666c6e62163e476b8ed407ed083017b0f35ee6d5",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 4,
+      "hasStructuralAnalysis": true
+    },
+    "firebase.json": {
+      "filePath": "firebase.json",
+      "contentHash": "bb63fd0ec5a95d4a839484c350338dcc8cbb2fb391335eb959d78d22c3866f7b",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 22,
+      "hasStructuralAnalysis": true
+    },
+    "firestore.indexes.json": {
+      "filePath": "firestore.indexes.json",
+      "contentHash": "4e8cdae10a6562eae87225142a32efc8ce3ba6b9ba41b434d1f8f6133ada1812",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 39,
+      "hasStructuralAnalysis": true
+    },
+    "firestore.rules": {
+      "filePath": "firestore.rules",
+      "contentHash": "215a0d4ec4e181537bf1aed4a74eac8bc851551e22cb401cdf295ca0fac363c6",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 169,
+      "hasStructuralAnalysis": false
+    },
+    "FIXES_TO_BE_MADE.md": {
+      "filePath": "FIXES_TO_BE_MADE.md",
+      "contentHash": "2732f95fe92ebe5d5cb405a933264a9a98fb1a275f9d80e72b9f8f082d7612aa",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 185,
+      "hasStructuralAnalysis": true
+    },
+    "FixesToBeMade.txt": {
+      "filePath": "FixesToBeMade.txt",
+      "contentHash": "553bea001cb90fefc4d117f4180a5dde6e0e255507bf68c0d429cb1d69ae3d44",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 301,
+      "hasStructuralAnalysis": false
+    },
+    "functions/package.json": {
+      "filePath": "functions/package.json",
+      "contentHash": "79a143b3134059461166c64837d39921a30b7d4245f2ddb10ba13a47f8bac7f9",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 20,
+      "hasStructuralAnalysis": true
+    },
+    "functions/src/index.ts": {
+      "filePath": "functions/src/index.ts",
+      "contentHash": "8ddc69afcbf9197923d961d563fc12691df344321987eae26e892cd7c3e02996",
+      "functions": [
+        {
+          "name": "chunkArray",
+          "params": [
+            "arr",
+            "size"
+          ],
+          "returnType": "T[][]",
+          "exported": false,
+          "lineCount": 7
+        },
+        {
+          "name": "calcAge",
+          "params": [
+            "dob"
+          ],
+          "returnType": "number",
+          "exported": false,
+          "lineCount": 4
+        },
+        {
+          "name": "isPaid",
+          "params": [
+            "p"
+          ],
+          "returnType": "boolean",
+          "exported": false,
+          "lineCount": 4
+        },
+        {
+          "name": "fetchUserName",
+          "params": [
+            "uid"
+          ],
+          "returnType": "Promise<string>",
+          "exported": false,
+          "lineCount": 9
+        },
+        {
+          "name": "fetchFcmTokens",
+          "params": [
+            "uids"
+          ],
+          "returnType": "Promise<string[]>",
+          "exported": false,
+          "lineCount": 14
+        },
+        {
+          "name": "notifyPromoted",
+          "params": [
+            "uids",
+            "sessionId",
+            "sessionTitle"
+          ],
+          "returnType": "Promise<void>",
+          "exported": false,
+          "lineCount": 23
+        },
+        {
+          "name": "getJerusalemDateParts",
+          "params": [
+            "date"
+          ],
+          "returnType": "{ str: string; dayOfWeek: number }",
+          "exported": false,
+          "lineCount": 6
+        },
+        {
+          "name": "jerusalemDateToUtcMs",
+          "params": [
+            "dateStr",
+            "hour",
+            "minute"
+          ],
+          "returnType": "number",
+          "exported": false,
+          "lineCount": 19
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "firebase-admin",
+          "specifiers": [
+            "* as admin"
+          ]
+        },
+        {
+          "source": "crypto",
+          "specifiers": [
+            "* as crypto"
+          ]
+        },
+        {
+          "source": "firebase-functions/logger",
+          "specifiers": [
+            "* as logger"
+          ]
+        },
+        {
+          "source": "firebase-functions/v2/scheduler",
+          "specifiers": [
+            "onSchedule"
+          ]
+        },
+        {
+          "source": "firebase-functions/v2/firestore",
+          "specifiers": [
+            "onDocumentCreated",
+            "onDocumentWritten"
+          ]
+        },
+        {
+          "source": "firebase-functions/v2/https",
+          "specifiers": [
+            "onCall",
+            "HttpsError"
+          ]
+        }
+      ],
+      "exports": [
+        "cleanupUnverifiedUsers",
+        "sessionCleanup",
+        "archiveExpiredSessionsNow",
+        "onSessionCreated",
+        "cancelSession",
+        "validateCoachKey",
+        "joinSession",
+        "leaveSession",
+        "updateSessionCapacity",
+        "markAttended",
+        "createRecurringSessions",
+        "mirrorUserPublic"
+      ],
+      "totalLines": 894,
+      "hasStructuralAnalysis": true
+    },
+    "functions/tsconfig.json": {
+      "filePath": "functions/tsconfig.json",
+      "contentHash": "74608590c96098ea20c3681e07af7ad15fb0f2b79d3ac2a05daec0656bf17007",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 14,
+      "hasStructuralAnalysis": true
+    },
+    "plan.tldr": {
+      "filePath": "plan.tldr",
+      "contentHash": "de14a53cbe0717a69a512fa0b95a6b8d46c6c09b37dee26815fe48487ac1926b",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 1643,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/analysis_options.yaml": {
+      "filePath": "spikers_app/analysis_options.yaml",
+      "contentHash": "b63207cf529949ec4727b68c23dbb38ce255b6f6f4ae1effcb5c1dcf2852d238",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 29,
+      "hasStructuralAnalysis": true
+    },
+    "spikers_app/appPlan.txt": {
+      "filePath": "spikers_app/appPlan.txt",
+      "contentHash": "daf5bc52daa411af47fd8ec5c4be7e2ee266bdf0121f880d97384efe0344384e",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 378,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/firebase.json": {
+      "filePath": "spikers_app/firebase.json",
+      "contentHash": "d2b9c99b5278488f5b251d16e6da5cc5b848b5b45537e5db606912cd407d0c97",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 1,
+      "hasStructuralAnalysis": true
+    },
+    "spikers_app/l10n.yaml": {
+      "filePath": "spikers_app/l10n.yaml",
+      "contentHash": "12075930933da32663a71cd46c49dcad1f68d64e3c0807618d6d5e32aec1e763",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 5,
+      "hasStructuralAnalysis": true
+    },
+    "spikers_app/lib/controller/announcement_controller.dart": {
+      "filePath": "spikers_app/lib/controller/announcement_controller.dart",
+      "contentHash": "3ca7701f4c73a22f47ab91ffa86ec96521873699edb56609c092f71949af9793",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 90,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/controller/auth_controller.dart": {
+      "filePath": "spikers_app/lib/controller/auth_controller.dart",
+      "contentHash": "8bdcc336f12b0f64dd1afb412566f3c09804a73be16752fc79dd3d08af84ce30",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 468,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/controller/leaderboard_controller.dart": {
+      "filePath": "spikers_app/lib/controller/leaderboard_controller.dart",
+      "contentHash": "5dd498c2ed8008dc3ed65806961cbc1c68e56d38b63bd2969bf919a94c9fbe3d",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 136,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/controller/locale_controller.dart": {
+      "filePath": "spikers_app/lib/controller/locale_controller.dart",
+      "contentHash": "cafcc92cbb413070f82e6c2e0abf9a44e76b0a68adf8d6435836a3ca18a8cbfe",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 34,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/controller/notification_controller.dart": {
+      "filePath": "spikers_app/lib/controller/notification_controller.dart",
+      "contentHash": "fd568426da50eafd86fcb3cc854d8d138cdd19229127eb23db3969681ef48835",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 58,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/controller/payment_controller.dart": {
+      "filePath": "spikers_app/lib/controller/payment_controller.dart",
+      "contentHash": "a31d305e3787f8a7865855c2be5c793488c5b679a56a17d035db4c9ecf404f83",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 63,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/controller/recurring_session_controller.dart": {
+      "filePath": "spikers_app/lib/controller/recurring_session_controller.dart",
+      "contentHash": "93d010a300f4157b20199000e5f2553023db41ba8e5eacdd1ee8cb567fcd55af",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 72,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/controller/session_controller.dart": {
+      "filePath": "spikers_app/lib/controller/session_controller.dart",
+      "contentHash": "e4fa09989c94cc15b947c0a2a33136c5270cee69fd0e52c6df443a43ef33fdcf",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 257,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/controller/template_controller.dart": {
+      "filePath": "spikers_app/lib/controller/template_controller.dart",
+      "contentHash": "81d4fe78baf75726f859c331c7554f69b2fb482a7848aa3d12a4757f85364e95",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 66,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/core/constants/app_assets.dart": {
+      "filePath": "spikers_app/lib/core/constants/app_assets.dart",
+      "contentHash": "48ce2632795b6770321bc715cc840d7e70681ef5b71c4cf4a34184443f842ccc",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 12,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/core/constants/app_colors.dart": {
+      "filePath": "spikers_app/lib/core/constants/app_colors.dart",
+      "contentHash": "dff0fb4111fe5b39ce534a38b0afb37e58a09f815a3b01949dfd9f5591773052",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 13,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/core/services/fcm_service.dart": {
+      "filePath": "spikers_app/lib/core/services/fcm_service.dart",
+      "contentHash": "a95b73c538b264f57eb60d1dbc4ec088d5297439277178d65d31bec54c32b22a",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 20,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/core/services/local_notification_service.dart": {
+      "filePath": "spikers_app/lib/core/services/local_notification_service.dart",
+      "contentHash": "28cd97c909a59aac9ea7f5c926cf900874bc2812f7c81b44de92032d33750314",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 54,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/core/theme/app_theme.dart": {
+      "filePath": "spikers_app/lib/core/theme/app_theme.dart",
+      "contentHash": "1b557b5cabe54a59fe4613dff26151189530830a8b9e719a574d80a5081c02ec",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 93,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/core/utils/age_calculator.dart": {
+      "filePath": "spikers_app/lib/core/utils/age_calculator.dart",
+      "contentHash": "e2089512e6ef59e9e8a95e49e6c3f3cdef61c5a47504020332d2a27dbcaae608",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 11,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/core/utils/validators.dart": {
+      "filePath": "spikers_app/lib/core/utils/validators.dart",
+      "contentHash": "afef94bf52fda6fccf782cbdcf9075cefbdc52d659fbd0c9e3ad2b56e53deff7",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 37,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/firebase_options.dart": {
+      "filePath": "spikers_app/lib/firebase_options.dart",
+      "contentHash": "c577b2b7c68ef36e8aed1bdaee30f7b36e5dad1adf553e9ae6e8986c9c1ae26d",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 91,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/l10n/app_ar.arb": {
+      "filePath": "spikers_app/lib/l10n/app_ar.arb",
+      "contentHash": "49b1adcee4fa2afc5c903c2c4d0c34694d4787ff1b0425d606926599d3afcce7",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 266,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/l10n/app_en.arb": {
+      "filePath": "spikers_app/lib/l10n/app_en.arb",
+      "contentHash": "83dce337aa55fa3135b8bc3d4dffed6223df236d07fe8cdce2fc6d6784ca020c",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 266,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/l10n/app_localizations_ar.dart": {
+      "filePath": "spikers_app/lib/l10n/app_localizations_ar.dart",
+      "contentHash": "11e7b4c7c54252bf5100bdeaf2a9a4c9abfb19e7cae6eb091eb65c506a24707c",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 648,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/l10n/app_localizations_en.dart": {
+      "filePath": "spikers_app/lib/l10n/app_localizations_en.dart",
+      "contentHash": "3e8d0a9013590fb08423df0f1a9d9f185c7122682eae714c6531df7c315f769e",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 652,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/l10n/app_localizations.dart": {
+      "filePath": "spikers_app/lib/l10n/app_localizations.dart",
+      "contentHash": "2f197d2bc7b8fec10f47ab4f1f943979b7df8137354aed2b4fb0f19f3058578f",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 1359,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/main.dart": {
+      "filePath": "spikers_app/lib/main.dart",
+      "contentHash": "98c923535072be0d4e8ee9334ae10ee9746e7229a36096ea5a4d4e0ee72dac9f",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 84,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/models/announcement_model.dart": {
+      "filePath": "spikers_app/lib/models/announcement_model.dart",
+      "contentHash": "ce9b6c01438acee9a3682e3a6cc1d792ecfd7868694dd930c0f1e1000f362481",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 38,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/models/chat_message_model.dart": {
+      "filePath": "spikers_app/lib/models/chat_message_model.dart",
+      "contentHash": "9ae05ba2a4603e77ae1dff3d420409095f943e7a13161ec05af5bcb147a28055",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 34,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/models/recurring_session_model.dart": {
+      "filePath": "spikers_app/lib/models/recurring_session_model.dart",
+      "contentHash": "cdfc04b9d970a38ccb2776e3ea7de5560aa3a65f4b853358ba901a0b131c9cd9",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 90,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/models/session_model.dart": {
+      "filePath": "spikers_app/lib/models/session_model.dart",
+      "contentHash": "eb3f1a87829ea029056530f00063e253c918dabf4de611704c51888e921d922c",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 100,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/models/session_template_model.dart": {
+      "filePath": "spikers_app/lib/models/session_template_model.dart",
+      "contentHash": "4801b5beca146a9287523dd87eae76f2988e91b0e8fa57b67cc44d29d8727111",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 52,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/models/user_model.dart": {
+      "filePath": "spikers_app/lib/models/user_model.dart",
+      "contentHash": "5e8999d3702794a9135f5b9db1294a42a526bd10d78693dacdaad6a3fddb6f40",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 97,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/routes/app_routes.dart": {
+      "filePath": "spikers_app/lib/routes/app_routes.dart",
+      "contentHash": "d5b314a8dd54261c5295c231c0cc9f29c738ac9e2559a8f265f7b7fa6f64f4d5",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 147,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/screens/announcements/announcements_screen.dart": {
+      "filePath": "spikers_app/lib/screens/announcements/announcements_screen.dart",
+      "contentHash": "995c65813d68a2b7b91c78770047394bcaa5b6efc1c6f87bd2de41802a63c0b1",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 245,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/screens/announcements/create_announcement_screen.dart": {
+      "filePath": "spikers_app/lib/screens/announcements/create_announcement_screen.dart",
+      "contentHash": "3d316a0dd8edff921dee5881c2a4305307e7af148f18eda01018e0ff6512aaea",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 115,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/screens/auth/email_change_notice_screen.dart": {
+      "filePath": "spikers_app/lib/screens/auth/email_change_notice_screen.dart",
+      "contentHash": "f7befc06f85ad520a7c5c114f51f10b52174ffa1c1befd6e4e3f39b67c64889e",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 68,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/screens/auth/forgot_password_screen.dart": {
+      "filePath": "spikers_app/lib/screens/auth/forgot_password_screen.dart",
+      "contentHash": "1da9bcb451feca81664d5d48be262b1be459fa7f7855c2a37c1c37e41990572b",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 78,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/screens/auth/login_screen.dart": {
+      "filePath": "spikers_app/lib/screens/auth/login_screen.dart",
+      "contentHash": "e53ff1ae0a6fcf2846b66c09a8d5d00846b9090c30fd60e6b156911bad2aa7ac",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 142,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/screens/auth/register_screen.dart": {
+      "filePath": "spikers_app/lib/screens/auth/register_screen.dart",
+      "contentHash": "2c481c17853493f45db86a7f5cc04bb16a2166d70789e8022eac3967c9ddcd04",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 431,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/screens/auth/verify_email_screen.dart": {
+      "filePath": "spikers_app/lib/screens/auth/verify_email_screen.dart",
+      "contentHash": "9d1f240d99c14a62f5b26e1148dacdf40d1b81d70ea456f09da65f866830b1d9",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 277,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/screens/coaches/coaches_list_screen.dart": {
+      "filePath": "spikers_app/lib/screens/coaches/coaches_list_screen.dart",
+      "contentHash": "6658dc6fdcba7525dc98b21f93de0b67e2df2205a3b1b22affa2af0ddad9e383",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 17,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/screens/home/coaches_tab.dart": {
+      "filePath": "spikers_app/lib/screens/home/coaches_tab.dart",
+      "contentHash": "c6326344e5ce66eb5749c9ffd403ea166e0c964e5abe000246bbf7ebb522e422",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 136,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/screens/home/home_screen.dart": {
+      "filePath": "spikers_app/lib/screens/home/home_screen.dart",
+      "contentHash": "d068a94926993fae6c09fd79a3888142c693afbe99673e6c0362ff0b5b42c96e",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 235,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/screens/home/players_peer_tab.dart": {
+      "filePath": "spikers_app/lib/screens/home/players_peer_tab.dart",
+      "contentHash": "78a01b71aeef18c257de99e48afcf05555489359084fede4b8fef2eae7ffe637",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 162,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/screens/home/players_tab.dart": {
+      "filePath": "spikers_app/lib/screens/home/players_tab.dart",
+      "contentHash": "16aba6ad1c9a1bb6d9003fea8ea2f5d845d673ae7b5bc73df6819f60f9d6c5da",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 369,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/screens/home/profile_tab.dart": {
+      "filePath": "spikers_app/lib/screens/home/profile_tab.dart",
+      "contentHash": "9612900f62307f9c6460b1a8d1c2ecc24b8cbff5b02c47ba193d14aa3c91a988",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 255,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/screens/home/sessions_tab.dart": {
+      "filePath": "spikers_app/lib/screens/home/sessions_tab.dart",
+      "contentHash": "431c8820f9553d5d6009ab4b66e2b87ca301672b59f484a14305aaec592aa5a5",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 111,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/screens/leaderboard/leaderboard_screen.dart": {
+      "filePath": "spikers_app/lib/screens/leaderboard/leaderboard_screen.dart",
+      "contentHash": "0137ba06cc76bc5537ab6bf7ba67a6c4a3fcffb65658380ce2d8b371bc7b08eb",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 209,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/screens/players/payment_confirm_dialog.dart": {
+      "filePath": "spikers_app/lib/screens/players/payment_confirm_dialog.dart",
+      "contentHash": "12de93d34dedc9bab6e6200fb15bc00dcf283378eea37c84c317b96536145089",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 129,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/screens/players/player_profile_screen.dart": {
+      "filePath": "spikers_app/lib/screens/players/player_profile_screen.dart",
+      "contentHash": "2dc3c00ebc3044973d06305438cb0e9876e77ef453468424cf6a6b2977bc445b",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 176,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/screens/sessions/create_recurring_session_screen.dart": {
+      "filePath": "spikers_app/lib/screens/sessions/create_recurring_session_screen.dart",
+      "contentHash": "79cbee46342a9e6ee890a5732dc6c1ecf8d916db0cbb4d46c80775bf577ec458",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 401,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/screens/sessions/create_session_screen.dart": {
+      "filePath": "spikers_app/lib/screens/sessions/create_session_screen.dart",
+      "contentHash": "6a811a5f74b494dc0767eddde20f0a9cf712e6edf2368bcd0a18370215bf8583",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 340,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/screens/sessions/quick_session_screen.dart": {
+      "filePath": "spikers_app/lib/screens/sessions/quick_session_screen.dart",
+      "contentHash": "ce3f51a3de1cada3436f0f7fb86fbb4946effb4532c0438836595cd35980905c",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 296,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/screens/sessions/recurring_sessions_screen.dart": {
+      "filePath": "spikers_app/lib/screens/sessions/recurring_sessions_screen.dart",
+      "contentHash": "7e9c2be1a85be432bd76be6cc0e5743493b08a0240555455f5a1f7cae7812190",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 211,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/screens/sessions/session_chat_screen.dart": {
+      "filePath": "spikers_app/lib/screens/sessions/session_chat_screen.dart",
+      "contentHash": "d168ecbc8fe02f0e6f8138ae2de2b9678e470b1df23f652ecef2f463167d709b",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 480,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/screens/sessions/session_detail_screen.dart": {
+      "filePath": "spikers_app/lib/screens/sessions/session_detail_screen.dart",
+      "contentHash": "b4409cd4f823ba9726de675706e331b7b4e9eb14480fa0205a90f2d2dfa3ee69",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 1172,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/screens/sessions/sessions_history_screen.dart": {
+      "filePath": "spikers_app/lib/screens/sessions/sessions_history_screen.dart",
+      "contentHash": "53e7cb3e238951be49580cd37c851e6201161feaca05734f62ecb26a3b85bcaa",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 284,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/screens/splash/splash_screen.dart": {
+      "filePath": "spikers_app/lib/screens/splash/splash_screen.dart",
+      "contentHash": "f984dfa237d31568e4a9394bf53990f3f892f5306005756dd736294e6cbb77af",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 63,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/screens/widgets/app_logo.dart": {
+      "filePath": "spikers_app/lib/screens/widgets/app_logo.dart",
+      "contentHash": "415ac6289d1e45180681b18d2706305e9d11f9dc1022533819ab8db851c166dc",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 13,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/screens/widgets/branded_button.dart": {
+      "filePath": "spikers_app/lib/screens/widgets/branded_button.dart",
+      "contentHash": "bae7c50c73055c5a2d449abe5ec4ba04fca8c3f733e3c860f30149ff26145b64",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 37,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/screens/widgets/branded_text_field.dart": {
+      "filePath": "spikers_app/lib/screens/widgets/branded_text_field.dart",
+      "contentHash": "1a8828170f718b6b2c2546d07c7dc4b15a32b18de063084a387944ad50831424",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 50,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/screens/widgets/edit_body_metrics_dialog.dart": {
+      "filePath": "spikers_app/lib/screens/widgets/edit_body_metrics_dialog.dart",
+      "contentHash": "a34fe6b5a07ea131b721598a6747e27b5233eb33548e566e90969fcf34ec49fd",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 179,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/screens/widgets/floating_nav_bar.dart": {
+      "filePath": "spikers_app/lib/screens/widgets/floating_nav_bar.dart",
+      "contentHash": "8e30dd592d980b6ef33c5be772a007a4cacdabaf97f8f8a1ad3928970ac81c9a",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 113,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/screens/widgets/profile_info.dart": {
+      "filePath": "spikers_app/lib/screens/widgets/profile_info.dart",
+      "contentHash": "3201f4d33388af47fb7a33b47d06465218bf8b74fa565ae2bab5da5643050e0f",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 251,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/lib/screens/widgets/session_card.dart": {
+      "filePath": "spikers_app/lib/screens/widgets/session_card.dart",
+      "contentHash": "9a54fc8e624765c704ac0cfd46c941c0444eef14b9e14bf585ad213dc866ca9f",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 222,
+      "hasStructuralAnalysis": false
+    },
+    "spikers_app/pubspec.yaml": {
+      "filePath": "spikers_app/pubspec.yaml",
+      "contentHash": "6b40426f3bf285457d676483b7653c84698dbf04a44af55c48c90d459f9992fe",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 74,
+      "hasStructuralAnalysis": true
+    },
+    "spikers_app/README.md": {
+      "filePath": "spikers_app/README.md",
+      "contentHash": "79e2f4298fa1e61067e70ef801c485799a734d996205a50fc03239d8a9fa668a",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 18,
+      "hasStructuralAnalysis": true
+    },
+    "storage.rules": {
+      "filePath": "storage.rules",
+      "contentHash": "42e2b5ac955773468477bb7554afa3e95bbaca6c304beedcc4350c43e073ba5d",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 20,
+      "hasStructuralAnalysis": false
+    },
+    "thingsToadd.txt": {
+      "filePath": "thingsToadd.txt",
+      "contentHash": "b2572efce0e3252ec9698fe21f36f6b7daff379d334eb2a92385278e70dac4aa",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 37,
+      "hasStructuralAnalysis": false
+    },
+    "todoIOS.txt": {
+      "filePath": "todoIOS.txt",
+      "contentHash": "b61a0fbdd70d2ba6977c6df4fa6cd5181905f2587b192950803fe3a64735d6ac",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 17,
+      "hasStructuralAnalysis": false
+    }
+  }
+}

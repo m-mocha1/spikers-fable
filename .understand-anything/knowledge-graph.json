@@ -1,0 +1,4979 @@
+{
+  "version": "1.0.0",
+  "project": {
+    "name": "spikers_app",
+    "languages": [
+      "arb",
+      "dart",
+      "json",
+      "markdown",
+      "rules",
+      "tldr",
+      "txt",
+      "typescript",
+      "unknown",
+      "yaml"
+    ],
+    "frameworks": [
+      "Flutter",
+      "GetX",
+      "Firebase Auth",
+      "Cloud Firestore",
+      "Firebase Storage",
+      "Firebase Messaging",
+      "Cloud Functions",
+      "Firebase App Check",
+      "Firebase Admin",
+      "TypeScript"
+    ],
+    "description": "Jerusalem Spikers Volleyball Club App: a bilingual (Arabic/English) Flutter mobile app for a volleyball club, backed by Firebase (Auth, Firestore, Storage, Messaging, Cloud Functions, App Check). Features include sessions and recurring sessions, announcements, leaderboards, notifications, player profiles, session chat, and templates.",
+    "analyzedAt": "2026-06-01T14:18:00.689Z",
+    "gitCommitHash": "474c33472473ecd0307bba7453a6bb249f4a7a0a"
+  },
+  "nodes": [
+    {
+      "id": "document:Claude.md",
+      "type": "document",
+      "name": "Claude.md",
+      "filePath": "Claude.md",
+      "summary": "Comprehensive AI development operating-system guide defining architecture, Firebase rules, state management, security, testing, and documentation standards for building the Spikers Flutter app as production-ready software.",
+      "tags": [
+        "documentation",
+        "development",
+        "architecture",
+        "guidelines",
+        "entry-point"
+      ],
+      "complexity": "complex",
+      "languageNotes": "Prescriptive engineering playbook spanning 39 sections covering feature-first architecture, repository pattern, and Firestore design conventions."
+    },
+    {
+      "id": "document:Claude_next_app.md",
+      "type": "document",
+      "name": "Claude_next_app.md",
+      "filePath": "Claude_next_app.md",
+      "summary": "Condensed engineering charter for a future app, listing fixed tech stack, folder layout, five non-negotiables, per-feature workflow, and review rejection criteria.",
+      "tags": [
+        "documentation",
+        "development",
+        "guidelines",
+        "architecture"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:FIXES_TO_BE_MADE.md",
+      "type": "document",
+      "name": "FIXES_TO_BE_MADE.md",
+      "filePath": "FIXES_TO_BE_MADE.md",
+      "summary": "Structured security and quality audit of the Spikers project, cataloging prioritized fixes across app data/logic, UI, Cloud Functions, security rules, and config with severity ratings.",
+      "tags": [
+        "documentation",
+        "security",
+        "audit",
+        "todo",
+        "development"
+      ],
+      "complexity": "complex",
+      "languageNotes": "Findings are organized by layer (A-E) with severity emojis and a suggested execution order plus verified non-issues."
+    },
+    {
+      "id": "document:FixesToBeMade.txt",
+      "type": "document",
+      "name": "FixesToBeMade.txt",
+      "filePath": "FixesToBeMade.txt",
+      "summary": "Plain-text review of the Spikers app pairing each identified problem with a ready-to-paste fix prompt, grouped into quick wins and standalone architectural changes.",
+      "tags": [
+        "documentation",
+        "audit",
+        "todo",
+        "development",
+        "security"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "config:cors.json",
+      "type": "config",
+      "name": "cors.json",
+      "filePath": "cors.json",
+      "summary": "CORS configuration for Firebase Storage bucket access, defining allowed origins, methods, and headers for cross-origin requests.",
+      "tags": [
+        "configuration",
+        "security",
+        "storage",
+        "firebase"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:firebase.json",
+      "type": "config",
+      "name": "firebase.json",
+      "filePath": "firebase.json",
+      "summary": "Root Firebase project configuration wiring Cloud Functions source, Firestore rules and indexes, and Storage rules for the Spikers app deployment.",
+      "tags": [
+        "configuration",
+        "firebase",
+        "deployment",
+        "infrastructure"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:firestore.indexes.json",
+      "type": "config",
+      "name": "firestore.indexes.json",
+      "filePath": "firestore.indexes.json",
+      "summary": "Firestore composite index definitions supporting compound queries used by the app's session, leaderboard, and user collections.",
+      "tags": [
+        "configuration",
+        "firebase",
+        "database",
+        "indexing"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:thingsToadd.txt",
+      "type": "document",
+      "name": "thingsToadd.txt",
+      "filePath": "thingsToadd.txt",
+      "summary": "Performance and cost-optimization backlog noting unbounded Firestore listeners, missing pagination, uncached network images, and client-side filtering issues across controllers and screens.",
+      "tags": [
+        "documentation",
+        "todo",
+        "performance",
+        "development"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:todoIOS.txt",
+      "type": "document",
+      "name": "todoIOS.txt",
+      "filePath": "todoIOS.txt",
+      "summary": "iOS release checklist covering manual Xcode push-notification and background-mode capabilities, app icon alpha-channel removal, and noted asset-loading errors.",
+      "tags": [
+        "documentation",
+        "todo",
+        "ios",
+        "deployment"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:spikers_app/README.md",
+      "type": "document",
+      "name": "README.md",
+      "filePath": "spikers_app/README.md",
+      "summary": "Default Flutter template README with a project title and a generic 'Getting Started' section linking to Flutter documentation; not customized for the Spikers app.",
+      "tags": [
+        "documentation",
+        "entry-point",
+        "boilerplate",
+        "flutter"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:spikers_app/analysis_options.yaml",
+      "type": "config",
+      "name": "analysis_options.yaml",
+      "filePath": "spikers_app/analysis_options.yaml",
+      "summary": "Dart static analysis configuration that includes the flutter_lints recommended rule set to enforce code-quality and style checks across the project.",
+      "tags": [
+        "configuration",
+        "linting",
+        "static-analysis",
+        "code-quality",
+        "dart"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:spikers_app/appPlan.txt",
+      "type": "document",
+      "name": "appPlan.txt",
+      "filePath": "spikers_app/appPlan.txt",
+      "summary": "Free-form planning document (318 non-empty lines) describing the Spikers app feature set, screens, data model, and roadmap used as a design reference.",
+      "tags": [
+        "documentation",
+        "planning",
+        "specification",
+        "design-notes"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "config:spikers_app/firebase.json",
+      "type": "config",
+      "name": "firebase.json",
+      "filePath": "spikers_app/firebase.json",
+      "summary": "FlutterFire-generated Firebase configuration manifest mapping the app to its registered Firebase platform apps.",
+      "tags": [
+        "configuration",
+        "firebase",
+        "deployment",
+        "infrastructure"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:spikers_app/l10n.yaml",
+      "type": "config",
+      "name": "l10n.yaml",
+      "filePath": "spikers_app/l10n.yaml",
+      "summary": "Flutter localization generation config pointing to lib/l10n ARB files (template app_en.arb) and emitting AppLocalizations in app_localizations.dart for the bilingual AR/EN app.",
+      "tags": [
+        "configuration",
+        "localization",
+        "i18n",
+        "flutter",
+        "build-system"
+      ],
+      "complexity": "simple",
+      "languageNotes": "Drives the gen-l10n tool to synthesize AppLocalizations from ARB resource bundles."
+    },
+    {
+      "id": "config:spikers_app/pubspec.yaml",
+      "type": "config",
+      "name": "pubspec.yaml",
+      "filePath": "spikers_app/pubspec.yaml",
+      "summary": "Flutter package manifest for the Jerusalem Spikers volleyball club app, declaring the Firebase suite (core, auth, firestore, messaging, functions, storage, app_check), GetX for state/routing/DI, localization, notifications, and UI utility dependencies.",
+      "tags": [
+        "configuration",
+        "build-system",
+        "dependencies",
+        "flutter",
+        "firebase"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "Uses GetX (get) for state management, routing, and DI; google_fonts ships Cairo for combined Arabic+Latin typography; flutter.generate enables gen-l10n localization output."
+    },
+    {
+      "id": "config:.firebaserc",
+      "type": "config",
+      "name": ".firebaserc",
+      "filePath": ".firebaserc",
+      "summary": "Firebase CLI project-alias configuration mapping the default alias to the spikers-13db7 Firebase project.",
+      "tags": [
+        "configuration",
+        "firebase",
+        "deployment"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:.understand-anything/.understandignore",
+      "type": "config",
+      "name": ".understandignore",
+      "filePath": ".understand-anything/.understandignore",
+      "summary": "Ignore-list for the understand-anything analysis tooling; excludes generated and vendored paths from scanning.",
+      "tags": [
+        "configuration",
+        "tooling",
+        "build-system"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "service:firestore.rules",
+      "type": "service",
+      "name": "firestore.rules",
+      "filePath": "firestore.rules",
+      "summary": "Cloud Firestore security rules enforcing role-based access (coach vs player), email-verification gating, field-level validation, and write-path lockdown so privileged mutations only happen via Admin-SDK Cloud Functions.",
+      "tags": [
+        "security",
+        "firestore",
+        "authorization",
+        "validation",
+        "infrastructure"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "Uses helper functions (isCoach, isVerified) plus diff().affectedKeys().hasOnly([...]) whitelists to block direct-API privilege escalation; sensitive collections are read/written exclusively by Cloud Functions."
+    },
+    {
+      "id": "config:functions/package.json",
+      "type": "config",
+      "name": "package.json",
+      "filePath": "functions/package.json",
+      "summary": "NPM manifest for the Cloud Functions package, declaring the firebase-admin/firebase-functions runtime deps and the tsc build scripts targeting Node 22.",
+      "tags": [
+        "configuration",
+        "build-system",
+        "firebase",
+        "node"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:functions/src/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "functions/src/index.ts",
+      "summary": "Backend Cloud Functions for the Spikers app: scheduled cleanup/archival jobs plus callable functions for joining, leaving, cancelling, capacity changes, attendance marking, coach-key validation, recurring-session generation, and the users_public mirror.",
+      "tags": [
+        "api-handler",
+        "service",
+        "firebase",
+        "cloud-functions",
+        "entry-point"
+      ],
+      "complexity": "complex",
+      "languageNotes": "Mixes Firestore triggers (onDocumentCreated/Written), scheduled functions (onSchedule), and HTTPS callables; uses Admin SDK to bypass client security rules for privileged writes and Jerusalem-timezone math for recurring session scheduling."
+    },
+    {
+      "id": "config:functions/tsconfig.json",
+      "type": "config",
+      "name": "tsconfig.json",
+      "filePath": "functions/tsconfig.json",
+      "summary": "TypeScript compiler configuration for the Cloud Functions package: strict mode, CommonJS modules, ES2017 target, emitting to lib/.",
+      "tags": [
+        "configuration",
+        "typescript",
+        "build-system"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:plan.tldr",
+      "type": "document",
+      "name": "plan.tldr",
+      "filePath": "plan.tldr",
+      "summary": "tldraw whiteboard file (JSON document) containing planning diagrams and architecture sketches for the Spikers app.",
+      "tags": [
+        "documentation",
+        "planning",
+        "diagram"
+      ],
+      "complexity": "complex",
+      "languageNotes": "Serialized tldraw store records (shapes, pages, bindings) rather than prose; not directly executable or imported by code."
+    },
+    {
+      "id": "file:spikers_app/lib/controller/announcement_controller.dart",
+      "type": "file",
+      "name": "announcement_controller.dart",
+      "filePath": "spikers_app/lib/controller/announcement_controller.dart",
+      "summary": "GetX controller managing club announcements: streams the latest announcement, tracks unread state per user, and provides coach create/edit/delete operations against the announcements collection.",
+      "tags": [
+        "service",
+        "state-management",
+        "firestore",
+        "event-handler"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:spikers_app/lib/controller/announcement_controller.dart:AnnouncementController",
+      "type": "class",
+      "name": "AnnouncementController",
+      "filePath": "spikers_app/lib/controller/announcement_controller.dart",
+      "lineRange": [
+        7,
+        89
+      ],
+      "summary": "GetxController that listens to the newest announcement, computes unread badge state from the user's lastSeenAnnouncementsAt, and performs CRUD on announcements.",
+      "tags": [
+        "service",
+        "state-management",
+        "firestore"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:spikers_app/lib/controller/auth_controller.dart",
+      "type": "file",
+      "name": "auth_controller.dart",
+      "filePath": "spikers_app/lib/controller/auth_controller.dart",
+      "summary": "Central authentication controller handling sign-in/up, email verification, session restore, profile/photo/body-metric updates, FCM token persistence, coach-key promotion, and sign-out teardown of domain controllers.",
+      "tags": [
+        "service",
+        "authentication",
+        "state-management",
+        "firestore",
+        "entry-point"
+      ],
+      "complexity": "complex",
+      "languageNotes": "Persists credentials in SharedPreferences (base64), forces ID-token refresh after email verification so Firestore rules see email_verified, and writes the FCM token to a private subcollection to avoid fanning out to PlayersTab listeners."
+    },
+    {
+      "id": "class:spikers_app/lib/controller/auth_controller.dart:AuthController",
+      "type": "class",
+      "name": "AuthController",
+      "filePath": "spikers_app/lib/controller/auth_controller.dart",
+      "lineRange": [
+        29,
+        467
+      ],
+      "summary": "GetxController owning Firebase Auth state, the current UserModel stream, FCM token lifecycle, and all auth-related navigation/error mapping.",
+      "tags": [
+        "service",
+        "authentication",
+        "state-management"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:spikers_app/lib/controller/leaderboard_controller.dart",
+      "type": "file",
+      "name": "leaderboard_controller.dart",
+      "filePath": "spikers_app/lib/controller/leaderboard_controller.dart",
+      "summary": "GetX controller building all-time and monthly attendance leaderboards by aggregating users_public attendance counts and counting attendedIds across sessions and sessions_history.",
+      "tags": [
+        "service",
+        "state-management",
+        "firestore",
+        "data-model"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:spikers_app/lib/controller/leaderboard_controller.dart:LeaderboardController",
+      "type": "class",
+      "name": "LeaderboardController",
+      "filePath": "spikers_app/lib/controller/leaderboard_controller.dart",
+      "lineRange": [
+        19,
+        135
+      ],
+      "summary": "GetxController that fetches and ranks players by attendance for all-time and current-month views, batching users_public lookups in groups of 10.",
+      "tags": [
+        "service",
+        "state-management",
+        "firestore"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:spikers_app/lib/controller/locale_controller.dart",
+      "type": "file",
+      "name": "locale_controller.dart",
+      "filePath": "spikers_app/lib/controller/locale_controller.dart",
+      "summary": "GetX controller persisting and toggling the app locale between English and Arabic via SharedPreferences and Get.updateLocale.",
+      "tags": [
+        "service",
+        "state-management",
+        "localization"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:spikers_app/lib/controller/notification_controller.dart",
+      "type": "file",
+      "name": "notification_controller.dart",
+      "filePath": "spikers_app/lib/controller/notification_controller.dart",
+      "summary": "GetX controller wiring FCM message handling: shows foreground banners via local notifications and routes notification taps to the relevant session detail screen.",
+      "tags": [
+        "service",
+        "event-handler",
+        "notifications",
+        "state-management"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:spikers_app/lib/controller/notification_controller.dart:NotificationController",
+      "type": "class",
+      "name": "NotificationController",
+      "filePath": "spikers_app/lib/controller/notification_controller.dart",
+      "lineRange": [
+        9,
+        57
+      ],
+      "summary": "GetxController initializing FCM, presenting foreground notifications locally, and handling notification-tap deep links into session detail.",
+      "tags": [
+        "service",
+        "event-handler",
+        "notifications"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:spikers_app/lib/controller/payment_controller.dart",
+      "type": "file",
+      "name": "payment_controller.dart",
+      "filePath": "spikers_app/lib/controller/payment_controller.dart",
+      "summary": "GetX controller letting coaches mark players paid/unpaid for a 30-day period, writing paidUntil/paidAt plus an audit record in a batch, while skipping lifetime members.",
+      "tags": [
+        "service",
+        "state-management",
+        "firestore",
+        "payments"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:spikers_app/lib/controller/payment_controller.dart:PaymentController",
+      "type": "class",
+      "name": "PaymentController",
+      "filePath": "spikers_app/lib/controller/payment_controller.dart",
+      "lineRange": [
+        5,
+        62
+      ],
+      "summary": "GetxController applying paid/unpaid status changes with a Firestore batch write to the user doc and a payments audit subcollection.",
+      "tags": [
+        "service",
+        "firestore",
+        "payments"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:spikers_app/lib/controller/recurring_session_controller.dart",
+      "type": "file",
+      "name": "recurring_session_controller.dart",
+      "filePath": "spikers_app/lib/controller/recurring_session_controller.dart",
+      "summary": "GetX controller streaming the current coach's recurring session rules and providing create/edit/toggle/delete operations on the recurring_sessions collection.",
+      "tags": [
+        "service",
+        "state-management",
+        "firestore",
+        "data-model"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:spikers_app/lib/controller/recurring_session_controller.dart:RecurringSessionController",
+      "type": "class",
+      "name": "RecurringSessionController",
+      "filePath": "spikers_app/lib/controller/recurring_session_controller.dart",
+      "lineRange": [
+        8,
+        71
+      ],
+      "summary": "GetxController listening to recurring_sessions filtered by coachId and exposing CRUD plus an enable/disable toggle.",
+      "tags": [
+        "service",
+        "firestore",
+        "state-management"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:spikers_app/lib/controller/session_controller.dart",
+      "type": "file",
+      "name": "session_controller.dart",
+      "filePath": "spikers_app/lib/controller/session_controller.dart",
+      "summary": "Core GetX controller for sessions: live-streams upcoming sessions filtered by verification/payment/gender/age, creates sessions, and delegates join/leave/cancel/capacity/attendance to Cloud Functions callables.",
+      "tags": [
+        "service",
+        "state-management",
+        "firestore",
+        "cloud-functions"
+      ],
+      "complexity": "complex",
+      "languageNotes": "Skips the Firestore listener for unverified or unpaid users to avoid PERMISSION_DENIED, and applies an action cooldown to prevent rage-toggling join/leave."
+    },
+    {
+      "id": "class:spikers_app/lib/controller/session_controller.dart:SessionController",
+      "type": "class",
+      "name": "SessionController",
+      "filePath": "spikers_app/lib/controller/session_controller.dart",
+      "lineRange": [
+        10,
+        256
+      ],
+      "summary": "GetxController managing the upcoming-sessions stream and all session mutations, mapping FirebaseFunctionsException codes to localized user messages.",
+      "tags": [
+        "service",
+        "state-management",
+        "cloud-functions"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:spikers_app/lib/controller/template_controller.dart",
+      "type": "file",
+      "name": "template_controller.dart",
+      "filePath": "spikers_app/lib/controller/template_controller.dart",
+      "summary": "GetX controller streaming a coach's saved session templates from their users/{uid}/templates subcollection and supporting save/delete.",
+      "tags": [
+        "service",
+        "state-management",
+        "firestore",
+        "data-model"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:spikers_app/lib/controller/template_controller.dart:TemplateController",
+      "type": "class",
+      "name": "TemplateController",
+      "filePath": "spikers_app/lib/controller/template_controller.dart",
+      "lineRange": [
+        8,
+        65
+      ],
+      "summary": "GetxController listening to the user's templates subcollection ordered by createdAt and exposing save/delete.",
+      "tags": [
+        "service",
+        "firestore",
+        "state-management"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:spikers_app/lib/core/constants/app_assets.dart",
+      "type": "file",
+      "name": "app_assets.dart",
+      "filePath": "spikers_app/lib/core/constants/app_assets.dart",
+      "summary": "Centralized constants for image asset paths including the logo, splash background, and the rotating session card designs.",
+      "tags": [
+        "config",
+        "constants",
+        "assets"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:spikers_app/lib/core/constants/app_colors.dart",
+      "type": "file",
+      "name": "app_colors.dart",
+      "filePath": "spikers_app/lib/core/constants/app_colors.dart",
+      "summary": "Design-system color palette constants (navy/gold brand colors plus state colors) used across the app theme.",
+      "tags": [
+        "config",
+        "constants",
+        "theme"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:spikers_app/lib/core/services/fcm_service.dart",
+      "type": "file",
+      "name": "fcm_service.dart",
+      "filePath": "spikers_app/lib/core/services/fcm_service.dart",
+      "summary": "Service that requests FCM permissions, initializes local notifications, and configures iOS foreground presentation so banners are shown manually.",
+      "tags": [
+        "service",
+        "notifications",
+        "firebase"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:spikers_app/lib/core/services/local_notification_service.dart",
+      "type": "file",
+      "name": "local_notification_service.dart",
+      "filePath": "spikers_app/lib/core/services/local_notification_service.dart",
+      "summary": "Wrapper around flutter_local_notifications that sets up the Android sessions channel and displays local notification banners for sessions.",
+      "tags": [
+        "service",
+        "notifications",
+        "utility"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:spikers_app/lib/core/services/local_notification_service.dart:LocalNotificationService",
+      "type": "class",
+      "name": "LocalNotificationService",
+      "filePath": "spikers_app/lib/core/services/local_notification_service.dart",
+      "lineRange": [
+        3,
+        53
+      ],
+      "summary": "Static service that initializes the local-notifications plugin and Android channel and shows session notification banners.",
+      "tags": [
+        "service",
+        "notifications"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:spikers_app/lib/core/theme/app_theme.dart",
+      "type": "file",
+      "name": "app_theme.dart",
+      "filePath": "spikers_app/lib/core/theme/app_theme.dart",
+      "summary": "Defines the app's dark Material 3 theme using the brand palette and the Cairo Google font across buttons, inputs, cards, chips, and snackbars.",
+      "tags": [
+        "config",
+        "theme",
+        "ui",
+        "design-system"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:spikers_app/lib/core/utils/age_calculator.dart",
+      "type": "file",
+      "name": "age_calculator.dart",
+      "filePath": "spikers_app/lib/core/utils/age_calculator.dart",
+      "summary": "Utility that computes a person's age in years from a date of birth, accounting for whether the birthday has occurred this year.",
+      "tags": [
+        "utility",
+        "date"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:spikers_app/lib/core/utils/validators.dart",
+      "type": "file",
+      "name": "validators.dart",
+      "filePath": "spikers_app/lib/core/utils/validators.dart",
+      "summary": "Reusable form-field validators for required text, email, password length, password confirmation, and integer-in-range inputs.",
+      "tags": [
+        "utility",
+        "validation",
+        "forms"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:spikers_app/lib/core/utils/validators.dart:Validators",
+      "type": "class",
+      "name": "Validators",
+      "filePath": "spikers_app/lib/core/utils/validators.dart",
+      "lineRange": [
+        1,
+        36
+      ],
+      "summary": "Static helper class providing localized-message form validators used by registration and auth forms.",
+      "tags": [
+        "utility",
+        "validation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:spikers_app/lib/firebase_options.dart",
+      "type": "file",
+      "name": "firebase_options.dart",
+      "filePath": "spikers_app/lib/firebase_options.dart",
+      "summary": "FlutterFire-generated DefaultFirebaseOptions providing per-platform Firebase initialization options for the app.",
+      "tags": [
+        "config",
+        "firebase",
+        "generated"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "Auto-generated by the FlutterFire CLI; selects platform-specific FirebaseOptions at runtime via defaultTargetPlatform."
+    },
+    {
+      "id": "config:spikers_app/lib/l10n/app_ar.arb",
+      "type": "config",
+      "name": "app_ar.arb",
+      "filePath": "spikers_app/lib/l10n/app_ar.arb",
+      "summary": "Arabic localization resource bundle defining all app UI strings (auth, sessions, players, announcements, payment) as ARB key/value pairs with placeholder metadata.",
+      "tags": [
+        "localization",
+        "configuration",
+        "i18n",
+        "arabic",
+        "data"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "ARB (Application Resource Bundle) format; @-prefixed metadata entries describe placeholders for parameterized messages."
+    },
+    {
+      "id": "config:spikers_app/lib/l10n/app_en.arb",
+      "type": "config",
+      "name": "app_en.arb",
+      "filePath": "spikers_app/lib/l10n/app_en.arb",
+      "summary": "English localization resource bundle (template) defining all app UI strings with placeholder metadata; serves as the source-of-truth keys mirrored by the Arabic bundle.",
+      "tags": [
+        "localization",
+        "configuration",
+        "i18n",
+        "english",
+        "data"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "ARB template file; placeholder definitions here drive the generated AppLocalizations method signatures."
+    },
+    {
+      "id": "file:spikers_app/lib/l10n/app_localizations.dart",
+      "type": "file",
+      "name": "app_localizations.dart",
+      "filePath": "spikers_app/lib/l10n/app_localizations.dart",
+      "summary": "Generated abstract base class AppLocalizations declaring every localized getter/method plus the LocalizationsDelegate; subclassed per-locale and resolved via AppLocalizations.of(context).",
+      "tags": [
+        "localization",
+        "generated",
+        "i18n",
+        "barrel",
+        "type-definition"
+      ],
+      "complexity": "complex",
+      "languageNotes": "Auto-generated by Flutter gen-l10n from app_en.arb; declares supportedLocales (ar, en) and the delegate wired into GetMaterialApp."
+    },
+    {
+      "id": "file:spikers_app/lib/l10n/app_localizations_ar.dart",
+      "type": "file",
+      "name": "app_localizations_ar.dart",
+      "filePath": "spikers_app/lib/l10n/app_localizations_ar.dart",
+      "summary": "Generated AppLocalizationsAr subclass returning Arabic translations for every localized string declared in the AppLocalizations base.",
+      "tags": [
+        "localization",
+        "generated",
+        "i18n",
+        "arabic"
+      ],
+      "complexity": "complex",
+      "languageNotes": "Auto-generated from app_ar.arb; one concrete override per localization key."
+    },
+    {
+      "id": "file:spikers_app/lib/l10n/app_localizations_en.dart",
+      "type": "file",
+      "name": "app_localizations_en.dart",
+      "filePath": "spikers_app/lib/l10n/app_localizations_en.dart",
+      "summary": "Generated AppLocalizationsEn subclass returning English translations for every localized string declared in the AppLocalizations base.",
+      "tags": [
+        "localization",
+        "generated",
+        "i18n",
+        "english"
+      ],
+      "complexity": "complex",
+      "languageNotes": "Auto-generated from app_en.arb; one concrete override per localization key."
+    },
+    {
+      "id": "file:spikers_app/lib/main.dart",
+      "type": "file",
+      "name": "main.dart",
+      "filePath": "spikers_app/lib/main.dart",
+      "summary": "Application entry point: initializes Firebase, App Check, and FCM background handling, then runs SpikersApp (a GetMaterialApp wiring routes, theme, RTL/LTR localization, and permanent LocaleController/AuthController bindings).",
+      "tags": [
+        "entry-point",
+        "bootstrap",
+        "firebase",
+        "localization",
+        "routing"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "Uses GetX GetMaterialApp; @pragma('vm:entry-point') background message handler required for FCM on Android."
+    },
+    {
+      "id": "function:spikers_app/lib/main.dart:main",
+      "type": "function",
+      "name": "main",
+      "filePath": "spikers_app/lib/main.dart",
+      "lineRange": [
+        20,
+        30
+      ],
+      "summary": "Async entry point that ensures Flutter bindings, initializes Firebase and App Check (debug vs play-integrity), registers the FCM background handler, and launches SpikersApp.",
+      "tags": [
+        "entry-point",
+        "bootstrap",
+        "firebase",
+        "initialization"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:spikers_app/lib/main.dart:SpikersApp",
+      "type": "class",
+      "name": "SpikersApp",
+      "filePath": "spikers_app/lib/main.dart",
+      "lineRange": [
+        32,
+        83
+      ],
+      "summary": "Root widget building the GetMaterialApp: configures theme, initial route, localization delegates, supported locales, and a reactive Directionality builder that flips RTL/LTR based on LocaleController.",
+      "tags": [
+        "component",
+        "root-widget",
+        "localization",
+        "routing",
+        "getx"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:spikers_app/lib/models/announcement_model.dart",
+      "type": "file",
+      "name": "announcement_model.dart",
+      "filePath": "spikers_app/lib/models/announcement_model.dart",
+      "summary": "Immutable AnnouncementModel data class with a Firestore fromDoc factory mapping announcement documents (title, body, author, createdAt).",
+      "tags": [
+        "data-model",
+        "serialization",
+        "firestore",
+        "immutable"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:spikers_app/lib/models/announcement_model.dart:AnnouncementModel",
+      "type": "class",
+      "name": "AnnouncementModel",
+      "filePath": "spikers_app/lib/models/announcement_model.dart",
+      "lineRange": [
+        4,
+        37
+      ],
+      "summary": "Immutable announcement entity with a fromDoc factory that deserializes Firestore snapshots and defaults missing createdAt to now().",
+      "tags": [
+        "data-model",
+        "serialization",
+        "firestore"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:spikers_app/lib/models/chat_message_model.dart",
+      "type": "file",
+      "name": "chat_message_model.dart",
+      "filePath": "spikers_app/lib/models/chat_message_model.dart",
+      "summary": "Immutable ChatMessage data class with fromDoc deserialization and toMap (server-timestamped) serialization for session chat messages.",
+      "tags": [
+        "data-model",
+        "serialization",
+        "firestore",
+        "immutable"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:spikers_app/lib/models/chat_message_model.dart:ChatMessage",
+      "type": "class",
+      "name": "ChatMessage",
+      "filePath": "spikers_app/lib/models/chat_message_model.dart",
+      "lineRange": [
+        3,
+        33
+      ],
+      "summary": "Chat message entity (sender, text, createdAt) with Firestore fromDoc/toMap round-trip; toMap uses serverTimestamp for createdAt.",
+      "tags": [
+        "data-model",
+        "serialization",
+        "firestore"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:spikers_app/lib/models/recurring_session_model.dart",
+      "type": "file",
+      "name": "recurring_session_model.dart",
+      "filePath": "spikers_app/lib/models/recurring_session_model.dart",
+      "summary": "Immutable RecurringSessionModel describing a coach's repeating session template (recurrence days, time window, age/gender filters, waitlist) with Firestore fromDoc/toMap.",
+      "tags": [
+        "data-model",
+        "serialization",
+        "firestore",
+        "immutable"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:spikers_app/lib/models/recurring_session_model.dart:RecurringSessionModel",
+      "type": "class",
+      "name": "RecurringSessionModel",
+      "filePath": "spikers_app/lib/models/recurring_session_model.dart",
+      "lineRange": [
+        4,
+        89
+      ],
+      "summary": "Recurring session definition with recurrence days and start/end time components, defaulting fields on deserialization and tracking lastCreatedDate for the generation job.",
+      "tags": [
+        "data-model",
+        "serialization",
+        "firestore",
+        "scheduling"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:spikers_app/lib/models/session_model.dart",
+      "type": "file",
+      "name": "session_model.dart",
+      "filePath": "spikers_app/lib/models/session_model.dart",
+      "summary": "Immutable SessionModel for volleyball sessions with attendee/waitlist tracking and computed status getters (isFull, isExpired, isOngoing, spotsLeft, waitlist helpers) plus Firestore fromDoc/toMap.",
+      "tags": [
+        "data-model",
+        "serialization",
+        "firestore",
+        "domain-logic"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:spikers_app/lib/models/session_model.dart:SessionModel",
+      "type": "class",
+      "name": "SessionModel",
+      "filePath": "spikers_app/lib/models/session_model.dart",
+      "lineRange": [
+        3,
+        99
+      ],
+      "summary": "Core session entity encapsulating capacity, waitlist, and timing logic via derived getters, with full Firestore serialization.",
+      "tags": [
+        "data-model",
+        "domain-logic",
+        "firestore",
+        "serialization"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:spikers_app/lib/models/session_template_model.dart",
+      "type": "file",
+      "name": "session_template_model.dart",
+      "filePath": "spikers_app/lib/models/session_template_model.dart",
+      "summary": "Immutable SessionTemplate data class storing reusable session presets (title, location, age/gender, capacity, waitlist) with Firestore fromDoc/toMap.",
+      "tags": [
+        "data-model",
+        "serialization",
+        "firestore",
+        "immutable"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:spikers_app/lib/models/session_template_model.dart:SessionTemplate",
+      "type": "class",
+      "name": "SessionTemplate",
+      "filePath": "spikers_app/lib/models/session_template_model.dart",
+      "lineRange": [
+        3,
+        51
+      ],
+      "summary": "Reusable session preset entity for quick-session creation, with Firestore deserialization and serialization helpers.",
+      "tags": [
+        "data-model",
+        "serialization",
+        "firestore"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:spikers_app/lib/models/user_model.dart",
+      "type": "file",
+      "name": "user_model.dart",
+      "filePath": "spikers_app/lib/models/user_model.dart",
+      "summary": "Immutable UserModel with role/payment/membership logic: computed age (via AgeCalculator), isCoach, isPaid (lifetime or paidUntil), and a calendar-day daysLeftUntil helper, plus Firestore fromDoc/toMap.",
+      "tags": [
+        "data-model",
+        "domain-logic",
+        "firestore",
+        "authorization",
+        "serialization"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "toMap writes verifiedAt explicitly (even null) so the backend cleanup query `where verifiedAt == null` can match it, since Firestore null-equality ignores missing fields."
+    },
+    {
+      "id": "class:spikers_app/lib/models/user_model.dart:UserModel",
+      "type": "class",
+      "name": "UserModel",
+      "filePath": "spikers_app/lib/models/user_model.dart",
+      "lineRange": [
+        4,
+        96
+      ],
+      "summary": "User entity exposing role and membership computed properties and a static calendar-aware daysLeftUntil; depends on AgeCalculator for age derivation.",
+      "tags": [
+        "data-model",
+        "domain-logic",
+        "authorization",
+        "firestore"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:spikers_app/lib/routes/app_routes.dart",
+      "type": "file",
+      "name": "app_routes.dart",
+      "filePath": "spikers_app/lib/routes/app_routes.dart",
+      "summary": "Centralized GetX routing: defines the Routes name constants, the appPages GetPage list (with per-route controller bindings and CoachOnlyMiddleware guards), and the coach-only redirect middleware.",
+      "tags": [
+        "routing",
+        "configuration",
+        "middleware",
+        "getx",
+        "navigation"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:spikers_app/lib/routes/app_routes.dart:Routes",
+      "type": "class",
+      "name": "Routes",
+      "filePath": "spikers_app/lib/routes/app_routes.dart",
+      "lineRange": [
+        31,
+        51
+      ],
+      "summary": "Abstract holder of route-name string constants used throughout the app for type-safe navigation.",
+      "tags": [
+        "routing",
+        "constants",
+        "navigation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:spikers_app/lib/routes/app_routes.dart:CoachOnlyMiddleware",
+      "type": "class",
+      "name": "CoachOnlyMiddleware",
+      "filePath": "spikers_app/lib/routes/app_routes.dart",
+      "lineRange": [
+        135,
+        146
+      ],
+      "summary": "GetMiddleware that redirects non-coach users to home (and unauthenticated users to login) before entering coach-only routes.",
+      "tags": [
+        "middleware",
+        "authorization",
+        "security",
+        "routing"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:spikers_app/lib/screens/announcements/announcements_screen.dart",
+      "type": "file",
+      "name": "announcements_screen.dart",
+      "filePath": "spikers_app/lib/screens/announcements/announcements_screen.dart",
+      "summary": "Announcements list screen streaming the Firestore announcements collection, marking them read on open, and rendering per-item cards with coach-only create/edit/delete actions.",
+      "tags": [
+        "component",
+        "screen",
+        "firestore",
+        "announcements",
+        "getx"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:spikers_app/lib/screens/announcements/announcements_screen.dart:AnnouncementsScreen",
+      "type": "class",
+      "name": "AnnouncementsScreen",
+      "filePath": "spikers_app/lib/screens/announcements/announcements_screen.dart",
+      "lineRange": [
+        11,
+        87
+      ],
+      "summary": "Stateful screen that streams announcements ordered by createdAt, marks them read via AnnouncementController, and shows a coach-only FAB to create new ones.",
+      "tags": [
+        "component",
+        "screen",
+        "firestore",
+        "announcements"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:spikers_app/lib/screens/announcements/announcements_screen.dart:_AnnouncementCard",
+      "type": "class",
+      "name": "_AnnouncementCard",
+      "filePath": "spikers_app/lib/screens/announcements/announcements_screen.dart",
+      "lineRange": [
+        89,
+        221
+      ],
+      "summary": "Card widget rendering a single announcement with relative timestamp and author-only edit/delete controls (delete shows a confirmation dialog).",
+      "tags": [
+        "component",
+        "widget",
+        "announcements"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:spikers_app/lib/screens/announcements/create_announcement_screen.dart",
+      "type": "file",
+      "name": "create_announcement_screen.dart",
+      "filePath": "spikers_app/lib/screens/announcements/create_announcement_screen.dart",
+      "summary": "Form screen for creating or editing an announcement, validating title/body and delegating to AnnouncementController.create/edit with success snackbars.",
+      "tags": [
+        "component",
+        "screen",
+        "form",
+        "validation",
+        "announcements"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:spikers_app/lib/screens/announcements/create_announcement_screen.dart:CreateAnnouncementScreen",
+      "type": "class",
+      "name": "CreateAnnouncementScreen",
+      "filePath": "spikers_app/lib/screens/announcements/create_announcement_screen.dart",
+      "lineRange": [
+        9,
+        114
+      ],
+      "summary": "Stateful create/edit announcement form that prefills from a passed AnnouncementModel argument and submits via AnnouncementController.",
+      "tags": [
+        "component",
+        "screen",
+        "form",
+        "validation"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:spikers_app/lib/screens/auth/email_change_notice_screen.dart",
+      "type": "file",
+      "name": "email_change_notice_screen.dart",
+      "filePath": "spikers_app/lib/screens/auth/email_change_notice_screen.dart",
+      "summary": "Informational screen shown after a pending email change, instructing the user to verify the new address and signing them out on continue.",
+      "tags": [
+        "component",
+        "screen",
+        "auth",
+        "stateless"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:spikers_app/lib/screens/auth/forgot_password_screen.dart",
+      "type": "file",
+      "name": "forgot_password_screen.dart",
+      "filePath": "spikers_app/lib/screens/auth/forgot_password_screen.dart",
+      "summary": "Password-reset form that validates the email and triggers AuthController.sendPasswordReset, with a reactive loading button.",
+      "tags": [
+        "component",
+        "screen",
+        "auth",
+        "form",
+        "validation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:spikers_app/lib/screens/auth/forgot_password_screen.dart:ForgotPasswordScreen",
+      "type": "class",
+      "name": "ForgotPasswordScreen",
+      "filePath": "spikers_app/lib/screens/auth/forgot_password_screen.dart",
+      "lineRange": [
+        10,
+        77
+      ],
+      "summary": "Stateful email-only form that sends a password reset via AuthController after Validators.email passes.",
+      "tags": [
+        "component",
+        "screen",
+        "auth",
+        "form"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:spikers_app/lib/screens/auth/login_screen.dart",
+      "type": "file",
+      "name": "login_screen.dart",
+      "filePath": "spikers_app/lib/screens/auth/login_screen.dart",
+      "summary": "Login screen with branded header, email/password form (validated), password visibility toggle, and navigation to forgot-password and register; submits via AuthController.signIn.",
+      "tags": [
+        "component",
+        "screen",
+        "auth",
+        "form",
+        "validation"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:spikers_app/lib/screens/auth/login_screen.dart:LoginScreen",
+      "type": "class",
+      "name": "LoginScreen",
+      "filePath": "spikers_app/lib/screens/auth/login_screen.dart",
+      "lineRange": [
+        12,
+        115
+      ],
+      "summary": "Stateful login form delegating authentication to AuthController.signIn and routing to forgot-password/register screens.",
+      "tags": [
+        "component",
+        "screen",
+        "auth",
+        "form"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:spikers_app/lib/screens/auth/register_screen.dart",
+      "type": "file",
+      "name": "register_screen.dart",
+      "filePath": "spikers_app/lib/screens/auth/register_screen.dart",
+      "summary": "Comprehensive registration form collecting name, email, password, gender, DOB (date picker), height/weight, role, optional coach key, and profile photo (gallery/camera), submitting via AuthController.register.",
+      "tags": [
+        "component",
+        "screen",
+        "auth",
+        "form",
+        "validation"
+      ],
+      "complexity": "complex",
+      "languageNotes": "Uses image_picker for avatar selection and intl DateFormat for DOB; coach key field animates in only when role == coach."
+    },
+    {
+      "id": "class:spikers_app/lib/screens/auth/register_screen.dart:RegisterScreen",
+      "type": "class",
+      "name": "RegisterScreen",
+      "filePath": "spikers_app/lib/screens/auth/register_screen.dart",
+      "lineRange": [
+        13,
+        397
+      ],
+      "summary": "Stateful registration form managing many controllers, photo picking, date selection, and conditional coach-key validation before calling AuthController.register.",
+      "tags": [
+        "component",
+        "screen",
+        "auth",
+        "form",
+        "validation"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:spikers_app/lib/screens/auth/verify_email_screen.dart",
+      "type": "file",
+      "name": "verify_email_screen.dart",
+      "filePath": "spikers_app/lib/screens/auth/verify_email_screen.dart",
+      "summary": "Email verification screen with a resend cooldown timer, a check-verified action that stamps verifiedAt in Firestore and routes home, and a change-email dialog flow.",
+      "tags": [
+        "component",
+        "screen",
+        "auth",
+        "firestore",
+        "timer"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:spikers_app/lib/screens/auth/verify_email_screen.dart:VerifyEmailScreen",
+      "type": "class",
+      "name": "VerifyEmailScreen",
+      "filePath": "spikers_app/lib/screens/auth/verify_email_screen.dart",
+      "lineRange": [
+        12,
+        209
+      ],
+      "summary": "Stateful verify-email screen managing a 60s resend cooldown, polling verification via AuthController.reloadAndCheckVerified, and offering email-change/sign-out actions.",
+      "tags": [
+        "component",
+        "screen",
+        "auth",
+        "timer"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:spikers_app/lib/screens/auth/verify_email_screen.dart:_ChangeEmailDialog",
+      "type": "class",
+      "name": "_ChangeEmailDialog",
+      "filePath": "spikers_app/lib/screens/auth/verify_email_screen.dart",
+      "lineRange": [
+        211,
+        277
+      ],
+      "summary": "Stateful dialog capturing and validating a new email address, returning the trimmed value on confirm.",
+      "tags": [
+        "component",
+        "dialog",
+        "form",
+        "validation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:spikers_app/lib/screens/coaches/coaches_list_screen.dart",
+      "type": "file",
+      "name": "coaches_list_screen.dart",
+      "filePath": "spikers_app/lib/screens/coaches/coaches_list_screen.dart",
+      "summary": "Thin scaffold screen titling the coaches view and embedding the reusable CoachesTab body.",
+      "tags": [
+        "component",
+        "screen",
+        "stateless",
+        "coaches"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:spikers_app/lib/screens/home/coaches_tab.dart",
+      "type": "file",
+      "name": "coaches_tab.dart",
+      "filePath": "spikers_app/lib/screens/home/coaches_tab.dart",
+      "summary": "Coaches tab streaming users_public docs with role==coach, sorting by name, and rendering avatar cards (cached network images with initials fallback).",
+      "tags": [
+        "component",
+        "tab",
+        "firestore",
+        "coaches"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:spikers_app/lib/screens/home/coaches_tab.dart:CoachesTab",
+      "type": "class",
+      "name": "CoachesTab",
+      "filePath": "spikers_app/lib/screens/home/coaches_tab.dart",
+      "lineRange": [
+        8,
+        82
+      ],
+      "summary": "Stateful tab subscribing to the users_public coaches stream and rendering a sorted list of coach cards with loading/empty states.",
+      "tags": [
+        "component",
+        "tab",
+        "firestore",
+        "coaches"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:spikers_app/lib/screens/home/home_screen.dart",
+      "type": "file",
+      "name": "home_screen.dart",
+      "filePath": "spikers_app/lib/screens/home/home_screen.dart",
+      "summary": "Main home shell with a floating nav bar switching between sessions/players/profile tabs (role-aware), app-bar actions for history/coaches/leaderboard/announcements (with unread badge), and a coach-only session-creation bottom sheet.",
+      "tags": [
+        "component",
+        "screen",
+        "navigation",
+        "getx",
+        "home"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:spikers_app/lib/screens/home/home_screen.dart:HomeScreen",
+      "type": "class",
+      "name": "HomeScreen",
+      "filePath": "spikers_app/lib/screens/home/home_screen.dart",
+      "lineRange": [
+        14,
+        193
+      ],
+      "summary": "Stateful home shell selecting tabs by role, surfacing an unread-announcement badge, and presenting coach-only session-creation options via a bottom sheet.",
+      "tags": [
+        "component",
+        "screen",
+        "navigation",
+        "home"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:spikers_app/lib/screens/home/home_screen.dart:buildEmptyState",
+      "type": "function",
+      "name": "buildEmptyState",
+      "filePath": "spikers_app/lib/screens/home/home_screen.dart",
+      "lineRange": [
+        213,
+        234
+      ],
+      "summary": "Shared empty-state widget (volleyball icon plus localized no-sessions message) reused by SessionsTab and SessionController.",
+      "tags": [
+        "utility",
+        "widget",
+        "empty-state"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:spikers_app/lib/screens/home/players_peer_tab.dart",
+      "type": "file",
+      "name": "players_peer_tab.dart",
+      "filePath": "spikers_app/lib/screens/home/players_peer_tab.dart",
+      "summary": "Player-facing peers tab streaming same-gender players from users_public (excluding self), sorted by name, rendering compact cards with attendance counts.",
+      "tags": [
+        "component",
+        "tab",
+        "firestore",
+        "players"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:spikers_app/lib/screens/home/players_peer_tab.dart:PlayersPeerTab",
+      "type": "class",
+      "name": "PlayersPeerTab",
+      "filePath": "spikers_app/lib/screens/home/players_peer_tab.dart",
+      "lineRange": [
+        10,
+        95
+      ],
+      "summary": "Stateful tab subscribing to same-gender player docs (minus the current user) and rendering them as attendance-labeled peer cards.",
+      "tags": [
+        "component",
+        "tab",
+        "firestore",
+        "players"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:spikers_app/lib/screens/home/players_tab.dart",
+      "type": "file",
+      "name": "players_tab.dart",
+      "filePath": "spikers_app/lib/screens/home/players_tab.dart",
+      "summary": "Coach-facing players tab streaming all players from the users collection with gender filtering, per-player cards (age, attendance, payment badge) navigating to profiles and toggling payment via confirm dialog.",
+      "tags": [
+        "component",
+        "tab",
+        "firestore",
+        "players",
+        "payment"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:spikers_app/lib/screens/home/players_tab.dart:PlayersTab",
+      "type": "class",
+      "name": "PlayersTab",
+      "filePath": "spikers_app/lib/screens/home/players_tab.dart",
+      "lineRange": [
+        13,
+        154
+      ],
+      "summary": "Stateful coach players tab streaming the users collection, applying a gender filter, and listing player cards that open profiles or trigger payment confirmation.",
+      "tags": [
+        "component",
+        "tab",
+        "firestore",
+        "players"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:spikers_app/lib/screens/home/players_tab.dart:_PlayerCard",
+      "type": "class",
+      "name": "_PlayerCard",
+      "filePath": "spikers_app/lib/screens/home/players_tab.dart",
+      "lineRange": [
+        156,
+        271
+      ],
+      "summary": "Player row card showing avatar, name, gender icon, age, attendance, and a tappable paid/unpaid/lifetime badge; navigates to the player profile on tap.",
+      "tags": [
+        "component",
+        "widget",
+        "players",
+        "payment"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:spikers_app/lib/screens/home/players_tab.dart:_PaidBadge",
+      "type": "class",
+      "name": "_PaidBadge",
+      "filePath": "spikers_app/lib/screens/home/players_tab.dart",
+      "lineRange": [
+        273,
+        335
+      ],
+      "summary": "Membership badge widget coloring by lifetime/paid/expiring/unpaid state and surfacing a days-left countdown when nearing expiry.",
+      "tags": [
+        "component",
+        "widget",
+        "payment"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:spikers_app/lib/screens/home/profile_tab.dart",
+      "type": "file",
+      "name": "profile_tab.dart",
+      "filePath": "spikers_app/lib/screens/home/profile_tab.dart",
+      "summary": "Profile tab showing the current user's avatar, role, body-metric stats, payment info, language toggle and sign-out, with avatar upload via image picker bottom sheet.",
+      "tags": [
+        "component",
+        "profile",
+        "getx",
+        "image-picker",
+        "ui"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:spikers_app/lib/screens/home/profile_tab.dart:_showAvatarPicker",
+      "type": "function",
+      "name": "_showAvatarPicker",
+      "filePath": "spikers_app/lib/screens/home/profile_tab.dart",
+      "lineRange": [
+        15,
+        60
+      ],
+      "summary": "Presents a modal bottom sheet letting the user pick an avatar source (gallery or camera).",
+      "tags": [
+        "ui",
+        "bottom-sheet",
+        "image-picker"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:spikers_app/lib/screens/home/profile_tab.dart:_Avatar",
+      "type": "class",
+      "name": "_Avatar",
+      "filePath": "spikers_app/lib/screens/home/profile_tab.dart",
+      "lineRange": [
+        138,
+        214
+      ],
+      "summary": "Circular avatar widget rendering a cached network photo or initials fallback, with an upload-in-progress overlay and edit badge.",
+      "tags": [
+        "component",
+        "avatar",
+        "ui"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:spikers_app/lib/screens/home/profile_tab.dart:_LanguageToggle",
+      "type": "class",
+      "name": "_LanguageToggle",
+      "filePath": "spikers_app/lib/screens/home/profile_tab.dart",
+      "lineRange": [
+        216,
+        254
+      ],
+      "summary": "Tappable row that toggles the app locale between Arabic and English via LocaleController.",
+      "tags": [
+        "component",
+        "localization",
+        "ui"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:spikers_app/lib/screens/home/sessions_tab.dart",
+      "type": "file",
+      "name": "sessions_tab.dart",
+      "filePath": "spikers_app/lib/screens/home/sessions_tab.dart",
+      "summary": "Sessions tab listing upcoming sessions with shimmer loading, error retry, paywall for unpaid members, empty state and pull-to-refresh.",
+      "tags": [
+        "component",
+        "sessions",
+        "getx",
+        "list",
+        "ui"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:spikers_app/lib/screens/leaderboard/leaderboard_screen.dart",
+      "type": "file",
+      "name": "leaderboard_screen.dart",
+      "filePath": "spikers_app/lib/screens/leaderboard/leaderboard_screen.dart",
+      "summary": "Leaderboard screen with monthly/all-time tabs ranking players by attendance count, rendering ranked tiles with avatars and medal styling for the top three.",
+      "tags": [
+        "component",
+        "leaderboard",
+        "getx",
+        "list",
+        "ui"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:spikers_app/lib/screens/leaderboard/leaderboard_screen.dart:_LeaderboardTile",
+      "type": "class",
+      "name": "_LeaderboardTile",
+      "filePath": "spikers_app/lib/screens/leaderboard/leaderboard_screen.dart",
+      "lineRange": [
+        87,
+        175
+      ],
+      "summary": "Renders a single ranked leaderboard row with rank badge, avatar/initials, name and attendance count, highlighting the top three.",
+      "tags": [
+        "component",
+        "leaderboard",
+        "ui"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:spikers_app/lib/screens/players/payment_confirm_dialog.dart",
+      "type": "file",
+      "name": "payment_confirm_dialog.dart",
+      "filePath": "spikers_app/lib/screens/players/payment_confirm_dialog.dart",
+      "summary": "Shows a confirmation dialog to toggle a player's payment status and, on confirm, calls PaymentController.markPaid/markUnpaid; short-circuits for lifetime members.",
+      "tags": [
+        "dialog",
+        "payment",
+        "getx",
+        "ui"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:spikers_app/lib/screens/players/payment_confirm_dialog.dart:confirmTogglePayment",
+      "type": "function",
+      "name": "confirmTogglePayment",
+      "filePath": "spikers_app/lib/screens/players/payment_confirm_dialog.dart",
+      "lineRange": [
+        12,
+        128
+      ],
+      "summary": "Async helper that confirms and applies a paid/unpaid toggle for a given user via PaymentController, with snackbar feedback.",
+      "tags": [
+        "dialog",
+        "payment",
+        "async",
+        "ui"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:spikers_app/lib/screens/players/player_profile_screen.dart",
+      "type": "file",
+      "name": "player_profile_screen.dart",
+      "filePath": "spikers_app/lib/screens/players/player_profile_screen.dart",
+      "summary": "Read-only player profile screen streaming a user document from Firestore and showing role, stats, info card and a coach-only payment action button.",
+      "tags": [
+        "component",
+        "profile",
+        "firestore",
+        "stream",
+        "ui"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:spikers_app/lib/screens/players/player_profile_screen.dart:_PaymentActionButton",
+      "type": "class",
+      "name": "_PaymentActionButton",
+      "filePath": "spikers_app/lib/screens/players/player_profile_screen.dart",
+      "lineRange": [
+        138,
+        175
+      ],
+      "summary": "Full-width button that triggers the payment confirmation dialog for the displayed player.",
+      "tags": [
+        "component",
+        "payment",
+        "ui"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:spikers_app/lib/screens/sessions/create_recurring_session_screen.dart",
+      "type": "file",
+      "name": "create_recurring_session_screen.dart",
+      "filePath": "spikers_app/lib/screens/sessions/create_recurring_session_screen.dart",
+      "summary": "Form screen for coaches to create or edit a recurring session template (title, location, gender, age range, capacity, recurrence days and times) via RecurringSessionController.",
+      "tags": [
+        "form",
+        "sessions",
+        "getx",
+        "validation",
+        "ui"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:spikers_app/lib/screens/sessions/create_recurring_session_screen.dart:_submit",
+      "type": "function",
+      "name": "_submit",
+      "filePath": "spikers_app/lib/screens/sessions/create_recurring_session_screen.dart",
+      "lineRange": [
+        99,
+        162
+      ],
+      "summary": "Validates the form and creates or edits a RecurringSessionModel through RecurringSessionController, with snackbar feedback.",
+      "tags": [
+        "form",
+        "validation",
+        "async",
+        "sessions"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:spikers_app/lib/screens/sessions/create_session_screen.dart",
+      "type": "file",
+      "name": "create_session_screen.dart",
+      "filePath": "spikers_app/lib/screens/sessions/create_session_screen.dart",
+      "summary": "Form screen for coaches to create a one-off session (optionally saving it as a reusable template), using a date-time picker and SessionController/TemplateController.",
+      "tags": [
+        "form",
+        "sessions",
+        "getx",
+        "validation",
+        "ui"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:spikers_app/lib/screens/sessions/create_session_screen.dart:_submit",
+      "type": "function",
+      "name": "_submit",
+      "filePath": "spikers_app/lib/screens/sessions/create_session_screen.dart",
+      "lineRange": [
+        90,
+        139
+      ],
+      "summary": "Validates time inputs, optionally saves a SessionTemplate, then builds and creates a SessionModel via SessionController.",
+      "tags": [
+        "form",
+        "validation",
+        "async",
+        "sessions"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:spikers_app/lib/screens/sessions/quick_session_screen.dart",
+      "type": "file",
+      "name": "quick_session_screen.dart",
+      "filePath": "spikers_app/lib/screens/sessions/quick_session_screen.dart",
+      "summary": "Lets a coach quickly create a session from a saved template by selecting one and picking start/end times, delegating to SessionController and TemplateController.",
+      "tags": [
+        "form",
+        "sessions",
+        "templates",
+        "getx",
+        "ui"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:spikers_app/lib/screens/sessions/quick_session_screen.dart:_TemplateCard",
+      "type": "class",
+      "name": "_TemplateCard",
+      "filePath": "spikers_app/lib/screens/sessions/quick_session_screen.dart",
+      "lineRange": [
+        215,
+        295
+      ],
+      "summary": "Selectable card displaying a session template's title, location and constraints with a delete action.",
+      "tags": [
+        "component",
+        "templates",
+        "ui"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:spikers_app/lib/screens/sessions/recurring_sessions_screen.dart",
+      "type": "file",
+      "name": "recurring_sessions_screen.dart",
+      "filePath": "spikers_app/lib/screens/sessions/recurring_sessions_screen.dart",
+      "summary": "Lists recurring session templates with enable/disable toggles, day-of-week chips, edit navigation and delete confirmation, backed by RecurringSessionController.",
+      "tags": [
+        "component",
+        "sessions",
+        "getx",
+        "list",
+        "ui"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:spikers_app/lib/screens/sessions/recurring_sessions_screen.dart:_RecurringCard",
+      "type": "class",
+      "name": "_RecurringCard",
+      "filePath": "spikers_app/lib/screens/sessions/recurring_sessions_screen.dart",
+      "lineRange": [
+        66,
+        210
+      ],
+      "summary": "Card rendering a recurring session with enabled switch, recurrence-day chips and a delete-with-confirmation action.",
+      "tags": [
+        "component",
+        "sessions",
+        "ui"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:spikers_app/lib/screens/sessions/session_chat_screen.dart",
+      "type": "file",
+      "name": "session_chat_screen.dart",
+      "filePath": "spikers_app/lib/screens/sessions/session_chat_screen.dart",
+      "summary": "Real-time session chat with a live Firestore snapshot window, paginated older-message history, sender-info resolution, last-seen tracking and a message composer.",
+      "tags": [
+        "component",
+        "chat",
+        "firestore",
+        "pagination",
+        "ui"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:spikers_app/lib/screens/sessions/session_chat_screen.dart:_SessionChatScreenState",
+      "type": "class",
+      "name": "_SessionChatScreenState",
+      "filePath": "spikers_app/lib/screens/sessions/session_chat_screen.dart",
+      "lineRange": [
+        20,
+        348
+      ],
+      "summary": "Stateful logic for the chat screen: live message subscription, infinite-scroll history loading, sender-info batching, send and mark-seen handling.",
+      "tags": [
+        "state",
+        "chat",
+        "firestore",
+        "pagination"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:spikers_app/lib/screens/sessions/session_chat_screen.dart:_MessageBubble",
+      "type": "class",
+      "name": "_MessageBubble",
+      "filePath": "spikers_app/lib/screens/sessions/session_chat_screen.dart",
+      "lineRange": [
+        350,
+        438
+      ],
+      "summary": "Renders a single chat message bubble aligned by sender with avatar and name for incoming messages.",
+      "tags": [
+        "component",
+        "chat",
+        "ui"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:spikers_app/lib/screens/sessions/session_detail_screen.dart",
+      "type": "file",
+      "name": "session_detail_screen.dart",
+      "filePath": "spikers_app/lib/screens/sessions/session_detail_screen.dart",
+      "summary": "Comprehensive session detail screen with live Firestore updates, countdown timer, attendee/waitlist lists, attendance marking, capacity editing, join/leave actions, archival scheduling and an unread-chat badge.",
+      "tags": [
+        "component",
+        "sessions",
+        "firestore",
+        "stream",
+        "ui"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:spikers_app/lib/screens/sessions/session_detail_screen.dart:_SessionDetailScreenState",
+      "type": "class",
+      "name": "_SessionDetailScreenState",
+      "filePath": "spikers_app/lib/screens/sessions/session_detail_screen.dart",
+      "lineRange": [
+        23,
+        315
+      ],
+      "summary": "Stateful controller for the detail screen: subscribes to session/history docs, resolves attendee and coach info, schedules archival, and builds the screen layout.",
+      "tags": [
+        "state",
+        "sessions",
+        "firestore",
+        "cloud-functions"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:spikers_app/lib/screens/sessions/session_detail_screen.dart:_CountdownTimer",
+      "type": "class",
+      "name": "_CountdownTimer",
+      "filePath": "spikers_app/lib/screens/sessions/session_detail_screen.dart",
+      "lineRange": [
+        367,
+        400
+      ],
+      "summary": "Per-second ticking countdown to session start (or end while ongoing) rendered as HH:MM:SS.",
+      "tags": [
+        "component",
+        "timer",
+        "ui"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:spikers_app/lib/screens/sessions/session_detail_screen.dart:_AttendeesSection",
+      "type": "class",
+      "name": "_AttendeesSection",
+      "filePath": "spikers_app/lib/screens/sessions/session_detail_screen.dart",
+      "lineRange": [
+        475,
+        679
+      ],
+      "summary": "Shows attendee and waitlist lists with capacity progress, coach attendance toggles, and a capacity-edit dialog flow.",
+      "tags": [
+        "component",
+        "sessions",
+        "attendance",
+        "ui"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:spikers_app/lib/screens/sessions/session_detail_screen.dart:_AttendeeItem",
+      "type": "class",
+      "name": "_AttendeeItem",
+      "filePath": "spikers_app/lib/screens/sessions/session_detail_screen.dart",
+      "lineRange": [
+        681,
+        794
+      ],
+      "summary": "Single attendee row with avatar, attendance count, gender icon and a coach-only attended toggle.",
+      "tags": [
+        "component",
+        "attendance",
+        "ui"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:spikers_app/lib/screens/sessions/session_detail_screen.dart:_JoinButton",
+      "type": "class",
+      "name": "_JoinButton",
+      "filePath": "spikers_app/lib/screens/sessions/session_detail_screen.dart",
+      "lineRange": [
+        857,
+        965
+      ],
+      "summary": "State-aware action button to join, leave, join waitlist, or show full/disabled state for a session via SessionController.",
+      "tags": [
+        "component",
+        "sessions",
+        "ui"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:spikers_app/lib/screens/sessions/session_detail_screen.dart:_EditCapacityDialog",
+      "type": "class",
+      "name": "_EditCapacityDialog",
+      "filePath": "spikers_app/lib/screens/sessions/session_detail_screen.dart",
+      "lineRange": [
+        967,
+        1074
+      ],
+      "summary": "Dialog with validated inputs for raising a session's max-players and waitlist-size capacity.",
+      "tags": [
+        "dialog",
+        "sessions",
+        "validation",
+        "ui"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:spikers_app/lib/screens/sessions/session_detail_screen.dart:_ChatBadgeIcon",
+      "type": "class",
+      "name": "_ChatBadgeIcon",
+      "filePath": "spikers_app/lib/screens/sessions/session_detail_screen.dart",
+      "lineRange": [
+        1076,
+        1171
+      ],
+      "summary": "App-bar chat icon that shows an unread dot by comparing the latest message timestamp against a SharedPreferences last-seen value.",
+      "tags": [
+        "component",
+        "chat",
+        "firestore",
+        "ui"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:spikers_app/lib/screens/sessions/sessions_history_screen.dart",
+      "type": "file",
+      "name": "sessions_history_screen.dart",
+      "filePath": "spikers_app/lib/screens/sessions/sessions_history_screen.dart",
+      "summary": "Streams archived sessions from the sessions_history collection (triggering a callable archival on open) and renders history cards with overlapping attendee avatars and attendance summaries.",
+      "tags": [
+        "component",
+        "sessions",
+        "firestore",
+        "cloud-functions",
+        "ui"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:spikers_app/lib/screens/sessions/sessions_history_screen.dart:_HistoryCardState",
+      "type": "class",
+      "name": "_HistoryCardState",
+      "filePath": "spikers_app/lib/screens/sessions/sessions_history_screen.dart",
+      "lineRange": [
+        95,
+        283
+      ],
+      "summary": "Stateful history card that lazily loads attendee avatars from users_public and renders an overlapping avatar stack with an overflow counter.",
+      "tags": [
+        "component",
+        "sessions",
+        "firestore",
+        "ui"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:spikers_app/lib/screens/splash/splash_screen.dart",
+      "type": "file",
+      "name": "splash_screen.dart",
+      "filePath": "spikers_app/lib/screens/splash/splash_screen.dart",
+      "summary": "Animated splash screen that waits for auth state to resolve then routes to home, email verification, or login.",
+      "tags": [
+        "component",
+        "entry-point",
+        "navigation",
+        "ui"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:spikers_app/lib/screens/widgets/app_logo.dart",
+      "type": "file",
+      "name": "app_logo.dart",
+      "filePath": "spikers_app/lib/screens/widgets/app_logo.dart",
+      "summary": "Tiny reusable widget rendering the app logo asset at a configurable width.",
+      "tags": [
+        "component",
+        "shared-widget",
+        "branding",
+        "ui"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:spikers_app/lib/screens/widgets/branded_button.dart",
+      "type": "file",
+      "name": "branded_button.dart",
+      "filePath": "spikers_app/lib/screens/widgets/branded_button.dart",
+      "summary": "Reusable full-width elevated button with a loading spinner state, used across the app's forms.",
+      "tags": [
+        "component",
+        "shared-widget",
+        "button",
+        "ui"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:spikers_app/lib/screens/widgets/branded_text_field.dart",
+      "type": "file",
+      "name": "branded_text_field.dart",
+      "filePath": "spikers_app/lib/screens/widgets/branded_text_field.dart",
+      "summary": "Reusable styled TextFormField wrapper exposing label, hint, validator, read-only and tap-handler options for consistent form inputs.",
+      "tags": [
+        "component",
+        "shared-widget",
+        "form",
+        "ui"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:spikers_app/lib/screens/widgets/edit_body_metrics_dialog.dart",
+      "type": "file",
+      "name": "edit_body_metrics_dialog.dart",
+      "filePath": "spikers_app/lib/screens/widgets/edit_body_metrics_dialog.dart",
+      "summary": "Dialog letting a user edit and persist their height and weight via AuthController.updateBodyMetrics, with range validation.",
+      "tags": [
+        "dialog",
+        "profile",
+        "getx",
+        "validation",
+        "ui"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:spikers_app/lib/screens/widgets/edit_body_metrics_dialog.dart:showEditBodyMetricsDialog",
+      "type": "function",
+      "name": "showEditBodyMetricsDialog",
+      "filePath": "spikers_app/lib/screens/widgets/edit_body_metrics_dialog.dart",
+      "lineRange": [
+        10,
+        19
+      ],
+      "summary": "Entry-point helper that opens the body-metrics editing dialog for a given user.",
+      "tags": [
+        "dialog",
+        "helper",
+        "ui"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:spikers_app/lib/screens/widgets/floating_nav_bar.dart",
+      "type": "file",
+      "name": "floating_nav_bar.dart",
+      "filePath": "spikers_app/lib/screens/widgets/floating_nav_bar.dart",
+      "summary": "Custom floating bottom navigation bar with animated icon scale and color transitions, driven by a list of nav items.",
+      "tags": [
+        "component",
+        "shared-widget",
+        "navigation",
+        "ui"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:spikers_app/lib/screens/widgets/profile_info.dart",
+      "type": "file",
+      "name": "profile_info.dart",
+      "filePath": "spikers_app/lib/screens/widgets/profile_info.dart",
+      "summary": "Shared profile building blocks: role badge, info card, stats row, and payment status row, reused by the profile and player-profile screens.",
+      "tags": [
+        "component",
+        "shared-widget",
+        "profile",
+        "ui"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:spikers_app/lib/screens/widgets/profile_info.dart:ProfileRoleBadge",
+      "type": "class",
+      "name": "ProfileRoleBadge",
+      "filePath": "spikers_app/lib/screens/widgets/profile_info.dart",
+      "lineRange": [
+        6,
+        44
+      ],
+      "summary": "Badge widget showing whether the user is a coach or player with matching icon and color.",
+      "tags": [
+        "component",
+        "profile",
+        "ui"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:spikers_app/lib/screens/widgets/profile_info.dart:ProfileInfoCard",
+      "type": "class",
+      "name": "ProfileInfoCard",
+      "filePath": "spikers_app/lib/screens/widgets/profile_info.dart",
+      "lineRange": [
+        46,
+        80
+      ],
+      "summary": "Card showing the user's gender and, for non-coaches, a payment status row.",
+      "tags": [
+        "component",
+        "profile",
+        "ui"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:spikers_app/lib/screens/widgets/profile_info.dart:ProfileStatsRow",
+      "type": "class",
+      "name": "ProfileStatsRow",
+      "filePath": "spikers_app/lib/screens/widgets/profile_info.dart",
+      "lineRange": [
+        82,
+        128
+      ],
+      "summary": "Stats row displaying height, weight and age, optionally tappable to trigger an edit callback.",
+      "tags": [
+        "component",
+        "profile",
+        "ui"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:spikers_app/lib/screens/widgets/profile_info.dart:_PaymentRow",
+      "type": "class",
+      "name": "_PaymentRow",
+      "filePath": "spikers_app/lib/screens/widgets/profile_info.dart",
+      "lineRange": [
+        174,
+        229
+      ],
+      "summary": "Computes and renders a colored payment status pill (lifetime, paid, expiring, or unpaid) from days-left and lifetime flags.",
+      "tags": [
+        "component",
+        "payment",
+        "ui"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:spikers_app/lib/screens/widgets/session_card.dart",
+      "type": "file",
+      "name": "session_card.dart",
+      "filePath": "spikers_app/lib/screens/widgets/session_card.dart",
+      "summary": "Reusable session list card showing title, location, time, gender, spots and waitlist indicators with live/full badges, navigating to session detail on tap.",
+      "tags": [
+        "component",
+        "shared-widget",
+        "sessions",
+        "ui"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:spikers_app/lib/screens/widgets/session_card.dart:SessionCard",
+      "type": "class",
+      "name": "SessionCard",
+      "filePath": "spikers_app/lib/screens/widgets/session_card.dart",
+      "lineRange": [
+        9,
+        92
+      ],
+      "summary": "Public card widget rendering a session summary with status badges and capacity indicators, tapping through to the detail route.",
+      "tags": [
+        "component",
+        "sessions",
+        "ui"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:spikers_app/lib/screens/widgets/session_card.dart:_GenderBadge",
+      "type": "class",
+      "name": "_GenderBadge",
+      "filePath": "spikers_app/lib/screens/widgets/session_card.dart",
+      "lineRange": [
+        130,
+        174
+      ],
+      "summary": "Badge mapping a session's gender value to a colored icon and localized label.",
+      "tags": [
+        "component",
+        "sessions",
+        "ui"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:spikers_app/lib/screens/widgets/session_card.dart:_SpotsIndicator",
+      "type": "class",
+      "name": "_SpotsIndicator",
+      "filePath": "spikers_app/lib/screens/widgets/session_card.dart",
+      "lineRange": [
+        176,
+        198
+      ],
+      "summary": "Shows filled/max attendee count with color reflecting how full the session is.",
+      "tags": [
+        "component",
+        "sessions",
+        "ui"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:storage.rules",
+      "type": "config",
+      "name": "storage.rules",
+      "filePath": "storage.rules",
+      "summary": "Firebase Storage security rules: authenticated users can read profile photos and may only write their own uid-named JPG under 5MB; all other paths are denied.",
+      "tags": [
+        "security",
+        "configuration",
+        "firebase",
+        "storage"
+      ],
+      "complexity": "simple",
+      "languageNotes": "Storage rules constrain uploads by filename-to-uid match, content-type and size; default-deny catch-all secures all other paths."
+    }
+  ],
+  "edges": [
+    {
+      "source": "config:firebase.json",
+      "target": "config:firestore.indexes.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:spikers_app/pubspec.yaml",
+      "target": "file:spikers_app/lib/main.dart",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:spikers_app/analysis_options.yaml",
+      "target": "file:spikers_app/lib/main.dart",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:spikers_app/firebase.json",
+      "target": "file:spikers_app/lib/main.dart",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:spikers_app/l10n.yaml",
+      "target": "file:spikers_app/lib/main.dart",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "document:spikers_app/README.md",
+      "target": "file:spikers_app/lib/main.dart",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "service:firestore.rules",
+      "target": "file:functions/src/index.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:functions/package.json",
+      "target": "file:functions/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:functions/tsconfig.json",
+      "target": "file:functions/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:spikers_app/lib/controller/announcement_controller.dart",
+      "target": "class:spikers_app/lib/controller/announcement_controller.dart:AnnouncementController",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/controller/announcement_controller.dart",
+      "target": "file:spikers_app/lib/controller/auth_controller.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/controller/auth_controller.dart",
+      "target": "class:spikers_app/lib/controller/auth_controller.dart:AuthController",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/controller/auth_controller.dart",
+      "target": "file:spikers_app/lib/controller/announcement_controller.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/controller/auth_controller.dart",
+      "target": "file:spikers_app/lib/controller/notification_controller.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/controller/auth_controller.dart",
+      "target": "file:spikers_app/lib/controller/payment_controller.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/controller/auth_controller.dart",
+      "target": "file:spikers_app/lib/controller/recurring_session_controller.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/controller/auth_controller.dart",
+      "target": "file:spikers_app/lib/controller/session_controller.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/controller/auth_controller.dart",
+      "target": "file:spikers_app/lib/controller/template_controller.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/controller/auth_controller.dart",
+      "target": "file:functions/src/index.ts",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:spikers_app/lib/controller/leaderboard_controller.dart",
+      "target": "class:spikers_app/lib/controller/leaderboard_controller.dart:LeaderboardController",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/controller/notification_controller.dart",
+      "target": "class:spikers_app/lib/controller/notification_controller.dart:NotificationController",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/controller/notification_controller.dart",
+      "target": "file:spikers_app/lib/core/services/fcm_service.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/controller/notification_controller.dart",
+      "target": "file:spikers_app/lib/core/services/local_notification_service.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/controller/payment_controller.dart",
+      "target": "class:spikers_app/lib/controller/payment_controller.dart:PaymentController",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/controller/payment_controller.dart",
+      "target": "file:spikers_app/lib/controller/auth_controller.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/controller/recurring_session_controller.dart",
+      "target": "class:spikers_app/lib/controller/recurring_session_controller.dart:RecurringSessionController",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/controller/recurring_session_controller.dart",
+      "target": "file:spikers_app/lib/controller/auth_controller.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/controller/session_controller.dart",
+      "target": "class:spikers_app/lib/controller/session_controller.dart:SessionController",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/controller/session_controller.dart",
+      "target": "file:spikers_app/lib/controller/auth_controller.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/controller/session_controller.dart",
+      "target": "file:spikers_app/lib/core/constants/app_assets.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/controller/session_controller.dart",
+      "target": "file:functions/src/index.ts",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:spikers_app/lib/controller/template_controller.dart",
+      "target": "class:spikers_app/lib/controller/template_controller.dart:TemplateController",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/controller/template_controller.dart",
+      "target": "file:spikers_app/lib/controller/auth_controller.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/core/services/fcm_service.dart",
+      "target": "file:spikers_app/lib/core/services/local_notification_service.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/core/services/local_notification_service.dart",
+      "target": "class:spikers_app/lib/core/services/local_notification_service.dart:LocalNotificationService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/core/theme/app_theme.dart",
+      "target": "file:spikers_app/lib/core/constants/app_colors.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/core/utils/validators.dart",
+      "target": "class:spikers_app/lib/core/utils/validators.dart:Validators",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "config:spikers_app/lib/l10n/app_en.arb",
+      "target": "file:spikers_app/lib/l10n/app_localizations.dart",
+      "type": "defines_schema",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "config:spikers_app/lib/l10n/app_ar.arb",
+      "target": "file:spikers_app/lib/l10n/app_localizations_ar.dart",
+      "type": "defines_schema",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "config:spikers_app/lib/l10n/app_en.arb",
+      "target": "file:spikers_app/lib/l10n/app_localizations_en.dart",
+      "type": "defines_schema",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:spikers_app/lib/l10n/app_localizations_ar.dart",
+      "target": "file:spikers_app/lib/l10n/app_localizations.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/l10n/app_localizations_en.dart",
+      "target": "file:spikers_app/lib/l10n/app_localizations.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/main.dart",
+      "target": "function:spikers_app/lib/main.dart:main",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/main.dart",
+      "target": "class:spikers_app/lib/main.dart:SpikersApp",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/main.dart",
+      "target": "file:spikers_app/lib/l10n/app_localizations.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/main.dart",
+      "target": "file:spikers_app/lib/routes/app_routes.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/models/announcement_model.dart",
+      "target": "class:spikers_app/lib/models/announcement_model.dart:AnnouncementModel",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/models/announcement_model.dart",
+      "target": "class:spikers_app/lib/models/announcement_model.dart:AnnouncementModel",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:spikers_app/lib/models/chat_message_model.dart",
+      "target": "class:spikers_app/lib/models/chat_message_model.dart:ChatMessage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/models/chat_message_model.dart",
+      "target": "class:spikers_app/lib/models/chat_message_model.dart:ChatMessage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:spikers_app/lib/models/recurring_session_model.dart",
+      "target": "class:spikers_app/lib/models/recurring_session_model.dart:RecurringSessionModel",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/models/recurring_session_model.dart",
+      "target": "class:spikers_app/lib/models/recurring_session_model.dart:RecurringSessionModel",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:spikers_app/lib/models/session_model.dart",
+      "target": "class:spikers_app/lib/models/session_model.dart:SessionModel",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/models/session_model.dart",
+      "target": "class:spikers_app/lib/models/session_model.dart:SessionModel",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:spikers_app/lib/models/session_template_model.dart",
+      "target": "class:spikers_app/lib/models/session_template_model.dart:SessionTemplate",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/models/session_template_model.dart",
+      "target": "class:spikers_app/lib/models/session_template_model.dart:SessionTemplate",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:spikers_app/lib/models/user_model.dart",
+      "target": "class:spikers_app/lib/models/user_model.dart:UserModel",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/models/user_model.dart",
+      "target": "class:spikers_app/lib/models/user_model.dart:UserModel",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:spikers_app/lib/routes/app_routes.dart",
+      "target": "class:spikers_app/lib/routes/app_routes.dart:Routes",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/routes/app_routes.dart",
+      "target": "class:spikers_app/lib/routes/app_routes.dart:CoachOnlyMiddleware",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/routes/app_routes.dart",
+      "target": "file:spikers_app/lib/screens/auth/login_screen.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/routes/app_routes.dart",
+      "target": "file:spikers_app/lib/screens/auth/register_screen.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/routes/app_routes.dart",
+      "target": "file:spikers_app/lib/screens/auth/email_change_notice_screen.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/routes/app_routes.dart",
+      "target": "file:spikers_app/lib/screens/auth/forgot_password_screen.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/routes/app_routes.dart",
+      "target": "file:spikers_app/lib/screens/auth/verify_email_screen.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/routes/app_routes.dart",
+      "target": "file:spikers_app/lib/screens/home/home_screen.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/routes/app_routes.dart",
+      "target": "file:spikers_app/lib/screens/coaches/coaches_list_screen.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/routes/app_routes.dart",
+      "target": "file:spikers_app/lib/screens/announcements/announcements_screen.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/routes/app_routes.dart",
+      "target": "file:spikers_app/lib/screens/announcements/create_announcement_screen.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/routes/app_routes.dart",
+      "target": "file:spikers_app/lib/screens/auth/login_screen.dart",
+      "type": "routes",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:spikers_app/lib/routes/app_routes.dart",
+      "target": "file:spikers_app/lib/screens/auth/register_screen.dart",
+      "type": "routes",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:spikers_app/lib/routes/app_routes.dart",
+      "target": "file:spikers_app/lib/screens/auth/forgot_password_screen.dart",
+      "type": "routes",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:spikers_app/lib/routes/app_routes.dart",
+      "target": "file:spikers_app/lib/screens/auth/verify_email_screen.dart",
+      "type": "routes",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:spikers_app/lib/routes/app_routes.dart",
+      "target": "file:spikers_app/lib/screens/auth/email_change_notice_screen.dart",
+      "type": "routes",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:spikers_app/lib/routes/app_routes.dart",
+      "target": "file:spikers_app/lib/screens/home/home_screen.dart",
+      "type": "routes",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:spikers_app/lib/routes/app_routes.dart",
+      "target": "file:spikers_app/lib/screens/announcements/announcements_screen.dart",
+      "type": "routes",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:spikers_app/lib/routes/app_routes.dart",
+      "target": "file:spikers_app/lib/screens/announcements/create_announcement_screen.dart",
+      "type": "routes",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:spikers_app/lib/routes/app_routes.dart",
+      "target": "file:spikers_app/lib/screens/coaches/coaches_list_screen.dart",
+      "type": "routes",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:spikers_app/lib/screens/announcements/announcements_screen.dart",
+      "target": "class:spikers_app/lib/screens/announcements/announcements_screen.dart:AnnouncementsScreen",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/screens/announcements/announcements_screen.dart",
+      "target": "class:spikers_app/lib/screens/announcements/announcements_screen.dart:_AnnouncementCard",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/screens/announcements/announcements_screen.dart",
+      "target": "file:spikers_app/lib/l10n/app_localizations.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/announcements/announcements_screen.dart",
+      "target": "file:spikers_app/lib/models/announcement_model.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/announcements/announcements_screen.dart",
+      "target": "file:spikers_app/lib/routes/app_routes.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/announcements/create_announcement_screen.dart",
+      "target": "class:spikers_app/lib/screens/announcements/create_announcement_screen.dart:CreateAnnouncementScreen",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/screens/announcements/create_announcement_screen.dart",
+      "target": "file:spikers_app/lib/l10n/app_localizations.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/announcements/create_announcement_screen.dart",
+      "target": "file:spikers_app/lib/models/announcement_model.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/auth/email_change_notice_screen.dart",
+      "target": "file:spikers_app/lib/l10n/app_localizations.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/auth/forgot_password_screen.dart",
+      "target": "class:spikers_app/lib/screens/auth/forgot_password_screen.dart:ForgotPasswordScreen",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/screens/auth/forgot_password_screen.dart",
+      "target": "file:spikers_app/lib/l10n/app_localizations.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/auth/login_screen.dart",
+      "target": "class:spikers_app/lib/screens/auth/login_screen.dart:LoginScreen",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/screens/auth/login_screen.dart",
+      "target": "file:spikers_app/lib/l10n/app_localizations.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/auth/login_screen.dart",
+      "target": "file:spikers_app/lib/routes/app_routes.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/auth/register_screen.dart",
+      "target": "class:spikers_app/lib/screens/auth/register_screen.dart:RegisterScreen",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/screens/auth/register_screen.dart",
+      "target": "file:spikers_app/lib/l10n/app_localizations.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/auth/verify_email_screen.dart",
+      "target": "class:spikers_app/lib/screens/auth/verify_email_screen.dart:VerifyEmailScreen",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/screens/auth/verify_email_screen.dart",
+      "target": "class:spikers_app/lib/screens/auth/verify_email_screen.dart:_ChangeEmailDialog",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/screens/auth/verify_email_screen.dart",
+      "target": "file:spikers_app/lib/l10n/app_localizations.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/auth/verify_email_screen.dart",
+      "target": "file:spikers_app/lib/routes/app_routes.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/coaches/coaches_list_screen.dart",
+      "target": "file:spikers_app/lib/l10n/app_localizations.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/coaches/coaches_list_screen.dart",
+      "target": "file:spikers_app/lib/screens/home/coaches_tab.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/home/coaches_tab.dart",
+      "target": "class:spikers_app/lib/screens/home/coaches_tab.dart:CoachesTab",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/screens/home/coaches_tab.dart",
+      "target": "file:spikers_app/lib/l10n/app_localizations.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/home/home_screen.dart",
+      "target": "class:spikers_app/lib/screens/home/home_screen.dart:HomeScreen",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/screens/home/home_screen.dart",
+      "target": "function:spikers_app/lib/screens/home/home_screen.dart:buildEmptyState",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/screens/home/home_screen.dart",
+      "target": "file:spikers_app/lib/l10n/app_localizations.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/home/home_screen.dart",
+      "target": "file:spikers_app/lib/routes/app_routes.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/home/home_screen.dart",
+      "target": "file:spikers_app/lib/screens/home/players_peer_tab.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/home/home_screen.dart",
+      "target": "file:spikers_app/lib/screens/home/players_tab.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/home/players_peer_tab.dart",
+      "target": "class:spikers_app/lib/screens/home/players_peer_tab.dart:PlayersPeerTab",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/screens/home/players_peer_tab.dart",
+      "target": "file:spikers_app/lib/l10n/app_localizations.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/home/players_tab.dart",
+      "target": "class:spikers_app/lib/screens/home/players_tab.dart:PlayersTab",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/screens/home/players_tab.dart",
+      "target": "class:spikers_app/lib/screens/home/players_tab.dart:_PlayerCard",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/screens/home/players_tab.dart",
+      "target": "class:spikers_app/lib/screens/home/players_tab.dart:_PaidBadge",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/screens/home/players_tab.dart",
+      "target": "file:spikers_app/lib/l10n/app_localizations.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/home/players_tab.dart",
+      "target": "file:spikers_app/lib/models/user_model.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/home/players_tab.dart",
+      "target": "file:spikers_app/lib/routes/app_routes.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/home/profile_tab.dart",
+      "target": "file:spikers_app/lib/controller/auth_controller.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/home/profile_tab.dart",
+      "target": "file:spikers_app/lib/controller/locale_controller.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/home/profile_tab.dart",
+      "target": "file:spikers_app/lib/core/constants/app_colors.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/home/profile_tab.dart",
+      "target": "file:spikers_app/lib/l10n/app_localizations.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/home/profile_tab.dart",
+      "target": "file:spikers_app/lib/screens/widgets/edit_body_metrics_dialog.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/home/profile_tab.dart",
+      "target": "file:spikers_app/lib/screens/widgets/profile_info.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/home/profile_tab.dart",
+      "target": "function:spikers_app/lib/screens/home/profile_tab.dart:_showAvatarPicker",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/screens/home/profile_tab.dart",
+      "target": "class:spikers_app/lib/screens/home/profile_tab.dart:_Avatar",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/screens/home/profile_tab.dart",
+      "target": "class:spikers_app/lib/screens/home/profile_tab.dart:_LanguageToggle",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/screens/home/profile_tab.dart",
+      "target": "file:spikers_app/lib/screens/widgets/profile_info.dart",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:spikers_app/lib/screens/home/profile_tab.dart",
+      "target": "file:spikers_app/lib/screens/widgets/edit_body_metrics_dialog.dart",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:spikers_app/lib/screens/home/sessions_tab.dart",
+      "target": "file:spikers_app/lib/controller/auth_controller.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/home/sessions_tab.dart",
+      "target": "file:spikers_app/lib/controller/session_controller.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/home/sessions_tab.dart",
+      "target": "file:spikers_app/lib/core/constants/app_colors.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/home/sessions_tab.dart",
+      "target": "file:spikers_app/lib/l10n/app_localizations.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/home/sessions_tab.dart",
+      "target": "file:spikers_app/lib/screens/widgets/session_card.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/home/sessions_tab.dart",
+      "target": "file:spikers_app/lib/screens/home/home_screen.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/home/sessions_tab.dart",
+      "target": "file:spikers_app/lib/controller/session_controller.dart",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:spikers_app/lib/screens/leaderboard/leaderboard_screen.dart",
+      "target": "file:spikers_app/lib/controller/leaderboard_controller.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/leaderboard/leaderboard_screen.dart",
+      "target": "file:spikers_app/lib/core/constants/app_colors.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/leaderboard/leaderboard_screen.dart",
+      "target": "file:spikers_app/lib/l10n/app_localizations.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/leaderboard/leaderboard_screen.dart",
+      "target": "class:spikers_app/lib/screens/leaderboard/leaderboard_screen.dart:_LeaderboardTile",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/screens/leaderboard/leaderboard_screen.dart",
+      "target": "file:spikers_app/lib/controller/leaderboard_controller.dart",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:spikers_app/lib/screens/players/payment_confirm_dialog.dart",
+      "target": "file:spikers_app/lib/controller/payment_controller.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/players/payment_confirm_dialog.dart",
+      "target": "file:spikers_app/lib/core/constants/app_colors.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/players/payment_confirm_dialog.dart",
+      "target": "file:spikers_app/lib/l10n/app_localizations.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/players/payment_confirm_dialog.dart",
+      "target": "function:spikers_app/lib/screens/players/payment_confirm_dialog.dart:confirmTogglePayment",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/screens/players/payment_confirm_dialog.dart",
+      "target": "function:spikers_app/lib/screens/players/payment_confirm_dialog.dart:confirmTogglePayment",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:spikers_app/lib/screens/players/payment_confirm_dialog.dart",
+      "target": "file:spikers_app/lib/controller/payment_controller.dart",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:spikers_app/lib/screens/players/player_profile_screen.dart",
+      "target": "file:spikers_app/lib/core/constants/app_colors.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/players/player_profile_screen.dart",
+      "target": "file:spikers_app/lib/l10n/app_localizations.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/players/player_profile_screen.dart",
+      "target": "file:spikers_app/lib/models/user_model.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/players/player_profile_screen.dart",
+      "target": "file:spikers_app/lib/screens/widgets/profile_info.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/players/player_profile_screen.dart",
+      "target": "file:spikers_app/lib/screens/players/payment_confirm_dialog.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/players/player_profile_screen.dart",
+      "target": "class:spikers_app/lib/screens/players/player_profile_screen.dart:_PaymentActionButton",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/screens/players/player_profile_screen.dart",
+      "target": "function:spikers_app/lib/screens/players/payment_confirm_dialog.dart:confirmTogglePayment",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/create_recurring_session_screen.dart",
+      "target": "file:spikers_app/lib/controller/auth_controller.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/create_recurring_session_screen.dart",
+      "target": "file:spikers_app/lib/controller/recurring_session_controller.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/create_recurring_session_screen.dart",
+      "target": "file:spikers_app/lib/core/constants/app_colors.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/create_recurring_session_screen.dart",
+      "target": "file:spikers_app/lib/core/utils/validators.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/create_recurring_session_screen.dart",
+      "target": "file:spikers_app/lib/l10n/app_localizations.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/create_recurring_session_screen.dart",
+      "target": "file:spikers_app/lib/models/recurring_session_model.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/create_recurring_session_screen.dart",
+      "target": "file:spikers_app/lib/screens/widgets/branded_button.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/create_recurring_session_screen.dart",
+      "target": "file:spikers_app/lib/screens/widgets/branded_text_field.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/create_recurring_session_screen.dart",
+      "target": "function:spikers_app/lib/screens/sessions/create_recurring_session_screen.dart:_submit",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/create_recurring_session_screen.dart",
+      "target": "file:spikers_app/lib/controller/recurring_session_controller.dart",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/create_session_screen.dart",
+      "target": "file:spikers_app/lib/controller/auth_controller.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/create_session_screen.dart",
+      "target": "file:spikers_app/lib/controller/session_controller.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/create_session_screen.dart",
+      "target": "file:spikers_app/lib/controller/template_controller.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/create_session_screen.dart",
+      "target": "file:spikers_app/lib/core/constants/app_colors.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/create_session_screen.dart",
+      "target": "file:spikers_app/lib/core/utils/validators.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/create_session_screen.dart",
+      "target": "file:spikers_app/lib/l10n/app_localizations.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/create_session_screen.dart",
+      "target": "file:spikers_app/lib/models/session_model.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/create_session_screen.dart",
+      "target": "file:spikers_app/lib/models/session_template_model.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/create_session_screen.dart",
+      "target": "file:spikers_app/lib/screens/widgets/branded_button.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/create_session_screen.dart",
+      "target": "file:spikers_app/lib/screens/widgets/branded_text_field.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/create_session_screen.dart",
+      "target": "function:spikers_app/lib/screens/sessions/create_session_screen.dart:_submit",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/create_session_screen.dart",
+      "target": "file:spikers_app/lib/controller/session_controller.dart",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/create_session_screen.dart",
+      "target": "file:spikers_app/lib/controller/template_controller.dart",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/quick_session_screen.dart",
+      "target": "file:spikers_app/lib/controller/auth_controller.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/quick_session_screen.dart",
+      "target": "file:spikers_app/lib/controller/session_controller.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/quick_session_screen.dart",
+      "target": "file:spikers_app/lib/controller/template_controller.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/quick_session_screen.dart",
+      "target": "file:spikers_app/lib/core/constants/app_colors.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/quick_session_screen.dart",
+      "target": "file:spikers_app/lib/l10n/app_localizations.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/quick_session_screen.dart",
+      "target": "file:spikers_app/lib/models/session_model.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/quick_session_screen.dart",
+      "target": "file:spikers_app/lib/models/session_template_model.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/quick_session_screen.dart",
+      "target": "file:spikers_app/lib/screens/widgets/branded_button.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/quick_session_screen.dart",
+      "target": "file:spikers_app/lib/screens/widgets/branded_text_field.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/quick_session_screen.dart",
+      "target": "class:spikers_app/lib/screens/sessions/quick_session_screen.dart:_TemplateCard",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/quick_session_screen.dart",
+      "target": "file:spikers_app/lib/controller/session_controller.dart",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/quick_session_screen.dart",
+      "target": "file:spikers_app/lib/controller/template_controller.dart",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/recurring_sessions_screen.dart",
+      "target": "file:spikers_app/lib/controller/recurring_session_controller.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/recurring_sessions_screen.dart",
+      "target": "file:spikers_app/lib/core/constants/app_colors.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/recurring_sessions_screen.dart",
+      "target": "file:spikers_app/lib/l10n/app_localizations.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/recurring_sessions_screen.dart",
+      "target": "file:spikers_app/lib/models/recurring_session_model.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/recurring_sessions_screen.dart",
+      "target": "file:spikers_app/lib/routes/app_routes.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/recurring_sessions_screen.dart",
+      "target": "class:spikers_app/lib/screens/sessions/recurring_sessions_screen.dart:_RecurringCard",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/recurring_sessions_screen.dart",
+      "target": "file:spikers_app/lib/controller/recurring_session_controller.dart",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/session_chat_screen.dart",
+      "target": "file:spikers_app/lib/controller/auth_controller.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/session_chat_screen.dart",
+      "target": "file:spikers_app/lib/controller/session_controller.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/session_chat_screen.dart",
+      "target": "file:spikers_app/lib/core/constants/app_colors.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/session_chat_screen.dart",
+      "target": "file:spikers_app/lib/l10n/app_localizations.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/session_chat_screen.dart",
+      "target": "file:spikers_app/lib/models/chat_message_model.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/session_chat_screen.dart",
+      "target": "class:spikers_app/lib/screens/sessions/session_chat_screen.dart:_SessionChatScreenState",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/session_chat_screen.dart",
+      "target": "class:spikers_app/lib/screens/sessions/session_chat_screen.dart:_MessageBubble",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/session_chat_screen.dart",
+      "target": "file:spikers_app/lib/controller/session_controller.dart",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/session_detail_screen.dart",
+      "target": "file:spikers_app/lib/controller/auth_controller.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/session_detail_screen.dart",
+      "target": "file:spikers_app/lib/controller/session_controller.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/session_detail_screen.dart",
+      "target": "file:spikers_app/lib/core/constants/app_colors.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/session_detail_screen.dart",
+      "target": "file:spikers_app/lib/l10n/app_localizations.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/session_detail_screen.dart",
+      "target": "file:spikers_app/lib/models/session_model.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/session_detail_screen.dart",
+      "target": "file:spikers_app/lib/routes/app_routes.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/session_detail_screen.dart",
+      "target": "class:spikers_app/lib/screens/sessions/session_detail_screen.dart:_SessionDetailScreenState",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/session_detail_screen.dart",
+      "target": "class:spikers_app/lib/screens/sessions/session_detail_screen.dart:_CountdownTimer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/session_detail_screen.dart",
+      "target": "class:spikers_app/lib/screens/sessions/session_detail_screen.dart:_AttendeesSection",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/session_detail_screen.dart",
+      "target": "class:spikers_app/lib/screens/sessions/session_detail_screen.dart:_AttendeeItem",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/session_detail_screen.dart",
+      "target": "class:spikers_app/lib/screens/sessions/session_detail_screen.dart:_JoinButton",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/session_detail_screen.dart",
+      "target": "class:spikers_app/lib/screens/sessions/session_detail_screen.dart:_EditCapacityDialog",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/session_detail_screen.dart",
+      "target": "class:spikers_app/lib/screens/sessions/session_detail_screen.dart:_ChatBadgeIcon",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/session_detail_screen.dart",
+      "target": "file:spikers_app/lib/controller/session_controller.dart",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/sessions_history_screen.dart",
+      "target": "file:spikers_app/lib/core/constants/app_colors.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/sessions_history_screen.dart",
+      "target": "file:spikers_app/lib/l10n/app_localizations.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/sessions_history_screen.dart",
+      "target": "file:spikers_app/lib/models/session_model.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/sessions_history_screen.dart",
+      "target": "file:spikers_app/lib/routes/app_routes.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/sessions_history_screen.dart",
+      "target": "class:spikers_app/lib/screens/sessions/sessions_history_screen.dart:_HistoryCardState",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/screens/sessions/sessions_history_screen.dart",
+      "target": "file:functions/src/index.ts",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:spikers_app/lib/screens/splash/splash_screen.dart",
+      "target": "file:spikers_app/lib/controller/auth_controller.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/splash/splash_screen.dart",
+      "target": "file:spikers_app/lib/core/constants/app_assets.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/splash/splash_screen.dart",
+      "target": "file:spikers_app/lib/routes/app_routes.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/splash/splash_screen.dart",
+      "target": "file:spikers_app/lib/controller/auth_controller.dart",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:spikers_app/lib/screens/widgets/app_logo.dart",
+      "target": "file:spikers_app/lib/core/constants/app_assets.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/widgets/branded_button.dart",
+      "target": "file:spikers_app/lib/core/constants/app_colors.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/widgets/edit_body_metrics_dialog.dart",
+      "target": "file:spikers_app/lib/controller/auth_controller.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/widgets/edit_body_metrics_dialog.dart",
+      "target": "file:spikers_app/lib/core/constants/app_colors.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/widgets/edit_body_metrics_dialog.dart",
+      "target": "file:spikers_app/lib/core/utils/validators.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/widgets/edit_body_metrics_dialog.dart",
+      "target": "file:spikers_app/lib/l10n/app_localizations.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/widgets/edit_body_metrics_dialog.dart",
+      "target": "file:spikers_app/lib/models/user_model.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/widgets/edit_body_metrics_dialog.dart",
+      "target": "file:spikers_app/lib/screens/widgets/branded_text_field.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/widgets/edit_body_metrics_dialog.dart",
+      "target": "function:spikers_app/lib/screens/widgets/edit_body_metrics_dialog.dart:showEditBodyMetricsDialog",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/screens/widgets/edit_body_metrics_dialog.dart",
+      "target": "function:spikers_app/lib/screens/widgets/edit_body_metrics_dialog.dart:showEditBodyMetricsDialog",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:spikers_app/lib/screens/widgets/edit_body_metrics_dialog.dart",
+      "target": "file:spikers_app/lib/controller/auth_controller.dart",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:spikers_app/lib/screens/widgets/floating_nav_bar.dart",
+      "target": "file:spikers_app/lib/core/constants/app_colors.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/widgets/profile_info.dart",
+      "target": "file:spikers_app/lib/core/constants/app_colors.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/widgets/profile_info.dart",
+      "target": "file:spikers_app/lib/l10n/app_localizations.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/widgets/profile_info.dart",
+      "target": "file:spikers_app/lib/models/user_model.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/widgets/profile_info.dart",
+      "target": "class:spikers_app/lib/screens/widgets/profile_info.dart:ProfileRoleBadge",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/screens/widgets/profile_info.dart",
+      "target": "class:spikers_app/lib/screens/widgets/profile_info.dart:ProfileInfoCard",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/screens/widgets/profile_info.dart",
+      "target": "class:spikers_app/lib/screens/widgets/profile_info.dart:ProfileStatsRow",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/screens/widgets/profile_info.dart",
+      "target": "class:spikers_app/lib/screens/widgets/profile_info.dart:_PaymentRow",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/screens/widgets/profile_info.dart",
+      "target": "class:spikers_app/lib/screens/widgets/profile_info.dart:ProfileRoleBadge",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:spikers_app/lib/screens/widgets/profile_info.dart",
+      "target": "class:spikers_app/lib/screens/widgets/profile_info.dart:ProfileInfoCard",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:spikers_app/lib/screens/widgets/profile_info.dart",
+      "target": "class:spikers_app/lib/screens/widgets/profile_info.dart:ProfileStatsRow",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:spikers_app/lib/screens/widgets/session_card.dart",
+      "target": "file:spikers_app/lib/core/constants/app_assets.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/widgets/session_card.dart",
+      "target": "file:spikers_app/lib/core/constants/app_colors.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/widgets/session_card.dart",
+      "target": "file:spikers_app/lib/models/session_model.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/widgets/session_card.dart",
+      "target": "file:spikers_app/lib/routes/app_routes.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/widgets/session_card.dart",
+      "target": "class:spikers_app/lib/screens/widgets/session_card.dart:SessionCard",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/screens/widgets/session_card.dart",
+      "target": "class:spikers_app/lib/screens/widgets/session_card.dart:_GenderBadge",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/screens/widgets/session_card.dart",
+      "target": "class:spikers_app/lib/screens/widgets/session_card.dart:_SpotsIndicator",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:spikers_app/lib/screens/widgets/session_card.dart",
+      "target": "class:spikers_app/lib/screens/widgets/session_card.dart:SessionCard",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "config:storage.rules",
+      "target": "file:spikers_app/lib/screens/home/profile_tab.dart",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:spikers_app/lib/controller/auth_controller.dart",
+      "target": "file:spikers_app/lib/models/user_model.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/controller/auth_controller.dart",
+      "target": "file:spikers_app/lib/routes/app_routes.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/controller/notification_controller.dart",
+      "target": "file:spikers_app/lib/routes/app_routes.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/controller/recurring_session_controller.dart",
+      "target": "file:spikers_app/lib/models/recurring_session_model.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/controller/session_controller.dart",
+      "target": "file:spikers_app/lib/models/session_model.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/controller/template_controller.dart",
+      "target": "file:spikers_app/lib/models/session_template_model.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/l10n/app_localizations.dart",
+      "target": "file:spikers_app/lib/l10n/app_localizations_ar.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/l10n/app_localizations.dart",
+      "target": "file:spikers_app/lib/l10n/app_localizations_en.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/main.dart",
+      "target": "file:spikers_app/lib/firebase_options.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/main.dart",
+      "target": "file:spikers_app/lib/core/constants/app_colors.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/main.dart",
+      "target": "file:spikers_app/lib/core/theme/app_theme.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/main.dart",
+      "target": "file:spikers_app/lib/controller/locale_controller.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/main.dart",
+      "target": "file:spikers_app/lib/controller/auth_controller.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/models/user_model.dart",
+      "target": "file:spikers_app/lib/core/utils/age_calculator.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/routes/app_routes.dart",
+      "target": "file:spikers_app/lib/controller/announcement_controller.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/routes/app_routes.dart",
+      "target": "file:spikers_app/lib/controller/payment_controller.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/routes/app_routes.dart",
+      "target": "file:spikers_app/lib/controller/leaderboard_controller.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/routes/app_routes.dart",
+      "target": "file:spikers_app/lib/screens/sessions/quick_session_screen.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/routes/app_routes.dart",
+      "target": "file:spikers_app/lib/screens/players/player_profile_screen.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/routes/app_routes.dart",
+      "target": "file:spikers_app/lib/screens/sessions/recurring_sessions_screen.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/routes/app_routes.dart",
+      "target": "file:spikers_app/lib/screens/splash/splash_screen.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/routes/app_routes.dart",
+      "target": "file:spikers_app/lib/controller/notification_controller.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/routes/app_routes.dart",
+      "target": "file:spikers_app/lib/screens/sessions/create_session_screen.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/routes/app_routes.dart",
+      "target": "file:spikers_app/lib/screens/sessions/session_detail_screen.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/routes/app_routes.dart",
+      "target": "file:spikers_app/lib/screens/sessions/session_chat_screen.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/routes/app_routes.dart",
+      "target": "file:spikers_app/lib/controller/recurring_session_controller.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/routes/app_routes.dart",
+      "target": "file:spikers_app/lib/screens/sessions/create_recurring_session_screen.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/routes/app_routes.dart",
+      "target": "file:spikers_app/lib/controller/auth_controller.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/routes/app_routes.dart",
+      "target": "file:spikers_app/lib/screens/leaderboard/leaderboard_screen.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/routes/app_routes.dart",
+      "target": "file:spikers_app/lib/screens/sessions/sessions_history_screen.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/routes/app_routes.dart",
+      "target": "file:spikers_app/lib/controller/template_controller.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/routes/app_routes.dart",
+      "target": "file:spikers_app/lib/controller/session_controller.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/announcements/announcements_screen.dart",
+      "target": "file:spikers_app/lib/core/constants/app_colors.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/announcements/announcements_screen.dart",
+      "target": "file:spikers_app/lib/controller/announcement_controller.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/announcements/announcements_screen.dart",
+      "target": "file:spikers_app/lib/controller/auth_controller.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/announcements/create_announcement_screen.dart",
+      "target": "file:spikers_app/lib/screens/widgets/branded_button.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/announcements/create_announcement_screen.dart",
+      "target": "file:spikers_app/lib/controller/announcement_controller.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/announcements/create_announcement_screen.dart",
+      "target": "file:spikers_app/lib/screens/widgets/branded_text_field.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/auth/email_change_notice_screen.dart",
+      "target": "file:spikers_app/lib/core/constants/app_colors.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/auth/email_change_notice_screen.dart",
+      "target": "file:spikers_app/lib/screens/widgets/branded_button.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/auth/email_change_notice_screen.dart",
+      "target": "file:spikers_app/lib/controller/auth_controller.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/auth/forgot_password_screen.dart",
+      "target": "file:spikers_app/lib/core/utils/validators.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/auth/forgot_password_screen.dart",
+      "target": "file:spikers_app/lib/core/constants/app_colors.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/auth/forgot_password_screen.dart",
+      "target": "file:spikers_app/lib/screens/widgets/branded_button.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/auth/forgot_password_screen.dart",
+      "target": "file:spikers_app/lib/screens/widgets/branded_text_field.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/auth/forgot_password_screen.dart",
+      "target": "file:spikers_app/lib/controller/auth_controller.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/auth/login_screen.dart",
+      "target": "file:spikers_app/lib/core/utils/validators.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/auth/login_screen.dart",
+      "target": "file:spikers_app/lib/core/constants/app_colors.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/auth/login_screen.dart",
+      "target": "file:spikers_app/lib/screens/widgets/branded_button.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/auth/login_screen.dart",
+      "target": "file:spikers_app/lib/screens/widgets/branded_text_field.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/auth/login_screen.dart",
+      "target": "file:spikers_app/lib/controller/auth_controller.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/auth/login_screen.dart",
+      "target": "file:spikers_app/lib/core/constants/app_assets.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/auth/register_screen.dart",
+      "target": "file:spikers_app/lib/core/utils/validators.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/auth/register_screen.dart",
+      "target": "file:spikers_app/lib/core/constants/app_colors.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/auth/register_screen.dart",
+      "target": "file:spikers_app/lib/screens/widgets/branded_button.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/auth/register_screen.dart",
+      "target": "file:spikers_app/lib/screens/widgets/branded_text_field.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/auth/register_screen.dart",
+      "target": "file:spikers_app/lib/controller/auth_controller.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/auth/verify_email_screen.dart",
+      "target": "file:spikers_app/lib/core/utils/validators.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/auth/verify_email_screen.dart",
+      "target": "file:spikers_app/lib/core/constants/app_colors.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/auth/verify_email_screen.dart",
+      "target": "file:spikers_app/lib/screens/widgets/branded_button.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/auth/verify_email_screen.dart",
+      "target": "file:spikers_app/lib/controller/auth_controller.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/home/coaches_tab.dart",
+      "target": "file:spikers_app/lib/core/constants/app_colors.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/home/home_screen.dart",
+      "target": "file:spikers_app/lib/screens/widgets/floating_nav_bar.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/home/home_screen.dart",
+      "target": "file:spikers_app/lib/core/constants/app_colors.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/home/home_screen.dart",
+      "target": "file:spikers_app/lib/screens/home/profile_tab.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/home/home_screen.dart",
+      "target": "file:spikers_app/lib/controller/announcement_controller.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/home/home_screen.dart",
+      "target": "file:spikers_app/lib/screens/home/sessions_tab.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/home/home_screen.dart",
+      "target": "file:spikers_app/lib/controller/auth_controller.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/home/players_peer_tab.dart",
+      "target": "file:spikers_app/lib/core/constants/app_colors.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/home/players_peer_tab.dart",
+      "target": "file:spikers_app/lib/controller/auth_controller.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/home/players_tab.dart",
+      "target": "file:spikers_app/lib/core/constants/app_colors.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/home/players_tab.dart",
+      "target": "file:spikers_app/lib/core/utils/age_calculator.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:spikers_app/lib/screens/home/players_tab.dart",
+      "target": "file:spikers_app/lib/screens/players/payment_confirm_dialog.dart",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    }
+  ],
+  "layers": [
+    {
+      "id": "layer:presentation",
+      "name": "Presentation & UI",
+      "description": "Flutter screens (auth, home tabs, sessions, announcements, leaderboard, players, coaches, splash) and reusable branded widgets that render the bilingual AR/EN club UI.",
+      "nodeIds": [
+        "file:spikers_app/lib/screens/announcements/announcements_screen.dart",
+        "file:spikers_app/lib/screens/announcements/create_announcement_screen.dart",
+        "file:spikers_app/lib/screens/auth/email_change_notice_screen.dart",
+        "file:spikers_app/lib/screens/auth/forgot_password_screen.dart",
+        "file:spikers_app/lib/screens/auth/login_screen.dart",
+        "file:spikers_app/lib/screens/auth/register_screen.dart",
+        "file:spikers_app/lib/screens/auth/verify_email_screen.dart",
+        "file:spikers_app/lib/screens/coaches/coaches_list_screen.dart",
+        "file:spikers_app/lib/screens/home/coaches_tab.dart",
+        "file:spikers_app/lib/screens/home/home_screen.dart",
+        "file:spikers_app/lib/screens/home/players_peer_tab.dart",
+        "file:spikers_app/lib/screens/home/players_tab.dart",
+        "file:spikers_app/lib/screens/home/profile_tab.dart",
+        "file:spikers_app/lib/screens/home/sessions_tab.dart",
+        "file:spikers_app/lib/screens/leaderboard/leaderboard_screen.dart",
+        "file:spikers_app/lib/screens/players/payment_confirm_dialog.dart",
+        "file:spikers_app/lib/screens/players/player_profile_screen.dart",
+        "file:spikers_app/lib/screens/sessions/create_recurring_session_screen.dart",
+        "file:spikers_app/lib/screens/sessions/create_session_screen.dart",
+        "file:spikers_app/lib/screens/sessions/quick_session_screen.dart",
+        "file:spikers_app/lib/screens/sessions/recurring_sessions_screen.dart",
+        "file:spikers_app/lib/screens/sessions/session_chat_screen.dart",
+        "file:spikers_app/lib/screens/sessions/session_detail_screen.dart",
+        "file:spikers_app/lib/screens/sessions/sessions_history_screen.dart",
+        "file:spikers_app/lib/screens/splash/splash_screen.dart",
+        "file:spikers_app/lib/screens/widgets/app_logo.dart",
+        "file:spikers_app/lib/screens/widgets/branded_button.dart",
+        "file:spikers_app/lib/screens/widgets/branded_text_field.dart",
+        "file:spikers_app/lib/screens/widgets/edit_body_metrics_dialog.dart",
+        "file:spikers_app/lib/screens/widgets/floating_nav_bar.dart",
+        "file:spikers_app/lib/screens/widgets/profile_info.dart",
+        "file:spikers_app/lib/screens/widgets/session_card.dart"
+      ]
+    },
+    {
+      "id": "layer:state-management",
+      "name": "State Management & Business Logic",
+      "description": "GetX controllers that hold reactive app state and orchestrate auth, sessions, announcements, leaderboards, payments, templates, recurring sessions, and notifications between the UI and Firebase.",
+      "nodeIds": [
+        "file:spikers_app/lib/controller/announcement_controller.dart",
+        "file:spikers_app/lib/controller/auth_controller.dart",
+        "file:spikers_app/lib/controller/leaderboard_controller.dart",
+        "file:spikers_app/lib/controller/notification_controller.dart",
+        "file:spikers_app/lib/controller/payment_controller.dart",
+        "file:spikers_app/lib/controller/recurring_session_controller.dart",
+        "file:spikers_app/lib/controller/session_controller.dart",
+        "file:spikers_app/lib/controller/template_controller.dart"
+      ]
+    },
+    {
+      "id": "layer:domain-models",
+      "name": "Domain & Data Models",
+      "description": "Immutable Dart entities (User, Session, RecurringSession, SessionTemplate, Announcement, ChatMessage) with Firestore serialization and domain logic such as capacity, membership, and age computation.",
+      "nodeIds": [
+        "file:spikers_app/lib/models/announcement_model.dart",
+        "file:spikers_app/lib/models/chat_message_model.dart",
+        "file:spikers_app/lib/models/recurring_session_model.dart",
+        "file:spikers_app/lib/models/session_model.dart",
+        "file:spikers_app/lib/models/session_template_model.dart",
+        "file:spikers_app/lib/models/user_model.dart"
+      ]
+    },
+    {
+      "id": "layer:routing",
+      "name": "Routing & Navigation",
+      "description": "Centralized GetX route definitions, per-route controller bindings, and the coach-only middleware guard that controls navigation across the app.",
+      "nodeIds": [
+        "file:spikers_app/lib/routes/app_routes.dart"
+      ]
+    },
+    {
+      "id": "layer:core-infrastructure",
+      "name": "Core Infrastructure",
+      "description": "App bootstrap (main.dart, generated Firebase options) plus core cross-cutting services: FCM and local notifications, Material 3 theme, brand constants, and shared validators/age utilities.",
+      "nodeIds": [
+        "file:spikers_app/lib/main.dart",
+        "file:spikers_app/lib/firebase_options.dart",
+        "file:spikers_app/lib/core/constants/app_assets.dart",
+        "file:spikers_app/lib/core/constants/app_colors.dart",
+        "file:spikers_app/lib/core/services/fcm_service.dart",
+        "file:spikers_app/lib/core/services/local_notification_service.dart",
+        "file:spikers_app/lib/core/theme/app_theme.dart",
+        "file:spikers_app/lib/core/utils/age_calculator.dart",
+        "file:spikers_app/lib/core/utils/validators.dart"
+      ]
+    },
+    {
+      "id": "layer:localization",
+      "name": "Localization",
+      "description": "Bilingual AR/EN internationalization: ARB resource bundles, the generated AppLocalizations delegates, and the locale controller that persists and toggles the active language.",
+      "nodeIds": [
+        "file:spikers_app/lib/controller/locale_controller.dart",
+        "config:spikers_app/lib/l10n/app_ar.arb",
+        "config:spikers_app/lib/l10n/app_en.arb",
+        "file:spikers_app/lib/l10n/app_localizations.dart",
+        "file:spikers_app/lib/l10n/app_localizations_ar.dart",
+        "file:spikers_app/lib/l10n/app_localizations_en.dart",
+        "config:spikers_app/l10n.yaml"
+      ]
+    },
+    {
+      "id": "layer:backend-functions",
+      "name": "Backend & Cloud Functions",
+      "description": "TypeScript Firebase Cloud Functions providing privileged server-side logic (session join/leave/cancel, attendance, coach-key validation, recurring-session generation, scheduled cleanup) plus their Node build config.",
+      "nodeIds": [
+        "file:functions/src/index.ts",
+        "config:functions/package.json",
+        "config:functions/tsconfig.json"
+      ]
+    },
+    {
+      "id": "layer:security-config",
+      "name": "Security & Firebase Config",
+      "description": "Firestore and Storage security rules, CORS policy, Firestore indexes, and Firebase/Flutter project configuration that govern access control and deployment of the backend.",
+      "nodeIds": [
+        "service:firestore.rules",
+        "config:storage.rules",
+        "config:cors.json",
+        "config:firebase.json",
+        "config:firestore.indexes.json",
+        "config:.firebaserc",
+        "config:spikers_app/firebase.json",
+        "config:spikers_app/pubspec.yaml",
+        "config:spikers_app/analysis_options.yaml",
+        "config:.understand-anything/.understandignore"
+      ]
+    },
+    {
+      "id": "layer:documentation",
+      "name": "Documentation & Planning",
+      "description": "Project guidance, audit/fix backlogs, planning notes, and the Flutter README that capture architecture standards and roadmap for the Spikers app.",
+      "nodeIds": [
+        "document:Claude.md",
+        "document:Claude_next_app.md",
+        "document:FIXES_TO_BE_MADE.md",
+        "document:FixesToBeMade.txt",
+        "document:thingsToadd.txt",
+        "document:todoIOS.txt",
+        "document:plan.tldr",
+        "document:spikers_app/README.md",
+        "document:spikers_app/appPlan.txt"
+      ]
+    }
+  ],
+  "tour": [
+    {
+      "order": 1,
+      "title": "Project Charter & Plan",
+      "description": "Since the only README.md is default Flutter boilerplate, start with the project's own guidance documents to learn what this app is. Claude.md is the engineering operating-system defining the mandated stack (Flutter, GetX, Firebase), feature-first architecture, repository pattern, and security standards, while appPlan.txt sketches the actual feature set, screens, and data model. Together they give a newcomer the 'what' and 'why' before touching any code.",
+      "nodeIds": [
+        "document:Claude.md",
+        "document:spikers_app/appPlan.txt"
+      ]
+    },
+    {
+      "order": 2,
+      "title": "Application Entry & Bootstrap",
+      "description": "main.dart is the runtime origin of the whole app and the start of the dependency graph. It ensures Flutter bindings, initializes Firebase via the generated firebase_options.dart, configures App Check and the FCM background handler, then launches SpikersApp — a GetMaterialApp that wires routes, theme, localization, and permanent LocaleController/AuthController bindings. Read this first to get a bird's-eye view of how every later subsystem is bootstrapped.",
+      "nodeIds": [
+        "file:spikers_app/lib/main.dart",
+        "file:spikers_app/lib/firebase_options.dart"
+      ],
+      "languageLesson": "GetMaterialApp replaces Flutter's MaterialApp and turns GetX into the app's router and dependency injector. Bindings registered as 'permanent' live for the whole app lifetime, so controllers like AuthController are available globally without being recreated."
+    },
+    {
+      "order": 3,
+      "title": "Routing & Navigation Guard",
+      "description": "app_routes.dart is the single most connected file in the codebase (fan-out 38): it centralizes every named route, its per-route controller binding, and the coach-only middleware that guards privileged screens. Building on the SpikersApp setup from Step 2, this is how the app decides which screen to show and which controllers to inject when navigating. Understanding this map makes every screen in later steps easy to locate.",
+      "nodeIds": [
+        "file:spikers_app/lib/routes/app_routes.dart"
+      ],
+      "languageLesson": "GetX Bindings declare which controllers a route needs, and GetMiddleware.redirect() runs before a route loads — here it bounces non-coach users away from coach-only screens. This keeps dependency wiring and route protection co-located with the route definition."
+    },
+    {
+      "order": 4,
+      "title": "Authentication Flow",
+      "description": "AuthController is the backbone of identity (fan-in 26) — it owns Firebase Auth state, the current UserModel stream, email verification, FCM token persistence, coach-key promotion, and sign-out teardown. The auth screens drive the user through login, registration, and email verification, with the splash screen deciding the entry destination based on auth state. This is where a new developer learns how a session begins and how roles (coach vs player) are established.",
+      "nodeIds": [
+        "file:spikers_app/lib/controller/auth_controller.dart",
+        "file:spikers_app/lib/screens/auth/login_screen.dart",
+        "file:spikers_app/lib/screens/auth/register_screen.dart",
+        "file:spikers_app/lib/screens/auth/verify_email_screen.dart",
+        "file:spikers_app/lib/screens/splash/splash_screen.dart"
+      ]
+    },
+    {
+      "order": 5,
+      "title": "Domain Data Models",
+      "description": "These immutable Dart entities define the vocabulary the whole app speaks. UserModel carries identity, role, membership, and payment fields; SessionModel and RecurringSessionModel model bookable sessions and their generation rules; AnnouncementModel and ChatMessage back club news and in-session chat. Each provides Firestore fromDoc/toMap serialization plus domain logic like capacity and age computation, forming the contract between the controllers (Step 4, 6) and the database.",
+      "nodeIds": [
+        "file:spikers_app/lib/models/user_model.dart",
+        "file:spikers_app/lib/models/session_model.dart",
+        "file:spikers_app/lib/models/recurring_session_model.dart",
+        "file:spikers_app/lib/models/announcement_model.dart",
+        "file:spikers_app/lib/models/chat_message_model.dart"
+      ],
+      "languageLesson": "These classes are immutable value objects: fields are final and updates produce new instances. The fromDoc factory constructor centralizes deserialization (with safe defaults for missing fields), keeping Firestore's untyped maps from leaking into the rest of the app."
+    },
+    {
+      "order": 6,
+      "title": "The GetX State Pattern",
+      "description": "This project enforces a strict UI → Controller → Firebase flow with no Firestore inside widgets. AnnouncementController demonstrates the canonical pattern: it streams reactive state, computes derived values (unread badge), and exposes CRUD methods the UI calls. Grasping this single controller — reactive streams in, mutation methods out — lets you read every other controller in the app by analogy.",
+      "nodeIds": [
+        "file:spikers_app/lib/controller/announcement_controller.dart",
+        "file:spikers_app/lib/screens/announcements/announcements_screen.dart"
+      ],
+      "languageLesson": "GetX controllers expose observable (.obs) fields; widgets wrap them in Obx() to rebuild only when those values change. Firestore snapshot streams are bound to these observables inside onInit, so the UI stays reactive without any manual setState."
+    },
+    {
+      "order": 7,
+      "title": "Core Feature: Sessions",
+      "description": "Sessions are the heart of the club app. SessionController live-streams upcoming sessions filtered by verification, payment, gender, and age, then delegates every privileged mutation (join/leave/cancel/capacity/attendance) to Cloud Functions rather than writing directly. The create and detail screens are the main user touchpoints, building on the SessionModel from Step 5 and the controller pattern from Step 6.",
+      "nodeIds": [
+        "file:spikers_app/lib/controller/session_controller.dart",
+        "file:spikers_app/lib/screens/sessions/create_session_screen.dart",
+        "file:spikers_app/lib/screens/sessions/session_detail_screen.dart"
+      ],
+      "languageLesson": "Notice the deliberate split: reads happen client-side via Firestore streams, but mutations call Cloud Functions callables. This pattern keeps trust on the server — the client can never directly write a join, so capacity and eligibility rules can't be bypassed."
+    },
+    {
+      "order": 8,
+      "title": "Sessions: Chat & Recurring Schedules",
+      "description": "Two satellite features extend the session core. The chat screen, backed by the ChatMessage model from Step 5, gives each session a real-time message thread. RecurringSessionController and its create screen let coaches define repeating session rules that the backend later expands into concrete sessions. Together they round out the session subsystem before we move to the other club features.",
+      "nodeIds": [
+        "file:spikers_app/lib/screens/sessions/session_chat_screen.dart",
+        "file:spikers_app/lib/controller/recurring_session_controller.dart",
+        "file:spikers_app/lib/screens/sessions/create_recurring_session_screen.dart"
+      ]
+    },
+    {
+      "order": 9,
+      "title": "Players, Profiles & Payments",
+      "description": "Beyond sessions, the app manages people and money. The home screen hosts the tabbed shell (sessions, players, profile, coaches), the player profile screen exposes member details, and PaymentController lets coaches mark players paid/unpaid for a 30-day window with a batched write plus an audit record. This shows how role-gated coach actions and the membership fields on UserModel (Step 5) come together.",
+      "nodeIds": [
+        "file:spikers_app/lib/screens/home/home_screen.dart",
+        "file:spikers_app/lib/screens/players/player_profile_screen.dart",
+        "file:spikers_app/lib/controller/payment_controller.dart"
+      ]
+    },
+    {
+      "order": 10,
+      "title": "Leaderboard & Notifications",
+      "description": "LeaderboardController aggregates attendance across sessions and the users_public mirror to rank players all-time and monthly, while NotificationController wires FCM: it shows foreground banners through the local-notification service and deep-links taps into the relevant session detail. These cross-cutting features depend on the auth and session foundations established earlier and demonstrate how the app aggregates and reacts to data events.",
+      "nodeIds": [
+        "file:spikers_app/lib/controller/leaderboard_controller.dart",
+        "file:spikers_app/lib/screens/leaderboard/leaderboard_screen.dart",
+        "file:spikers_app/lib/controller/notification_controller.dart",
+        "file:spikers_app/lib/core/services/fcm_service.dart"
+      ]
+    },
+    {
+      "order": 11,
+      "title": "Design System & Shared Widgets",
+      "description": "Consistency comes from a small core. app_theme.dart builds the dark Material 3 theme from the app_colors.dart brand palette (navy/gold) and the Cairo font, while branded_button, branded_text_field, and session_card are the high-reuse widgets (fan-in 8–9) seen across nearly every screen in earlier steps. Knowing these explains why the UI looks uniform and where to make global style changes.",
+      "nodeIds": [
+        "file:spikers_app/lib/core/theme/app_theme.dart",
+        "file:spikers_app/lib/core/constants/app_colors.dart",
+        "file:spikers_app/lib/screens/widgets/branded_button.dart",
+        "file:spikers_app/lib/screens/widgets/branded_text_field.dart",
+        "file:spikers_app/lib/screens/widgets/session_card.dart"
+      ]
+    },
+    {
+      "order": 12,
+      "title": "Backend Cloud Functions",
+      "description": "functions/src/index.ts is the privileged server tier the client delegates to. It implements the callable functions behind Step 7's session mutations (join/leave/cancel/capacity/attendance), validates coach keys, generates recurring sessions, maintains the users_public mirror, and runs scheduled cleanup/archival jobs. This is where the real business rules and authority live — the Flutter app is intentionally a thin, untrusted client.",
+      "nodeIds": [
+        "file:functions/src/index.ts",
+        "config:functions/package.json"
+      ],
+      "languageLesson": "Firebase callable functions run with Admin-SDK privileges, bypassing Firestore security rules. That is why sensitive writes are funneled here: the function re-checks auth, role, and capacity server-side before mutating, so a tampered client cannot forge a join or mark itself paid."
+    },
+    {
+      "order": 13,
+      "title": "Security Rules & Firebase Config",
+      "description": "The security tier closes the loop. firestore.rules enforces role-based access (coach vs player), email-verification gating, and field-level validation while locking down privileged write paths so only the Cloud Functions from Step 12 can perform them; storage.rules restricts profile-photo uploads to a user's own uid-named JPG under 5MB. firebase.json ties rules, indexes, and functions together for deployment. This is the enforcement layer behind the client/server split seen throughout the tour.",
+      "nodeIds": [
+        "service:firestore.rules",
+        "config:storage.rules",
+        "config:firebase.json"
+      ],
+      "languageLesson": "Firestore rules are a deny-by-default declarative language: every read/write is rejected unless a rule explicitly allows it. Pairing locked-down rules with Admin-SDK Cloud Functions is the standard Firebase pattern for enforcing trust the client cannot be given."
+    },
+    {
+      "order": 14,
+      "title": "Bilingual Localization (AR/EN)",
+      "description": "Finally, the feature that shapes the whole UI: bilingual Arabic/English support. The app_en.arb and app_ar.arb resource bundles hold every UI string, the generated AppLocalizations base class exposes them as typed getters, and LocaleController persists and toggles the active language — driving the RTL/LTR Directionality flip wired back in main.dart (Step 2). This explains the AppLocalizations.of(context) calls peppered through every screen you read earlier.",
+      "nodeIds": [
+        "config:spikers_app/lib/l10n/app_en.arb",
+        "config:spikers_app/lib/l10n/app_ar.arb",
+        "file:spikers_app/lib/l10n/app_localizations.dart",
+        "file:spikers_app/lib/controller/locale_controller.dart",
+        "config:spikers_app/l10n.yaml"
+      ],
+      "languageLesson": "ARB (Application Resource Bundle) files are JSON key/value catalogs; l10n.yaml drives Flutter's gen_l10n tool to generate the AppLocalizations delegates at build time. The English bundle is the template/source-of-truth and the Arabic bundle must mirror its keys exactly."
+    }
+  ]
+}

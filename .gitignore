@@ -1,0 +1,33 @@
+# Cloud Functions — compiled output and dependencies
+functions/node_modules/
+functions/lib/
+
+# Firebase local cache and debug logs
+.firebase/
+firebase-debug.log
+firebase-debug.*.log
+firestore-debug.log
+ui-debug.log
+database-debug.log
+
+# Environment / secrets
+.env
+.env.*
+*.local
+serviceAccountKey.json
+
+# Android signing secrets — never commit these
+**/key.properties
+**/local.properties
+*.jks
+*.keystore
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+
+# Text
+plan.tldr
+*.txt

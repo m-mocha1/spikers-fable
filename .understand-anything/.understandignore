@@ -1,0 +1,59 @@
+# .understandignore — patterns for files/dirs to exclude from analysis
+# Syntax: same as .gitignore (globs, # comments, ! negation, trailing / for dirs)
+# Lines below are suggestions — uncomment to activate.
+#
+# Built-in defaults (always excluded unless negated):
+#   node_modules/, .git/, dist/, build/, obj/, *.lock, *.min.js, etc.
+#
+# --- From .gitignore (uncomment to exclude) ---
+
+# functions/node_modules/
+# functions/lib/
+# .firebase/
+# firebase-debug.log
+# firebase-debug.*.log
+# firestore-debug.log
+# ui-debug.log
+# database-debug.log
+# .env
+# .env.*
+# *.local
+# serviceAccountKey.json
+# **/key.properties
+# **/local.properties
+# *.jks
+# *.keystore
+# .DS_Store
+# Thumbs.db
+# desktop.ini
+# plan.tldr
+# *.txt
+
+# --- Flutter / Dart (active exclusions) ---
+
+.dart_tool/
+spikers_app/.dart_tool/
+spikers_app/build/
+spikers_app/android/
+spikers_app/ios/
+spikers_app/linux/
+spikers_app/macos/
+spikers_app/windows/
+spikers_app/web/
+spikers_app/test/
+*.g.dart
+*.freezed.dart
+spikers_app/.flutter-plugins-dependencies
+spikers_app/.metadata
+spikers_app/pubspec.lock
+
+# --- Firebase build output ---
+
+functions/node_modules/
+functions/lib/
+
+# --- Test file patterns (uncomment to exclude) ---
+
+# *.test.*
+# *.spec.*
+# *.snap

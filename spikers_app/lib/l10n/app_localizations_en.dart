@@ -1,0 +1,651 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
+import 'app_localizations.dart';
+
+// ignore_for_file: type=lint
+
+/// The translations for English (`en`).
+class AppLocalizationsEn extends AppLocalizations {
+  AppLocalizationsEn([String locale = 'en']) : super(locale);
+
+  @override
+  String get appName => 'Jerusalem Spikers';
+
+  @override
+  String get signIn => 'Sign In';
+
+  @override
+  String get register => 'Register';
+
+  @override
+  String get email => 'Email';
+
+  @override
+  String get emailHint => 'Enter your email';
+
+  @override
+  String get password => 'Password';
+
+  @override
+  String get passwordHint => 'Enter your password';
+
+  @override
+  String get confirmPassword => 'Confirm Password';
+
+  @override
+  String get confirmPasswordHint => 'Re-enter your password';
+
+  @override
+  String get name => 'Full Name';
+
+  @override
+  String get nameHint => 'Enter your full name';
+
+  @override
+  String get forgotPassword => 'Forgot Password?';
+
+  @override
+  String get sendResetEmail => 'Send Reset Email';
+
+  @override
+  String get noAccount => 'Don\'t have an account?';
+
+  @override
+  String get haveAccount => 'Already have an account?';
+
+  @override
+  String get male => 'Male';
+
+  @override
+  String get female => 'Female';
+
+  @override
+  String get mixed => 'Mixed';
+
+  @override
+  String get gender => 'Gender';
+
+  @override
+  String get dateOfBirth => 'Date of Birth';
+
+  @override
+  String get selectDate => 'Select date';
+
+  @override
+  String get role => 'Role';
+
+  @override
+  String get player => 'Player';
+
+  @override
+  String get coach => 'Coach';
+
+  @override
+  String get coachKey => 'Coach Access Key';
+
+  @override
+  String get coachKeyHint => 'Enter the coach key';
+
+  @override
+  String get sessions => 'Sessions';
+
+  @override
+  String get profile => 'Profile';
+
+  @override
+  String get createSession => 'Create Session';
+
+  @override
+  String get sessionTitle => 'Session Title';
+
+  @override
+  String get sessionTitleHint => 'e.g. Morning Practice';
+
+  @override
+  String get location => 'Location';
+
+  @override
+  String get locationHint => 'e.g. Jerusalem Sports Hall';
+
+  @override
+  String get minAge => 'Min Age';
+
+  @override
+  String get maxAge => 'Max Age';
+
+  @override
+  String get startTime => 'Start Time';
+
+  @override
+  String get endTime => 'End Time';
+
+  @override
+  String get maxPlayers => 'Max Players';
+
+  @override
+  String get joinSession => 'Join';
+
+  @override
+  String get leaveSession => 'Leave';
+
+  @override
+  String get cancelSession => 'Cancel Session';
+
+  @override
+  String get sessionFull => 'Session Full';
+
+  @override
+  String spotsLeft(int count) {
+    return '$count spots left';
+  }
+
+  @override
+  String get attendees => 'Attendees';
+
+  @override
+  String get noSessions => 'No sessions available';
+
+  @override
+  String get noSessionsDesc => 'Check back later for upcoming sessions';
+
+  @override
+  String get sessionCreated => 'Session created successfully';
+
+  @override
+  String get sessionCancelled => 'Session has been cancelled';
+
+  @override
+  String get sessionEnded => 'Session has ended';
+
+  @override
+  String get sessionEndedSubtitle => 'Good job!';
+
+  @override
+  String get newSession => 'New Session';
+
+  @override
+  String get signOut => 'Sign Out';
+
+  @override
+  String get switchLanguage => 'عربي';
+
+  @override
+  String get requiredField => 'This field is required';
+
+  @override
+  String get invalidEmail => 'Enter a valid email address';
+
+  @override
+  String get passwordTooShort => 'Password must be at least 6 characters';
+
+  @override
+  String get passwordsDoNotMatch => 'Passwords do not match';
+
+  @override
+  String get invalidCoachKey => 'Invalid coach key';
+
+  @override
+  String get emailAlreadyInUse =>
+      'This email is already registered. Try signing in instead.';
+
+  @override
+  String get userNotFound => 'No account found with this email.';
+
+  @override
+  String get wrongPassword => 'Wrong email or password';
+
+  @override
+  String get tooManyRequests =>
+      'Too many attempts. Please wait a moment and try again.';
+
+  @override
+  String get userDisabled => 'This account has been disabled. Contact support.';
+
+  @override
+  String get networkError => 'No internet connection. Check your network.';
+
+  @override
+  String get unknownError => 'Something went wrong. Please try again.';
+
+  @override
+  String get loading => 'Loading...';
+
+  @override
+  String get retry => 'Retry';
+
+  @override
+  String get myAccount => 'My Account';
+
+  @override
+  String get age => 'Age';
+
+  @override
+  String get years => 'years';
+
+  @override
+  String get upcoming => 'Upcoming';
+
+  @override
+  String get ongoing => 'Ongoing';
+
+  @override
+  String get startsIn => 'Starts in';
+
+  @override
+  String get endsIn => 'Ends in';
+
+  @override
+  String get confirm => 'Confirm';
+
+  @override
+  String get yes => 'Yes';
+
+  @override
+  String get no => 'No';
+
+  @override
+  String get cancel => 'Cancel';
+
+  @override
+  String get confirmCancelSession => 'Cancel Session';
+
+  @override
+  String get confirmCancelMessage =>
+      'Are you sure you want to cancel this session? Attendees will be notified.';
+
+  @override
+  String get ageRange => 'Age Range';
+
+  @override
+  String get players => 'players';
+
+  @override
+  String get full => 'Full';
+
+  @override
+  String get live => 'Live';
+
+  @override
+  String get sessionInfo => 'Session Info';
+
+  @override
+  String get coachLabel => 'Coach';
+
+  @override
+  String joinedCount(int count, int max) {
+    return '$count/$max players';
+  }
+
+  @override
+  String get sessionDate => 'Date';
+
+  @override
+  String get genderMixed => 'Mixed';
+
+  @override
+  String get coachSessions => 'My Sessions';
+
+  @override
+  String get endTimeError => 'End time must be after start time';
+
+  @override
+  String get errorOccurred => 'An error occurred';
+
+  @override
+  String get quickSession => 'Quick Session';
+
+  @override
+  String get selectTemplate => 'Pick a template';
+
+  @override
+  String get saveAsTemplate => 'Save as Template';
+
+  @override
+  String get noTemplates => 'No templates yet';
+
+  @override
+  String get noTemplatesDesc =>
+      'Create a session and check \"Save as Template\" to save it here';
+
+  @override
+  String get templateSaved => 'Template saved';
+
+  @override
+  String get chat => 'Chat';
+
+  @override
+  String get typeMessage => 'Type a message...';
+
+  @override
+  String get chatEmpty => 'No messages yet. Say something!';
+
+  @override
+  String get attended => 'Attended';
+
+  @override
+  String get notAttended => 'Absent';
+
+  @override
+  String get sessionsAttended => 'sessions attended';
+
+  @override
+  String get addPhoto => 'Add Photo';
+
+  @override
+  String get changePhoto => 'Change Photo';
+
+  @override
+  String get pickFromGallery => 'Gallery';
+
+  @override
+  String get takePhoto => 'Camera';
+
+  @override
+  String get photoUpdated => 'Profile photo updated';
+
+  @override
+  String get playersTab => 'Players';
+
+  @override
+  String get coachesTab => 'Coaches';
+
+  @override
+  String get allGenders => 'All';
+
+  @override
+  String get noPlayers => 'No players found';
+
+  @override
+  String get noCoaches => 'No coaches found';
+
+  @override
+  String get paid => 'Paid';
+
+  @override
+  String get unpaid => 'Unpaid';
+
+  @override
+  String get lifetime => 'LIFETIME';
+
+  @override
+  String get lifetimeMember => 'This player has lifetime membership.';
+
+  @override
+  String get payment => 'Payment';
+
+  @override
+  String get paymentRequired => 'Sessions locked';
+
+  @override
+  String get paymentRequiredDesc =>
+      'Pay your dues to unlock sessions. Contact your coach.';
+
+  @override
+  String confirmMarkPaid(String name) {
+    return 'Mark $name as paid?';
+  }
+
+  @override
+  String confirmMarkUnpaid(String name) {
+    return 'Mark $name as unpaid?';
+  }
+
+  @override
+  String daysLeft(int days) {
+    return '${days}d left';
+  }
+
+  @override
+  String get verifyEmailTitle => 'Verify your email';
+
+  @override
+  String verifyEmailBody(String email) {
+    return 'We sent a verification link to $email. Tap it, then come back and press Continue.';
+  }
+
+  @override
+  String get verifyEmailContinue => 'I verified — Continue';
+
+  @override
+  String get verifyEmailResend => 'Resend email';
+
+  @override
+  String verifyEmailResendIn(int seconds) {
+    return 'Resend in ${seconds}s';
+  }
+
+  @override
+  String get verifyEmailNotYet => 'Not verified yet. Check your inbox.';
+
+  @override
+  String get verifyEmailSent => 'Verification email sent.';
+
+  @override
+  String get changeEmail => 'Wrong email? Change it';
+
+  @override
+  String get changeEmailTitle => 'Change email';
+
+  @override
+  String get changeEmailHint => 'Enter the correct email';
+
+  @override
+  String get changeEmailUpdate => 'Update';
+
+  @override
+  String get emailChangeNoticeTitle => 'Check your email';
+
+  @override
+  String emailChangeNoticeBody(String email) {
+    return 'We sent a verification link to $email. Click the link, then come back and sign in with the new email.';
+  }
+
+  @override
+  String get emailChangeNoticeButton => 'Go to sign in';
+
+  @override
+  String get sessionExpired => 'Session expired. Please sign in again.';
+
+  @override
+  String get waitlistSize => 'Waitlist Size';
+
+  @override
+  String get waitlist => 'Waitlist';
+
+  @override
+  String get joinWaitlist => 'Join Waitlist';
+
+  @override
+  String get leaveWaitlist => 'Leave Waitlist';
+
+  @override
+  String get waitlistFull => 'Waitlist Full';
+
+  @override
+  String get waitlistedSnack => 'You\'ve been added to the waitlist';
+
+  @override
+  String get increaseCapacity => 'Increase Capacity';
+
+  @override
+  String get newMaxPlayers => 'New max players';
+
+  @override
+  String get newWaitlistSize => 'New waitlist size';
+
+  @override
+  String get capacityMustNotDecrease => 'Capacity cannot be decreased';
+
+  @override
+  String mustBeAtLeast(int count) {
+    return 'Must be at least $count';
+  }
+
+  @override
+  String get sessionMissing => 'This session no longer exists';
+
+  @override
+  String get notSignedIn => 'Please sign in again';
+
+  @override
+  String get notYourSession => 'Only the session\'s coach can do that';
+
+  @override
+  String get nothingToUpdate => 'Nothing to update';
+
+  @override
+  String get height => 'Height';
+
+  @override
+  String get weight => 'Weight';
+
+  @override
+  String get heightHint => 'cm';
+
+  @override
+  String get weightHint => 'kg';
+
+  @override
+  String get invalidHeight => 'Enter a valid height (100–250 cm)';
+
+  @override
+  String get invalidWeight => 'Enter a valid weight (20–200 kg)';
+
+  @override
+  String get editBodyMetrics => 'Edit height & weight';
+
+  @override
+  String get save => 'Save';
+
+  @override
+  String get announcements => 'Announcements';
+
+  @override
+  String get noAnnouncements => 'No announcements yet';
+
+  @override
+  String get newAnnouncement => 'New Announcement';
+
+  @override
+  String get announcementTitle => 'Title';
+
+  @override
+  String get announcementBody => 'Message';
+
+  @override
+  String get announcementCreated => 'Announcement posted';
+
+  @override
+  String get editAnnouncement => 'Edit Announcement';
+
+  @override
+  String get announcementUpdated => 'Announcement updated';
+
+  @override
+  String get announcementDeleted => 'Announcement deleted';
+
+  @override
+  String get confirmDeleteAnnouncement => 'Delete announcement?';
+
+  @override
+  String get confirmDeleteAnnouncementBody => 'This cannot be undone.';
+
+  @override
+  String get delete => 'Delete';
+
+  @override
+  String get sessionsHistory => 'Sessions History';
+
+  @override
+  String get noSessionsHistory => 'No past sessions yet';
+
+  @override
+  String historyAttendanceSummary(int attended, int joined, int max) {
+    return '$attended attended · $joined/$max joined';
+  }
+
+  @override
+  String get leaderboard => 'Leaderboard';
+
+  @override
+  String get thisMonth => 'This Month';
+
+  @override
+  String get allTime => 'All Time';
+
+  @override
+  String get noLeaderboardData => 'No attendance data yet';
+
+  @override
+  String sessionsCount(int count) {
+    return '$count sessions';
+  }
+
+  @override
+  String get recurringSessions => 'Recurring Sessions';
+
+  @override
+  String get recurringSessionsDesc => 'Auto-create sessions on a schedule';
+
+  @override
+  String get createRecurring => 'New Recurring Session';
+
+  @override
+  String get editRecurring => 'Edit Recurring Session';
+
+  @override
+  String get recurrenceDays => 'Repeat On';
+
+  @override
+  String get noRecurringSessions => 'No recurring sessions';
+
+  @override
+  String get noRecurringSessionsDesc =>
+      'Tap + to auto-create practices on a schedule';
+
+  @override
+  String get recurringCreated => 'Recurring session created';
+
+  @override
+  String get recurringUpdated => 'Recurring session updated';
+
+  @override
+  String get recurringDeleted => 'Recurring session deleted';
+
+  @override
+  String get confirmDeleteRecurring => 'Delete recurring session?';
+
+  @override
+  String get confirmDeleteRecurringBody =>
+      'Future sessions will no longer be auto-created.';
+
+  @override
+  String get enabled => 'Enabled';
+
+  @override
+  String get paused => 'Paused';
+
+  @override
+  String get selectDays => 'Select at least one day';
+
+  @override
+  String get sun => 'Sun';
+
+  @override
+  String get mon => 'Mon';
+
+  @override
+  String get tue => 'Tue';
+
+  @override
+  String get wed => 'Wed';
+
+  @override
+  String get thu => 'Thu';
+
+  @override
+  String get fri => 'Fri';
+
+  @override
+  String get sat => 'Sat';
+}

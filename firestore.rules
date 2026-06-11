@@ -1,0 +1,168 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuth()  { return request.auth != null; }
+    function uid()     { return request.auth.uid; }
+    function isVerified() {
+      return isAuth() && request.auth.token.email_verified == true;
+    }
+    function isCoach() {
+      return isAuth() &&
+             get(/databases/$(database)/documents/users/$(uid())).data.role == 'coach';
+    }
+    function sessionData(sessionId) {
+      return get(/databases/$(database)/documents/sessions/$(sessionId)).data;
+    }
+
+    // Field validators — used by the H2 asserts on /users.
+    function isValidName(v)   { return v is string && v.size() >= 1 && v.size() <= 80; }
+    function isValidGender(v) { return v == 'male' || v == 'female'; }
+    function isValidHeight(v) { return v is int && v >= 100 && v <= 250; }
+    function isValidWeight(v) { return v is int && v >= 20  && v <= 200; }
+    // Earliest plausible DOB ~1925-01-01; must be at least 13 years ago.
+    function isValidDob(v) {
+      return v is timestamp
+             && v.toMillis() > -1420070400000
+             && v.toMillis() < request.time.toMillis() - 13 * 365 * 24 * 60 * 60 * 1000;
+    }
+    function hasField(data, key) { return key in data.keys(); }
+
+    match /users/{userId} {
+      // Tightened from `isAuth()` — full profile reads gated to coaches and
+      // the owner. All other verified users use /users_public for name +
+      // photoUrl + role + gender + attendanceCount lookups.
+      allow read: if isCoach() || (isAuth() && uid() == userId);
+
+      allow create: if isAuth() && uid() == userId
+                    // Force role='player' at create; coaches are promoted
+                    // server-side via the validateCoachKey callable.
+                    && request.resource.data.role == 'player'
+                    && isValidName(request.resource.data.name)
+                    && isValidGender(request.resource.data.gender)
+                    && isValidDob(request.resource.data.dateOfBirth)
+                    && (!hasField(request.resource.data, 'heightCm')
+                        || isValidHeight(request.resource.data.heightCm))
+                    && (!hasField(request.resource.data, 'weightKg')
+                        || isValidWeight(request.resource.data.weightKg));
+
+      // Owner can update only non-privileged profile fields. Whitelist
+      // prevents direct-API privilege escalation (e.g. setting role='coach'
+      // or self-granting paidUntil). Coach can update only payment fields
+      // on any user; attendanceCount is now written exclusively by the
+      // markAttended callable (Admin SDK, bypasses rules).
+      allow update: if (isAuth() && uid() == userId
+                        && request.resource.data.diff(resource.data).affectedKeys()
+                            .hasOnly([
+                              'name',
+                              'photoUrl',
+                              'verifiedAt',
+                              'createdAt',
+                              'gender',
+                              'dateOfBirth',
+                              'heightCm',
+                              'weightKg',
+                              'lastSeenAnnouncementsAt'
+                            ])
+                        && isValidName(request.resource.data.name)
+                        && isValidGender(request.resource.data.gender)
+                        && isValidDob(request.resource.data.dateOfBirth)
+                        && (!hasField(request.resource.data, 'heightCm')
+                            || isValidHeight(request.resource.data.heightCm))
+                        && (!hasField(request.resource.data, 'weightKg')
+                            || isValidWeight(request.resource.data.weightKg)))
+                    || (isCoach() &&
+                        request.resource.data.diff(resource.data).affectedKeys()
+                            .hasOnly(['paidUntil', 'paidAt']));
+      allow delete: if false;
+
+      match /templates/{templateId} {
+        allow read, write: if uid() == userId;
+      }
+
+      match /payments/{paymentId} {
+        allow create: if isCoach();
+        allow read:   if isCoach() || uid() == userId;
+        allow update, delete: if false;
+      }
+
+      // Private subcollection — used for fcmToken (Fix 2 in FixesToBeMade.txt).
+      // Reads stay off the user doc so they don't fan out to PlayersTab listeners.
+      match /private/{docId} {
+        allow read, write: if isAuth() && uid() == userId;
+      }
+    }
+
+    // Public mirror of /users — only safe fields, readable by any verified
+    // user. Written exclusively by the mirrorUserPublic Function (Admin SDK).
+    match /users_public/{userId} {
+      allow read: if isVerified();
+      allow write: if false;
+    }
+
+    match /sessions/{sessionId} {
+      // Sessions and chat are gated behind email verification (the client also
+      // routes unverified users to /verify-email; this is defense-in-depth).
+      allow read: if isVerified();
+
+      // Only verified coaches create sessions, declaring themselves as coach.
+      allow create: if isVerified() && isCoach()
+                    && request.resource.data.coachId == uid();
+
+      // Deletes happen via cancelSession + sessionCleanup Cloud Functions (Admin SDK).
+      allow delete: if false;
+
+      // attendedIds is now written exclusively by the markAttended callable
+      // (Admin SDK), so no direct-client update is needed any more.
+      allow update: if false;
+
+      match /messages/{msgId} {
+        allow read: if isVerified();
+        // Caller must own the sender field AND be the coach or a current attendee.
+        allow create: if isVerified()
+                      && request.resource.data.senderId == uid()
+                      && (uid() == sessionData(sessionId).coachId
+                          || uid() in sessionData(sessionId).attendeeIds);
+        allow update, delete: if false;
+      }
+    }
+
+    match /sessions_history/{sessionId} {
+      allow read: if isVerified();
+      allow write: if false;
+    }
+
+    match /recurring_sessions/{recurringId} {
+      allow read:   if isVerified() && isCoach();
+
+      allow create: if isVerified() && isCoach()
+                    && request.resource.data.coachId == uid();
+
+      allow update: if isVerified() && isCoach()
+                    && resource.data.coachId == uid();
+
+      allow delete: if isVerified() && isCoach()
+                    && resource.data.coachId == uid();
+    }
+
+    match /announcements/{announcementId} {
+      allow read: if isVerified();
+
+      allow create: if isVerified() && isCoach()
+                    && request.resource.data.authorId == uid();
+
+      allow update: if isVerified() && isCoach()
+                    && resource.data.authorId == uid()
+                    && request.resource.data.diff(resource.data).affectedKeys()
+                        .hasOnly(['title', 'body']);
+
+      allow delete: if isVerified() && isCoach()
+                    && resource.data.authorId == uid();
+    }
+
+    match /config/{docId} {
+      allow read:  if false; // secret — Cloud Function reads via Admin SDK
+      allow write: if false;
+    }
+  }
+}

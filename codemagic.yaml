@@ -1,0 +1,78 @@
+# Codemagic CI/CD configuration for the Spikers app.
+#
+# The Flutter project lives in the `spikers_app/` subdirectory of this repo,
+# so every workflow sets `working_directory: spikers_app`. That is the fix for
+# the "Failed to install dependencies ... Directory was not found" error, which
+# happened because Codemagic was looking for pubspec.yaml at the repo root.
+#
+# Before the first successful run you must configure, in the Codemagic UI:
+#   1. An App Store Connect API key integration (Team settings > Integrations).
+#   2. A code signing certificate / bundle id `com.jerusalem.spikers` registered
+#      in your Apple Developer account.
+# Then replace the placeholder values marked TODO below.
+
+workflows:
+  ios-testflight:
+    name: iOS - TestFlight
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    working_directory: spikers_app
+
+    environment:
+      flutter: stable          # pin to e.g. 3.41.9 once confirmed available on Codemagic
+      xcode: latest
+      cocoapods: default
+
+      # App Store Connect API key integration.
+      # Create it under Team settings > Integrations > App Store Connect,
+      # then set `integrations.app_store_connect` to that integration's name.
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.jerusalem.spikers
+      groups:
+        - app_store_credentials # TODO: env var group holding APP_STORE_APP_ID, etc.
+
+    integrations:
+      app_store_connect: ASC_KEY  # TODO: replace with your App Store Connect API key name
+
+    scripts:
+      - name: Flutter pub get
+        script: flutter pub get
+
+      - name: Install CocoaPods dependencies
+        script: |
+          find . -name "Podfile" -execdir pod install \;
+
+      - name: Flutter analyze
+        script: flutter analyze
+        ignore_failure: true
+
+      - name: Set up code signing settings on Xcode project
+        script: xcode-project use-profiles
+
+      - name: Build iOS (IPA for distribution)
+        script: |
+          flutter build ipa --release \
+            --export-options-plist=/Users/builder/export_options.plist
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - flutter_drive.log
+
+    publishing:
+      # Publish the build to TestFlight so your testers install via the
+      # standard App Store / TestFlight flow.
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        # Optionally add beta_groups to auto-assign testers:
+        # beta_groups:
+        #   - Friends
+
+      email:
+        recipients:
+          - mhamadadmare11@gmail.com
+        notify:
+          success: true
+          failure: true

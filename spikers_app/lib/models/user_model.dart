@@ -1,0 +1,96 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../core/utils/age_calculator.dart';
+
+class UserModel {
+  final String uid;
+  final String name;
+  final String gender;
+  final DateTime dateOfBirth;
+  final String role;
+  final String? photoUrl;
+  final DateTime createdAt;
+  final DateTime? verifiedAt;
+  final DateTime? paidUntil;
+  final DateTime? paidAt;
+  final int? heightCm;
+  final int? weightKg;
+  final DateTime? lastSeenAnnouncementsAt;
+  final bool lifetimeMember;
+
+  const UserModel({
+    required this.uid,
+    required this.name,
+    required this.gender,
+    required this.dateOfBirth,
+    required this.role,
+    this.photoUrl,
+    required this.createdAt,
+    this.verifiedAt,
+    this.paidUntil,
+    this.paidAt,
+    this.heightCm,
+    this.weightKg,
+    this.lastSeenAnnouncementsAt,
+    this.lifetimeMember = false,
+  });
+
+  int get age => AgeCalculator.fromDate(dateOfBirth);
+  bool get isCoach => role == 'coach';
+  bool get isPaid =>
+      lifetimeMember ||
+      (paidUntil != null && paidUntil!.isAfter(DateTime.now()));
+  int get paymentDaysLeft => daysLeftUntil(paidUntil);
+
+  // Calendar-day diff so a sub expiring tomorrow at any hour reads as
+  // "1 day left", not "0 days left" from Duration.inDays truncation.
+  static int daysLeftUntil(DateTime? paidUntil) {
+    if (paidUntil == null) return 0;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final endDay =
+        DateTime(paidUntil.year, paidUntil.month, paidUntil.day);
+    final diff = endDay.difference(today).inDays;
+    return diff < 0 ? 0 : diff;
+  }
+
+  factory UserModel.fromDoc(DocumentSnapshot doc) {
+    final d = doc.data() as Map<String, dynamic>;
+    return UserModel(
+      uid: doc.id,
+      name: d['name'] ?? '',
+      gender: d['gender'] ?? 'male',
+      dateOfBirth: (d['dateOfBirth'] as Timestamp).toDate(),
+      role: d['role'] ?? 'player',
+      photoUrl: d['photoUrl'] as String?,
+      createdAt: (d['createdAt'] as Timestamp).toDate(),
+      verifiedAt: (d['verifiedAt'] as Timestamp?)?.toDate(),
+      paidUntil: (d['paidUntil'] as Timestamp?)?.toDate(),
+      paidAt: (d['paidAt'] as Timestamp?)?.toDate(),
+      heightCm: (d['heightCm'] as num?)?.toInt(),
+      weightKg: (d['weightKg'] as num?)?.toInt(),
+      lastSeenAnnouncementsAt:
+          (d['lastSeenAnnouncementsAt'] as Timestamp?)?.toDate(),
+      lifetimeMember: (d['lifetimeMember'] ?? false) as bool,
+    );
+  }
+
+  Map<String, dynamic> toMap() => {
+        'name': name,
+        'gender': gender,
+        'dateOfBirth': Timestamp.fromDate(dateOfBirth),
+        'role': role,
+        'createdAt': Timestamp.fromDate(createdAt),
+        // Written explicitly (even as null) so cleanupUnverifiedUsers can
+        // query `where verifiedAt == null` — Firestore's null equality does
+        // not match missing fields.
+        'verifiedAt':
+            verifiedAt != null ? Timestamp.fromDate(verifiedAt!) : null,
+        if (paidUntil != null) 'paidUntil': Timestamp.fromDate(paidUntil!),
+        if (paidAt != null) 'paidAt': Timestamp.fromDate(paidAt!),
+        if (heightCm != null) 'heightCm': heightCm,
+        if (weightKg != null) 'weightKg': weightKg,
+        if (lastSeenAnnouncementsAt != null)
+          'lastSeenAnnouncementsAt':
+              Timestamp.fromDate(lastSeenAnnouncementsAt!),
+      };
+}
