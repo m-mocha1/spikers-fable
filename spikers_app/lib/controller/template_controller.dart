@@ -1,13 +1,23 @@
 import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
+
+import '../core/firebase/firebase_providers.dart' show kFunctionsRegion;
+import '../features/sessions/data/datasources/sessions_remote_datasource.dart';
+import '../features/sessions/data/repositories/templates_repository_impl.dart';
 import '../models/session_template_model.dart';
 import 'auth_controller.dart';
 
+/// MIGRATION SHIM — GetX facade over the templates repository.
 class TemplateController extends GetxController {
-  final _db = FirebaseFirestore.instance;
   final _auth = Get.find<AuthController>();
+  late final _repo = TemplatesRepositoryImpl(SessionsRemoteDataSource(
+    FirebaseFirestore.instance,
+    FirebaseFunctions.instanceFor(region: kFunctionsRegion),
+  ));
 
   final templates = <SessionTemplate>[].obs;
   StreamSubscription? _sub;
@@ -27,15 +37,8 @@ class TemplateController extends GetxController {
   void _listen() {
     final uid = _auth.currentUser.value?.uid;
     if (uid == null) return;
-    _sub = _db
-        .collection('users')
-        .doc(uid)
-        .collection('templates')
-        .orderBy('createdAt', descending: true)
-        .snapshots()
-        .listen(
-          (snap) => templates.value =
-              snap.docs.map(SessionTemplate.fromDoc).toList(),
+    _sub = _repo.watch(uid).listen(
+          (list) => templates.value = list,
           onError: (e) {
             debugPrint('TemplateController: templates listener error — $e');
           },
@@ -45,21 +48,12 @@ class TemplateController extends GetxController {
   Future<void> save(SessionTemplate template) async {
     final uid = _auth.currentUser.value?.uid;
     if (uid == null) return;
-    await _db
-        .collection('users')
-        .doc(uid)
-        .collection('templates')
-        .add(template.toMap());
+    await _repo.save(uid, template);
   }
 
   Future<void> delete(String templateId) async {
     final uid = _auth.currentUser.value?.uid;
     if (uid == null) return;
-    await _db
-        .collection('users')
-        .doc(uid)
-        .collection('templates')
-        .doc(templateId)
-        .delete();
+    await _repo.delete(uid, templateId);
   }
 }

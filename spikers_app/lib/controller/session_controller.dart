@@ -1,17 +1,28 @@
 import 'dart:async';
-import 'dart:math';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:get/get.dart';
-import '../core/constants/app_assets.dart';
+
+import '../core/firebase/firebase_providers.dart' show kFunctionsRegion;
+import '../features/sessions/data/datasources/sessions_remote_datasource.dart';
+import '../features/sessions/data/repositories/session_chat_repository_impl.dart';
+import '../features/sessions/data/repositories/sessions_repository_impl.dart';
+import '../features/sessions/domain/repositories/sessions_repository.dart';
 import '../models/session_model.dart';
 import 'auth_controller.dart';
 
+/// MIGRATION SHIM — GetX facade over the sessions repository for the
+/// not-yet-migrated session screens. No Firebase logic lives here anymore.
 class SessionController extends GetxController {
-  final _db = FirebaseFirestore.instance;
-  final _fns = FirebaseFunctions.instanceFor(region: 'europe-west1');
   final _auth = Get.find<AuthController>();
-  final _random = Random();
+
+  late final SessionsRemoteDataSource _ds = SessionsRemoteDataSource(
+    FirebaseFirestore.instance,
+    FirebaseFunctions.instanceFor(region: kFunctionsRegion),
+  );
+  late final SessionsRepository _repo = SessionsRepositoryImpl(_ds);
+  late final _chat = SessionChatRepositoryImpl(_ds);
 
   final sessions = <SessionModel>[].obs;
   final isLoading = true.obs;
@@ -49,48 +60,9 @@ class SessionController extends GetxController {
       return;
     }
 
-    // Firestore rules require email_verified == true to read sessions.
-    // Skip the snapshot listener for unverified users so we don't hit
-    // PERMISSION_DENIED. (Splash/signIn already route them away from /home,
-    // but the permanent SessionController can re-fire on auth changes.)
-    if (!_auth.isEmailVerified) {
-      sessions.value = [];
-      hasError.value = false;
-      isLoading.value = false;
-      return;
-    }
-
-    if (!user.isCoach && !user.isPaid) {
-      sessions.value = [];
-      hasError.value = false;
-      isLoading.value = false;
-      return;
-    }
-
-    Query<Map<String, dynamic>> query = _db
-        .collection('sessions')
-        .where('endTime', isGreaterThan: Timestamp.fromDate(DateTime.now()));
-
-    if (!user.isCoach) {
-      query = query.where('gender', whereIn: [user.gender, 'mixed']);
-    }
-
-    query = query.orderBy('endTime').orderBy('startTime');
-
-    _sub = query.snapshots().listen((snapshot) {
-      final now = DateTime.now();
-      var all = snapshot.docs
-          .map(SessionModel.fromDoc)
-          .where((s) => s.endTime.isAfter(now))
-          .toList();
-
-      if (!user.isCoach) {
-        final age = user.age;
-        all = all.where((s) => age >= s.minAge && age <= s.maxAge).toList();
-      }
-
-      all.sort((a, b) => a.startTime.compareTo(b.startTime));
-
+    _sub = _repo
+        .watchUpcoming(user, emailVerified: _auth.isEmailVerified)
+        .listen((all) {
       sessions.value = all;
       hasError.value = false;
       isLoading.value = false;
@@ -102,9 +74,7 @@ class SessionController extends GetxController {
 
   Future<void> createSession(SessionModel session) async {
     try {
-      final payload = session.toMap();
-      payload['designIndex'] = _random.nextInt(AppAssets.cardDesigns.length);
-      await _db.collection('sessions').add(payload);
+      await _repo.create(session);
       Get.back();
       Get.snackbar('', 'sessionCreated'.tr,
           snackPosition: SnackPosition.BOTTOM);
@@ -117,18 +87,16 @@ class SessionController extends GetxController {
     if (isJoining.value) return;
     isJoining.value = true;
     try {
-      final res = await _fns
-          .httpsCallable('joinSession')
-          .call({'sessionId': sessionId});
-      final status = (res.data?['status'] as String?) ?? '';
-      if (status == 'waitlisted') {
+      final result = await _repo.join(sessionId);
+      if (result == JoinResult.waitlisted) {
         Get.snackbar('', 'waitlistedSnack'.tr,
             snackPosition: SnackPosition.BOTTOM);
       }
       // 'joined' and 'already_*' stay silent — the live snapshot will
       // update the UI and a snackbar would be noise.
-    } on FirebaseFunctionsException catch (e) {
-      Get.snackbar('', _mapJoinError(e), snackPosition: SnackPosition.BOTTOM);
+    } on SessionActionException catch (e) {
+      Get.snackbar('', _mapJoinError(e.code),
+          snackPosition: SnackPosition.BOTTOM);
     } catch (_) {
       Get.snackbar('', 'unknownError'.tr, snackPosition: SnackPosition.BOTTOM);
     } finally {
@@ -137,8 +105,8 @@ class SessionController extends GetxController {
     }
   }
 
-  String _mapJoinError(FirebaseFunctionsException e) {
-    switch (e.code) {
+  String _mapJoinError(String code) {
+    switch (code) {
       case 'failed-precondition':
         return 'sessionFull'.tr;
       case 'not-found':
@@ -148,7 +116,7 @@ class SessionController extends GetxController {
       default:
         // Surface the raw code during early-stage testing so the next
         // unexpected failure is diagnosable. Tighten once stable.
-        return '${'unknownError'.tr} (${e.code})';
+        return '${'unknownError'.tr} ($code)';
     }
   }
 
@@ -158,13 +126,10 @@ class SessionController extends GetxController {
     int? newWaitlistSize,
   }) async {
     try {
-      await _fns.httpsCallable('updateSessionCapacity').call({
-        'sessionId': sessionId,
-        'newMaxPlayers': ?newMaxPlayers,
-        'newWaitlistSize': ?newWaitlistSize,
-      });
+      await _repo.updateCapacity(sessionId,
+          newMaxPlayers: newMaxPlayers, newWaitlistSize: newWaitlistSize);
       return null;
-    } on FirebaseFunctionsException catch (e) {
+    } on SessionActionException catch (e) {
       switch (e.code) {
         case 'failed-precondition':
           return 'capacityMustNotDecrease'.tr;
@@ -188,7 +153,7 @@ class SessionController extends GetxController {
     if (isJoining.value) return;
     isJoining.value = true;
     try {
-      await _fns.httpsCallable('leaveSession').call({'sessionId': sessionId});
+      await _repo.leave(sessionId);
     } catch (_) {
       Get.snackbar('', 'unknownError'.tr, snackPosition: SnackPosition.BOTTOM);
     } finally {
@@ -200,11 +165,7 @@ class SessionController extends GetxController {
   Future<void> markAttended(
       String sessionId, String userId, bool attended) async {
     try {
-      await _fns.httpsCallable('markAttended').call({
-        'sessionId': sessionId,
-        'userId': userId,
-        'attended': attended,
-      });
+      await _repo.markAttended(sessionId, userId, attended);
     } catch (_) {
       Get.snackbar('', 'unknownError'.tr, snackPosition: SnackPosition.BOTTOM);
     }
@@ -213,27 +174,20 @@ class SessionController extends GetxController {
   Future<void> sendMessage(String sessionId, String text) async {
     final user = _auth.currentUser.value;
     if (user == null) return;
-    await _db
-        .collection('sessions')
-        .doc(sessionId)
-        .collection('messages')
-        .add({
-      'senderId': user.uid,
-      'text': text,
-      'createdAt': FieldValue.serverTimestamp(),
-    });
+    await _chat.send(sessionId, senderId: user.uid, text: text);
   }
 
   Future<void> cancelSession(String sessionId) async {
     if (isCancelling.value) return;
     isCancelling.value = true;
     try {
-      await _fns.httpsCallable('cancelSession').call({'sessionId': sessionId});
+      await _repo.cancel(sessionId);
       // Success navigation + snackbar are driven by the session-detail
       // snapshot listener (!doc.exists branch) so they fire exactly once,
       // regardless of which path observes the delete first.
-    } on FirebaseFunctionsException catch (e) {
-      Get.snackbar('', _mapCancelError(e), snackPosition: SnackPosition.BOTTOM);
+    } on SessionActionException catch (e) {
+      Get.snackbar('', _mapCancelError(e.code),
+          snackPosition: SnackPosition.BOTTOM);
     } catch (_) {
       Get.snackbar('', 'unknownError'.tr, snackPosition: SnackPosition.BOTTOM);
     } finally {
@@ -241,8 +195,8 @@ class SessionController extends GetxController {
     }
   }
 
-  String _mapCancelError(FirebaseFunctionsException e) {
-    switch (e.code) {
+  String _mapCancelError(String code) {
+    switch (code) {
       case 'permission-denied':
         return 'notYourSession'.tr;
       case 'not-found':
@@ -250,7 +204,7 @@ class SessionController extends GetxController {
       case 'unauthenticated':
         return 'notSignedIn'.tr;
       default:
-        return '${'unknownError'.tr} (${e.code})';
+        return '${'unknownError'.tr} ($code)';
     }
   }
 }
