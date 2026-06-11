@@ -6,9 +6,9 @@ import 'package:get/get.dart'
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../../models/recurring_session_model.dart';
-import '../../../../screens/widgets/branded_button.dart';
-import '../../../../screens/widgets/branded_text_field.dart';
+import 'package:spikers_app/features/sessions/domain/entities/recurring_session_model.dart';
+import 'package:spikers_app/core/widgets/branded_button.dart';
+import 'package:spikers_app/core/widgets/branded_text_field.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../providers/sessions_providers.dart';
 

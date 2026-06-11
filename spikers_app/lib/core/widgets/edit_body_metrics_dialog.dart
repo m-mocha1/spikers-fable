@@ -5,7 +5,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/utils/validators.dart';
 import '../../features/auth/presentation/providers/auth_providers.dart';
 import '../../l10n/app_localizations.dart';
-import '../../models/user_model.dart';
+import 'package:spikers_app/features/auth/domain/entities/user_model.dart';
 import 'branded_text_field.dart';
 
 Future<void> showEditBodyMetricsDialog(

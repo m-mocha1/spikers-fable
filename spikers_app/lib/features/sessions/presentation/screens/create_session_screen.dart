@@ -8,10 +8,10 @@ import 'package:omni_datetime_picker/omni_datetime_picker.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../../models/session_model.dart';
-import '../../../../models/session_template_model.dart';
-import '../../../../screens/widgets/branded_button.dart';
-import '../../../../screens/widgets/branded_text_field.dart';
+import 'package:spikers_app/features/sessions/domain/entities/session_model.dart';
+import 'package:spikers_app/features/sessions/domain/entities/session_template_model.dart';
+import 'package:spikers_app/core/widgets/branded_button.dart';
+import 'package:spikers_app/core/widgets/branded_text_field.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../providers/sessions_providers.dart';
 

@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get/get.dart' show Get, GetNavigation;
 
-import '../../../../models/user_model.dart';
+import 'package:spikers_app/features/auth/domain/entities/user_model.dart';
 import '../../../../routes/app_routes.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../domain/repositories/auth_repository.dart';

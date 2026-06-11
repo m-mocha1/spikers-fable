@@ -5,8 +5,8 @@ import 'package:get/get.dart' show Get, GetNavigation;
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../../models/user_model.dart';
-import '../../../../screens/widgets/profile_info.dart';
+import 'package:spikers_app/features/auth/domain/entities/user_model.dart';
+import 'package:spikers_app/core/widgets/profile_info.dart';
 import '../widgets/payment_confirm_dialog.dart';
 import '../providers/players_providers.dart';
 

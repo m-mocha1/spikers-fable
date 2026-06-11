@@ -1,4 +1,4 @@
-import '../../../../models/session_template_model.dart';
+import 'package:spikers_app/features/sessions/domain/entities/session_template_model.dart';
 import '../../domain/repositories/templates_repository.dart';
 import '../datasources/sessions_remote_datasource.dart';
 

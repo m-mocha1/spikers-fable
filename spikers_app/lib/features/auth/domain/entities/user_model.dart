@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../core/utils/age_calculator.dart';
+import '../../../../core/utils/age_calculator.dart';
 
 class UserModel {
   final String uid;

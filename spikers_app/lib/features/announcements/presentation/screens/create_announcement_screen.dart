@@ -4,8 +4,8 @@ import 'package:get/get.dart'
     show ExtensionSnackbar, Get, GetNavigation, SnackPosition;
 
 import '../../../../l10n/app_localizations.dart';
-import '../../../../screens/widgets/branded_button.dart';
-import '../../../../screens/widgets/branded_text_field.dart';
+import 'package:spikers_app/core/widgets/branded_button.dart';
+import 'package:spikers_app/core/widgets/branded_text_field.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../domain/entities/announcement.dart';
 import '../providers/announcements_providers.dart';

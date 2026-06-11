@@ -8,8 +8,8 @@ import 'package:spikers_app/features/sessions/data/repositories/session_chat_rep
 import 'package:spikers_app/features/sessions/data/repositories/sessions_repository_impl.dart';
 import 'package:spikers_app/features/sessions/data/repositories/templates_repository_impl.dart';
 import 'package:spikers_app/features/sessions/domain/repositories/sessions_repository.dart';
-import 'package:spikers_app/models/session_template_model.dart';
-import 'package:spikers_app/models/user_model.dart';
+import 'package:spikers_app/features/sessions/domain/entities/session_template_model.dart';
+import 'package:spikers_app/features/auth/domain/entities/user_model.dart';
 
 class _MockFunctions extends Mock implements FirebaseFunctions {}
 

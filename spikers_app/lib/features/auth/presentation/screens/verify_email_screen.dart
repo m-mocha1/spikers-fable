@@ -9,7 +9,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../routes/app_routes.dart';
-import '../../../../screens/widgets/branded_button.dart';
+import 'package:spikers_app/core/widgets/branded_button.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../providers/auth_providers.dart';
 import '../utils/auth_error_l10n.dart';

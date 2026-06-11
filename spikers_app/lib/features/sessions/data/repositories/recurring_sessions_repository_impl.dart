@@ -1,4 +1,4 @@
-import '../../../../models/recurring_session_model.dart';
+import 'package:spikers_app/features/sessions/domain/entities/recurring_session_model.dart';
 import '../../domain/repositories/recurring_sessions_repository.dart';
 import '../datasources/sessions_remote_datasource.dart';
 

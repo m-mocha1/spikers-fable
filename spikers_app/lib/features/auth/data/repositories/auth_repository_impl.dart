@@ -10,7 +10,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/firebase/firebase_providers.dart' show kFunctionsRegion;
-import '../../../../models/user_model.dart';
+import 'package:spikers_app/features/auth/domain/entities/user_model.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_remote_datasource.dart';
 import '../datasources/credential_store.dart';

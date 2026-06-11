@@ -8,8 +8,8 @@ import 'package:image_picker/image_picker.dart';
 import '../../../../controller/locale_controller.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../../screens/widgets/edit_body_metrics_dialog.dart';
-import '../../../../screens/widgets/profile_info.dart';
+import 'package:spikers_app/core/widgets/edit_body_metrics_dialog.dart';
+import 'package:spikers_app/core/widgets/profile_info.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 
 class ProfileTab extends ConsumerStatefulWidget {

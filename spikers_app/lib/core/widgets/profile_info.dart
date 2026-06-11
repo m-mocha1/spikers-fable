@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../l10n/app_localizations.dart';
-import '../../models/user_model.dart';
+import 'package:spikers_app/features/auth/domain/entities/user_model.dart';
 
 class ProfileRoleBadge extends StatelessWidget {
   final bool isCoach;

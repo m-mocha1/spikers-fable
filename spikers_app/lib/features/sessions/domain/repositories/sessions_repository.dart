@@ -1,5 +1,5 @@
-import '../../../../models/session_model.dart';
-import '../../../../models/user_model.dart';
+import 'package:spikers_app/features/sessions/domain/entities/session_model.dart';
+import 'package:spikers_app/features/auth/domain/entities/user_model.dart';
 
 /// Thrown when a session Cloud Function call is rejected. [code] is the
 /// FirebaseFunctionsException code — presentation maps it to a localized

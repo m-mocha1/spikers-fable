@@ -1,4 +1,4 @@
-import '../../../../models/chat_message_model.dart';
+import 'package:spikers_app/features/sessions/domain/entities/chat_message_model.dart';
 import '../../domain/repositories/session_chat_repository.dart';
 import '../datasources/sessions_remote_datasource.dart';
 

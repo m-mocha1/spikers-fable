@@ -8,7 +8,7 @@ import 'package:spikers_app/features/auth/data/datasources/auth_remote_datasourc
 import 'package:spikers_app/features/auth/data/datasources/credential_store.dart';
 import 'package:spikers_app/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:spikers_app/features/auth/domain/repositories/auth_repository.dart';
-import 'package:spikers_app/models/user_model.dart';
+import 'package:spikers_app/features/auth/domain/entities/user_model.dart';
 
 class _MockRemote extends Mock implements AuthRemoteDataSource {}
 

@@ -1,7 +1,7 @@
 import 'package:cloud_functions/cloud_functions.dart';
 
-import '../../../../models/session_model.dart';
-import '../../../../models/user_model.dart';
+import 'package:spikers_app/features/sessions/domain/entities/session_model.dart';
+import 'package:spikers_app/features/auth/domain/entities/user_model.dart';
 import '../../domain/repositories/sessions_repository.dart';
 import '../datasources/sessions_remote_datasource.dart';
 

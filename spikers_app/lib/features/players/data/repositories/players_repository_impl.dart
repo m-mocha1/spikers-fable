@@ -1,4 +1,4 @@
-import '../../../../models/user_model.dart';
+import 'package:spikers_app/features/auth/domain/entities/user_model.dart';
 import '../../domain/entities/player_summary.dart';
 import '../../domain/repositories/players_repository.dart';
 import '../datasources/players_remote_datasource.dart';

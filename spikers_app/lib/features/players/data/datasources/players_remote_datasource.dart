@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import '../../../../models/user_model.dart';
+import 'package:spikers_app/features/auth/domain/entities/user_model.dart';
 import '../../domain/entities/player_summary.dart';
 
 class PlayersRemoteDataSource {

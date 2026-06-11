@@ -6,8 +6,8 @@ import 'package:get/get.dart'
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../../screens/widgets/branded_button.dart';
-import '../../../../screens/widgets/branded_text_field.dart';
+import 'package:spikers_app/core/widgets/branded_button.dart';
+import 'package:spikers_app/core/widgets/branded_text_field.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../providers/auth_providers.dart';
 import '../utils/auth_error_l10n.dart';

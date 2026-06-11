@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/firebase/firebase_providers.dart';
-import '../../../../models/recurring_session_model.dart';
-import '../../../../models/session_model.dart';
-import '../../../../models/session_template_model.dart';
+import 'package:spikers_app/features/sessions/domain/entities/recurring_session_model.dart';
+import 'package:spikers_app/features/sessions/domain/entities/session_model.dart';
+import 'package:spikers_app/features/sessions/domain/entities/session_template_model.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../data/datasources/sessions_remote_datasource.dart';
 import '../../data/repositories/recurring_sessions_repository_impl.dart';

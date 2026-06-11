@@ -1,4 +1,4 @@
-import '../../../../models/recurring_session_model.dart';
+import 'package:spikers_app/features/sessions/domain/entities/recurring_session_model.dart';
 
 abstract class RecurringSessionsRepository {
   /// The coach's recurring schedules, newest first. Malformed docs are

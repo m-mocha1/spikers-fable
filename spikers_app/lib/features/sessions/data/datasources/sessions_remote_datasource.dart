@@ -5,11 +5,11 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../../../core/constants/app_assets.dart';
-import '../../../../models/chat_message_model.dart';
-import '../../../../models/recurring_session_model.dart';
-import '../../../../models/session_model.dart';
-import '../../../../models/session_template_model.dart';
-import '../../../../models/user_model.dart';
+import 'package:spikers_app/features/sessions/domain/entities/chat_message_model.dart';
+import 'package:spikers_app/features/sessions/domain/entities/recurring_session_model.dart';
+import 'package:spikers_app/features/sessions/domain/entities/session_model.dart';
+import 'package:spikers_app/features/sessions/domain/entities/session_template_model.dart';
+import 'package:spikers_app/features/auth/domain/entities/user_model.dart';
 import '../../domain/repositories/sessions_repository.dart'
     show PublicProfile;
 

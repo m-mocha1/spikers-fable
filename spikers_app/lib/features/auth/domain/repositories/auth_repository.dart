@@ -1,6 +1,6 @@
 import 'package:image_picker/image_picker.dart';
 
-import '../../../../models/user_model.dart';
+import 'package:spikers_app/features/auth/domain/entities/user_model.dart';
 
 /// Thrown by repository methods when Firebase Auth rejects an operation.
 /// [code] is the FirebaseAuthException code (or 'unknown') — presentation

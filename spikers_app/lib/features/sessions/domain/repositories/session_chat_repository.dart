@@ -1,4 +1,4 @@
-import '../../../../models/chat_message_model.dart';
+import 'package:spikers_app/features/sessions/domain/entities/chat_message_model.dart';
 
 abstract class SessionChatRepository {
   /// Newest [limit] messages, newest first (live).

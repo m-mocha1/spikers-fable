@@ -5,7 +5,7 @@ import 'package:get/get.dart' show Get, GetNavigation;
 import '../../../../core/constants/app_colors.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../routes/app_routes.dart';
-import '../../../../screens/widgets/floating_nav_bar.dart';
+import 'package:spikers_app/core/widgets/floating_nav_bar.dart';
 import '../../../announcements/presentation/widgets/announcements_bell.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../notifications/application/notifications_service.dart';

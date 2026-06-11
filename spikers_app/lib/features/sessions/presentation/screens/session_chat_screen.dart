@@ -8,7 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../../models/chat_message_model.dart';
+import 'package:spikers_app/features/sessions/domain/entities/chat_message_model.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../domain/repositories/sessions_repository.dart'
     show PublicProfile;

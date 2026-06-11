@@ -1,4 +1,4 @@
-import '../../../../models/user_model.dart';
+import 'package:spikers_app/features/auth/domain/entities/user_model.dart';
 import '../entities/player_summary.dart';
 
 abstract class PlayersRepository {

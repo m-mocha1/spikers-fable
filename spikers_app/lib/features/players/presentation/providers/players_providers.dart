@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/firebase/firebase_providers.dart';
-import '../../../../models/user_model.dart';
+import 'package:spikers_app/features/auth/domain/entities/user_model.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../data/datasources/players_remote_datasource.dart';
 import '../../data/repositories/players_repository_impl.dart';

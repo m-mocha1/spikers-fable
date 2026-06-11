@@ -5,7 +5,7 @@ import 'package:get/get.dart'
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../../models/recurring_session_model.dart';
+import 'package:spikers_app/features/sessions/domain/entities/recurring_session_model.dart';
 import '../../../../routes/app_routes.dart';
 import '../providers/sessions_providers.dart';
 

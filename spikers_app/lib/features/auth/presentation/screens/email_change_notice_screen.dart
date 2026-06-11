@@ -4,7 +4,7 @@ import 'package:get/get.dart' show Get, GetNavigation;
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../../screens/widgets/branded_button.dart';
+import 'package:spikers_app/core/widgets/branded_button.dart';
 import '../providers/auth_providers.dart';
 
 class EmailChangeNoticeScreen extends ConsumerWidget {
