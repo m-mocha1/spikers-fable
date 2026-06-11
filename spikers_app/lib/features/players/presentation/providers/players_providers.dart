@@ -1,0 +1,32 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../../core/firebase/firebase_providers.dart';
+import '../../../../models/user_model.dart';
+import '../../../auth/presentation/providers/auth_providers.dart';
+import '../../data/datasources/players_remote_datasource.dart';
+import '../../data/repositories/players_repository_impl.dart';
+import '../../domain/entities/player_summary.dart';
+import '../../domain/repositories/players_repository.dart';
+
+final playersRepositoryProvider = Provider<PlayersRepository>(
+  (ref) => PlayersRepositoryImpl(
+    PlayersRemoteDataSource(ref.watch(firestoreProvider)),
+  ),
+);
+
+final playersProvider = StreamProvider.autoDispose<List<PlayerSummary>>(
+  (ref) => ref.watch(playersRepositoryProvider).watchPlayers(),
+);
+
+final peersProvider = StreamProvider.autoDispose<List<PeerSummary>>((ref) {
+  final me = ref.watch(currentUserProvider).value;
+  if (me == null) return const Stream.empty();
+  return ref
+      .watch(playersRepositoryProvider)
+      .watchPeers(myUid: me.uid, myGender: me.gender);
+});
+
+final playerProvider =
+    StreamProvider.autoDispose.family<UserModel?, String>(
+  (ref, uid) => ref.watch(playersRepositoryProvider).watchPlayer(uid),
+);

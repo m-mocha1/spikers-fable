@@ -1,0 +1,73 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+import '../../../../models/user_model.dart';
+
+/// Coach-facing roster row (from the full users collection).
+class PlayerSummary {
+  final String uid;
+  final String name;
+  final String gender;
+  final String photoUrl;
+  final DateTime? dateOfBirth;
+  final int attendanceCount;
+  final DateTime? paidUntil;
+  final bool lifetimeMember;
+
+  const PlayerSummary({
+    required this.uid,
+    required this.name,
+    required this.gender,
+    required this.photoUrl,
+    required this.dateOfBirth,
+    required this.attendanceCount,
+    required this.paidUntil,
+    required this.lifetimeMember,
+  });
+
+  bool get isPaid =>
+      lifetimeMember ||
+      (paidUntil != null && paidUntil!.isAfter(DateTime.now()));
+
+  int get paymentDaysLeft => UserModel.daysLeftUntil(paidUntil);
+
+  factory PlayerSummary.fromDoc(
+      QueryDocumentSnapshot<Map<String, dynamic>> doc) {
+    final d = doc.data();
+    return PlayerSummary(
+      uid: doc.id,
+      name: (d['name'] ?? '') as String,
+      gender: (d['gender'] ?? 'male') as String,
+      photoUrl: (d['photoUrl'] ?? '') as String,
+      dateOfBirth: (d['dateOfBirth'] as Timestamp?)?.toDate(),
+      attendanceCount: ((d['attendanceCount'] ?? 0) as num).toInt(),
+      paidUntil: (d['paidUntil'] as Timestamp?)?.toDate(),
+      lifetimeMember: (d['lifetimeMember'] ?? false) as bool,
+    );
+  }
+}
+
+/// Player-facing roster row (from the public mirror; no payment data).
+class PeerSummary {
+  final String uid;
+  final String name;
+  final String photoUrl;
+  final int attendanceCount;
+
+  const PeerSummary({
+    required this.uid,
+    required this.name,
+    required this.photoUrl,
+    required this.attendanceCount,
+  });
+
+  factory PeerSummary.fromDoc(
+      QueryDocumentSnapshot<Map<String, dynamic>> doc) {
+    final d = doc.data();
+    return PeerSummary(
+      uid: doc.id,
+      name: (d['name'] ?? '') as String,
+      photoUrl: (d['photoUrl'] ?? '') as String,
+      attendanceCount: ((d['attendanceCount'] ?? 0) as num).toInt(),
+    );
+  }
+}

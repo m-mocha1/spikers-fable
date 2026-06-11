@@ -1,16 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import '../../controller/payment_controller.dart';
-import '../../core/constants/app_colors.dart';
-import '../../l10n/app_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get/get.dart'
+    show ExtensionSnackbar, Get, GetNavigation, SnackPosition;
+
+import '../../../../core/constants/app_colors.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../../../auth/presentation/providers/auth_providers.dart';
+import '../providers/players_providers.dart';
 
 /// Shows the mark-paid / mark-unpaid confirmation dialog and, on confirm,
-/// calls [PaymentController.markPaid] or [PaymentController.markUnpaid].
+/// flips the player's payment status through the players repository.
 ///
 /// Passing the current [paidUntil] lets the dialog flip between the two
 /// actions (paid -> unpaid and vice versa).
 Future<void> confirmTogglePayment(
-  BuildContext context, {
+  BuildContext context,
+  WidgetRef ref, {
   required String uid,
   required String name,
   required DateTime? paidUntil,
@@ -18,8 +23,7 @@ Future<void> confirmTogglePayment(
 }) async {
   final l = AppLocalizations.of(context)!;
   if (isLifetime) {
-    Get.snackbar('', l.lifetimeMember,
-        snackPosition: SnackPosition.BOTTOM);
+    Get.snackbar('', l.lifetimeMember, snackPosition: SnackPosition.BOTTOM);
     return;
   }
   final paidNow = paidUntil != null && paidUntil.isAfter(DateTime.now());
@@ -29,9 +33,8 @@ Future<void> confirmTogglePayment(
       ? Icons.check_circle_outline
       : Icons.highlight_off_rounded;
   final actionLabel = markingPaid ? l.paid : l.unpaid;
-  final message = markingPaid
-      ? l.confirmMarkPaid(name)
-      : l.confirmMarkUnpaid(name);
+  final message =
+      markingPaid ? l.confirmMarkPaid(name) : l.confirmMarkUnpaid(name);
 
   final confirmed = await showDialog<bool>(
     context: context,
@@ -115,12 +118,14 @@ Future<void> confirmTogglePayment(
 
   if (confirmed != true) return;
 
-  final payments = Get.find<PaymentController>();
+  final coach = ref.read(currentUserProvider).value;
+  if (coach == null) return;
+  final repo = ref.read(playersRepositoryProvider);
   try {
     if (paidNow) {
-      await payments.markUnpaid(uid);
+      await repo.markUnpaid(uid, coachUid: coach.uid, coachName: coach.name);
     } else {
-      await payments.markPaid(uid);
+      await repo.markPaid(uid, coachUid: coach.uid, coachName: coach.name);
     }
   } catch (_) {
     Get.snackbar('', l.unknownError, snackPosition: SnackPosition.BOTTOM);

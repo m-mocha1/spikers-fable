@@ -1,18 +1,20 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import '../../core/constants/app_colors.dart';
-import '../../l10n/app_localizations.dart';
-import '../../models/user_model.dart';
-import '../widgets/profile_info.dart';
-import 'payment_confirm_dialog.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get/get.dart' show Get, GetNavigation;
 
-class PlayerProfileScreen extends StatelessWidget {
+import '../../../../core/constants/app_colors.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../../../../models/user_model.dart';
+import '../../../../screens/widgets/profile_info.dart';
+import '../widgets/payment_confirm_dialog.dart';
+import '../providers/players_providers.dart';
+
+class PlayerProfileScreen extends ConsumerWidget {
   const PlayerProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context)!;
     final userId = Get.arguments as String?;
 
@@ -26,33 +28,23 @@ class PlayerProfileScreen extends StatelessWidget {
       );
     }
 
-    final stream = FirebaseFirestore.instance
-        .collection('users')
-        .doc(userId)
-        .snapshots();
+    final userAsync = ref.watch(playerProvider(userId));
 
-    return StreamBuilder<DocumentSnapshot>(
-      stream: stream,
-      builder: (context, snap) {
-        if (snap.connectionState == ConnectionState.waiting) {
-          return Scaffold(
-            appBar: AppBar(),
-            body: const Center(
-                child: CircularProgressIndicator(color: AppColors.gold)),
-          );
-        }
-
-        if (snap.hasError) {
-          return Scaffold(
-            appBar: AppBar(),
-            body: Center(
-              child: Text(l.errorOccurred,
-                  style: const TextStyle(color: AppColors.grey)),
-            ),
-          );
-        }
-
-        if (!snap.hasData || !snap.data!.exists) {
+    return userAsync.when(
+      loading: () => Scaffold(
+        appBar: AppBar(),
+        body: const Center(
+            child: CircularProgressIndicator(color: AppColors.gold)),
+      ),
+      error: (e, _) => Scaffold(
+        appBar: AppBar(),
+        body: Center(
+          child: Text(l.errorOccurred,
+              style: const TextStyle(color: AppColors.grey)),
+        ),
+      ),
+      data: (user) {
+        if (user == null) {
           return Scaffold(
             appBar: AppBar(),
             body: Center(
@@ -62,12 +54,10 @@ class PlayerProfileScreen extends StatelessWidget {
           );
         }
 
-        final user = UserModel.fromDoc(snap.data!);
-
         return Scaffold(
           appBar: AppBar(
-            title: Text(user.name,
-                maxLines: 1, overflow: TextOverflow.ellipsis),
+            title:
+                Text(user.name, maxLines: 1, overflow: TextOverflow.ellipsis),
           ),
           body: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
@@ -135,13 +125,13 @@ class _ReadOnlyAvatar extends StatelessWidget {
   }
 }
 
-class _PaymentActionButton extends StatelessWidget {
+class _PaymentActionButton extends ConsumerWidget {
   final UserModel user;
   final AppLocalizations l;
   const _PaymentActionButton({required this.user, required this.l});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final markingPaid = !user.isPaid;
     final color = markingPaid ? AppColors.success : AppColors.errorRed;
     final icon = markingPaid
@@ -154,6 +144,7 @@ class _PaymentActionButton extends StatelessWidget {
       child: ElevatedButton.icon(
         onPressed: () => confirmTogglePayment(
           context,
+          ref,
           uid: user.uid,
           name: user.name,
           paidUntil: user.paidUntil,
@@ -166,8 +157,8 @@ class _PaymentActionButton extends StatelessWidget {
           backgroundColor: color,
           elevation: 0,
           padding: const EdgeInsets.symmetric(vertical: 14),
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),
     );

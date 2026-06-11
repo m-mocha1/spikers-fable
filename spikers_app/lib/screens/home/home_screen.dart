@@ -6,8 +6,8 @@ import '../../core/constants/app_colors.dart';
 import '../../l10n/app_localizations.dart';
 import '../../routes/app_routes.dart';
 import '../widgets/floating_nav_bar.dart';
-import 'players_peer_tab.dart';
-import 'players_tab.dart';
+import '../../features/players/presentation/screens/players_peer_tab.dart';
+import '../../features/players/presentation/screens/players_tab.dart';
 import 'profile_tab.dart';
 import 'sessions_tab.dart';
 

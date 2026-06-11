@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../l10n/app_localizations.dart';
-import '../home/coaches_tab.dart';
+
+import '../../../../l10n/app_localizations.dart';
+import 'coaches_tab.dart';
 
 class CoachesListScreen extends StatelessWidget {
   const CoachesListScreen({super.key});

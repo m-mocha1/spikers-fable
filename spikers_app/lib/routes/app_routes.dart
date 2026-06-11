@@ -2,7 +2,6 @@ import 'package:flutter/material.dart' show RouteSettings;
 import 'package:get/get.dart';
 import '../controller/auth_controller.dart';
 import '../controller/notification_controller.dart';
-import '../controller/payment_controller.dart';
 import '../controller/session_controller.dart';
 import '../controller/template_controller.dart';
 import '../features/auth/presentation/screens/splash_screen.dart';
@@ -17,8 +16,8 @@ import '../screens/sessions/create_session_screen.dart';
 import '../screens/sessions/quick_session_screen.dart';
 import '../screens/sessions/session_chat_screen.dart';
 import '../screens/sessions/sessions_history_screen.dart';
-import '../screens/players/player_profile_screen.dart';
-import '../screens/coaches/coaches_list_screen.dart';
+import '../features/players/presentation/screens/player_profile_screen.dart';
+import '../features/coaches/presentation/screens/coaches_list_screen.dart';
 import '../features/announcements/presentation/screens/announcements_screen.dart';
 import '../features/announcements/presentation/screens/create_announcement_screen.dart';
 import '../controller/recurring_session_controller.dart';
@@ -62,7 +61,6 @@ final List<GetPage> appPages = [
       Get.put(SessionController(), permanent: true);
       Get.put(NotificationController(), permanent: true);
       Get.put(TemplateController(), permanent: true);
-      Get.put(PaymentController(), permanent: true);
     }),
   ),
   GetPage(name: Routes.sessionDetail,  page: () => const SessionDetailScreen()),
