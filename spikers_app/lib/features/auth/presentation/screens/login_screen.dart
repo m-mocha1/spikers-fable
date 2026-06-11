@@ -1,28 +1,32 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import '../../controller/auth_controller.dart';
-import '../../core/constants/app_assets.dart';
-import '../../core/constants/app_colors.dart';
-import '../../core/utils/validators.dart';
-import '../../routes/app_routes.dart';
-import '../widgets/branded_button.dart';
-import '../widgets/branded_text_field.dart';
-import '../../l10n/app_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get/get.dart'
+    show ExtensionSnackbar, Get, GetNavigation, SnackPosition;
 
-class LoginScreen extends StatefulWidget {
+import '../../../../core/constants/app_assets.dart';
+import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/validators.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../../../../routes/app_routes.dart';
+import '../../../../screens/widgets/branded_button.dart';
+import '../../../../screens/widgets/branded_text_field.dart';
+import '../../domain/repositories/auth_repository.dart';
+import '../providers/auth_providers.dart';
+import '../utils/auth_error_l10n.dart';
+
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   bool _showPass = false;
-
-  final _auth = Get.find<AuthController>();
+  bool _loading = false;
 
   @override
   void dispose() {
@@ -31,9 +35,21 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _submit() {
-    if (_formKey.currentState!.validate()) {
-      _auth.signIn(_emailCtrl.text, _passCtrl.text);
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate() || _loading) return;
+    final l = AppLocalizations.of(context)!;
+    final repo = ref.read(authRepositoryProvider);
+    setState(() => _loading = true);
+    try {
+      await repo.signIn(_emailCtrl.text, _passCtrl.text);
+      Get.offAllNamed(
+          repo.isEmailVerified ? Routes.home : Routes.verifyEmail);
+    } on AuthException catch (e) {
+      Get.snackbar('', authErrorMessage(l, e.code),
+          snackPosition: SnackPosition.BOTTOM,
+          duration: const Duration(seconds: 3));
+    } finally {
+      if (mounted) setState(() => _loading = false);
     }
   }
 
@@ -86,11 +102,11 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Obx(() => BrandedButton(
-                          label: l.signIn,
-                          onPressed: _submit,
-                          isLoading: _auth.isLoading.value,
-                        )),
+                    BrandedButton(
+                      label: l.signIn,
+                      onPressed: _submit,
+                      isLoading: _loading,
+                    ),
                     const SizedBox(height: 24),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,

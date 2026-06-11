@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import '../../controller/auth_controller.dart';
-import '../../core/constants/app_assets.dart';
-import '../../routes/app_routes.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get/get.dart' show Get, GetNavigation;
 
-class SplashScreen extends StatefulWidget {
+import '../../../../core/constants/app_assets.dart';
+import '../../../../routes/app_routes.dart';
+import '../providers/auth_providers.dart';
+
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen>
+class _SplashScreenState extends ConsumerState<SplashScreen>
     with SingleTickerProviderStateMixin {
   late final AnimationController _ctrl;
   late final Animation<double> _fade;
@@ -30,12 +32,12 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _navigate() async {
-    final auth = Get.find<AuthController>();
-    await auth.waitForAuth();
+    final repo = ref.read(authRepositoryProvider);
+    await repo.ready;
     if (!mounted) return;
-    if (auth.isSignedIn) {
+    if (repo.isSignedIn) {
       Get.offAllNamed(
-          auth.isEmailVerified ? Routes.home : Routes.verifyEmail);
+          repo.isEmailVerified ? Routes.home : Routes.verifyEmail);
     } else {
       Get.offAllNamed(Routes.login);
     }

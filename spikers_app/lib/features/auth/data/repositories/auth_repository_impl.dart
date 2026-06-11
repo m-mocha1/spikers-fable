@@ -1,0 +1,368 @@
+import 'dart:async';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../../../core/firebase/firebase_providers.dart' show kFunctionsRegion;
+import '../../../../models/user_model.dart';
+import '../../domain/repositories/auth_repository.dart';
+import '../datasources/auth_remote_datasource.dart';
+import '../datasources/credential_store.dart';
+
+class AuthRepositoryImpl implements AuthRepository {
+  final AuthRemoteDataSource _remote;
+  final CredentialStore _credentials;
+  final FirebaseMessaging? _messaging;
+
+  AuthRepositoryImpl({
+    required AuthRemoteDataSource remote,
+    required CredentialStore credentials,
+    FirebaseMessaging? messaging,
+  })  : _remote = remote,
+        _credentials = credentials,
+        _messaging = messaging;
+
+  /// Production instance shared by the Riverpod providers and the temporary
+  /// GetX AuthController shim. The shim dies with the last GetX consumers;
+  /// until then both worlds must observe the same session.
+  static AuthRepositoryImpl? _instance;
+  static AuthRepositoryImpl get instance => _instance ??= AuthRepositoryImpl(
+        remote: AuthRemoteDataSource(
+          auth: FirebaseAuth.instance,
+          db: FirebaseFirestore.instance,
+          storage: FirebaseStorage.instance,
+          functions: FirebaseFunctions.instanceFor(region: kFunctionsRegion),
+        ),
+        credentials: SecureCredentialStore(),
+        messaging: FirebaseMessaging.instance,
+      )..init();
+
+  final _readyCompleter = Completer<void>();
+  final _userController = StreamController<UserModel?>.broadcast();
+  UserModel? _lastUser;
+  bool _hasEmitted = false;
+  bool _initStarted = false;
+
+  StreamSubscription? _userSub;
+  StreamSubscription? _authStateSub;
+  StreamSubscription? _tokenRefreshSub;
+
+  @override
+  Future<void> get ready => _readyCompleter.future;
+
+  @override
+  UserModel? get currentUserNow => _lastUser;
+
+  @override
+  bool get isSignedIn => _remote.auth.currentUser != null;
+
+  @override
+  bool get isEmailVerified => _remote.auth.currentUser?.emailVerified ?? false;
+
+  @override
+  String get currentEmail => _remote.auth.currentUser?.email ?? '';
+
+  @override
+  Stream<UserModel?> watchCurrentUser() async* {
+    if (_hasEmitted) yield _lastUser;
+    yield* _userController.stream;
+  }
+
+  void _emit(UserModel? user) {
+    _lastUser = user;
+    _hasEmitted = true;
+    _userController.add(user);
+  }
+
+  /// Restores the session and starts the auth-state pipeline. Idempotent.
+  Future<void> init() async {
+    if (_initStarted) return;
+    _initStarted = true;
+
+    if (_remote.auth.currentUser == null) {
+      await _tryRestoreSession();
+    }
+
+    final user = _remote.auth.currentUser;
+    if (user != null) {
+      try {
+        await _listenToUser(user.uid);
+        _updateFcmToken(user.uid);
+      } catch (e) {
+        debugPrint('auth: initial user listen/FCM setup failed — $e');
+      }
+    }
+
+    if (!_readyCompleter.isCompleted) _readyCompleter.complete();
+    _authStateSub =
+        _remote.auth.authStateChanges().skip(1).listen(_onAuthStateChanged);
+  }
+
+  Future<bool> _tryRestoreSession() async {
+    try {
+      final creds = await _credentials.read();
+      if (creds == null) return false;
+      await _remote.signIn(creds.email, creds.password);
+      return _remote.auth.currentUser != null;
+    } catch (_) {
+      await _credentials.clear();
+      return false;
+    }
+  }
+
+  Future<void> _onAuthStateChanged(User? user) async {
+    try {
+      if (user == null) {
+        await _userSub?.cancel();
+        _userSub = null;
+        _emit(null);
+      } else {
+        await _listenToUser(user.uid);
+        _updateFcmToken(user.uid);
+      }
+    } catch (_) {
+      if (_remote.auth.currentUser == null) _emit(null);
+    } finally {
+      if (!_readyCompleter.isCompleted) _readyCompleter.complete();
+    }
+  }
+
+  Future<void> _listenToUser(String uid) async {
+    await _userSub?.cancel();
+    final firstSnap = Completer<void>();
+    _userSub = _remote.userDocStream(uid).listen(
+      (doc) {
+        _emit(doc.exists ? UserModel.fromDoc(doc) : null);
+
+        // Heal verifiedAt if it's null on the server side (verified on
+        // another device, or verify-screen write was dropped). Skip
+        // snapshots with pending writes — Firestore shows
+        // FieldValue.serverTimestamp() as null locally until the server
+        // confirms, and that would re-trigger this heal in a loop.
+        if (!doc.metadata.hasPendingWrites &&
+            doc.exists &&
+            _remote.auth.currentUser?.emailVerified == true &&
+            (doc.data() ?? const {})['verifiedAt'] == null) {
+          doc.reference
+              .update({'verifiedAt': FieldValue.serverTimestamp()})
+              .catchError((_) {});
+        }
+
+        if (!firstSnap.isCompleted) firstSnap.complete();
+      },
+      onError: (e) {
+        if (!firstSnap.isCompleted) firstSnap.completeError(e);
+      },
+    );
+    await firstSnap.future;
+  }
+
+  Future<void> _updateFcmToken(String uid) async {
+    final messaging = _messaging;
+    if (messaging == null) return;
+    try {
+      final token = await messaging.getToken();
+      if (token != null) await _writeTokenIfChanged(uid, token);
+      await _tokenRefreshSub?.cancel();
+      _tokenRefreshSub = messaging.onTokenRefresh.listen((t) {
+        _writeTokenIfChanged(uid, t);
+      });
+    } catch (e) {
+      debugPrint('auth: FCM token update failed — $e');
+    }
+  }
+
+  Future<void> _writeTokenIfChanged(String uid, String token) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final key = 'fcm_last_token_$uid';
+      if (prefs.getString(key) == token) return;
+      await _remote.writeFcmToken(uid, token);
+      await prefs.setString(key, token);
+    } catch (e) {
+      debugPrint('auth: FCM token write failed — $e');
+    }
+  }
+
+  @override
+  Future<void> signIn(String email, String password) async {
+    try {
+      await _remote.signIn(email.trim(), password);
+      await _credentials.save(email.trim(), password);
+      await ready;
+    } on FirebaseAuthException catch (e) {
+      throw AuthException(e.code);
+    }
+  }
+
+  @override
+  Future<CoachPromotion> register({
+    required String name,
+    required String email,
+    required String password,
+    required String gender,
+    required DateTime dateOfBirth,
+    required int heightCm,
+    required int weightKg,
+    required String role,
+    required String coachKey,
+    XFile? photoFile,
+  }) async {
+    final UserCredential cred;
+    try {
+      cred = await _remote.createAccount(email.trim(), password);
+    } on FirebaseAuthException catch (e) {
+      throw AuthException(e.code);
+    }
+
+    await _credentials.save(email.trim(), password);
+
+    String? photoUrl;
+    if (photoFile != null) {
+      photoUrl =
+          await _remote.uploadProfilePhoto(cred.user!.uid, photoFile.path);
+    }
+
+    // Firestore rules require role == 'player' at create. Coaches are
+    // promoted server-side by validateCoachKey below.
+    final user = UserModel(
+      uid: cred.user!.uid,
+      name: name.trim(),
+      gender: gender,
+      dateOfBirth: dateOfBirth,
+      role: 'player',
+      photoUrl: photoUrl,
+      createdAt: DateTime.now(),
+      heightCm: heightCm,
+      weightKg: weightKg,
+    );
+    await _remote.createUserDoc(user, photoUrl);
+    _emit(user);
+
+    var promotion = CoachPromotion.notRequested;
+    if (role == 'coach') {
+      try {
+        final promoted = await _remote.validateCoachKey(coachKey);
+        promotion =
+            promoted ? CoachPromotion.promoted : CoachPromotion.invalidKey;
+      } catch (_) {
+        promotion = CoachPromotion.networkError;
+      }
+    }
+
+    try {
+      await cred.user?.sendEmailVerification();
+    } catch (_) {
+      // Non-fatal — user can resend from the verify screen.
+    }
+
+    return promotion;
+  }
+
+  @override
+  Future<void> signOut() async {
+    await _credentials.clear();
+    await _remote.signOut();
+    _emit(null);
+  }
+
+  @override
+  Future<void> sendVerificationEmail() async {
+    try {
+      await _remote.auth.currentUser?.sendEmailVerification();
+    } catch (_) {
+      throw const AuthException('unknown');
+    }
+  }
+
+  @override
+  Future<bool> reloadAndCheckVerified() async {
+    try {
+      await _remote.auth.currentUser?.reload();
+      final verified = _remote.auth.currentUser?.emailVerified ?? false;
+      if (verified) {
+        // CRITICAL: reload() refreshes user fields but NOT the ID token.
+        // Firestore authenticates via the ID token, which still carries the
+        // stale `email_verified: false` claim until forced. Without this,
+        // the isVerified() rule rejects queries immediately after verify.
+        await _remote.auth.currentUser?.getIdToken(true);
+      }
+      return verified;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  @override
+  Future<void> markVerifiedAt() async {
+    final uid = _remote.auth.currentUser?.uid;
+    if (uid == null) return;
+    try {
+      await _remote
+          .updateUserDoc(uid, {'verifiedAt': FieldValue.serverTimestamp()});
+    } catch (_) {
+      // Cleanup function will heal this on its next pass.
+    }
+  }
+
+  @override
+  Future<void> updatePendingEmail(String newEmail) async {
+    final user = _remote.auth.currentUser;
+    if (user == null) throw const AuthException('unknown');
+    try {
+      await user.verifyBeforeUpdateEmail(newEmail.trim());
+    } on FirebaseAuthException catch (e) {
+      throw AuthException(e.code);
+    } catch (_) {
+      throw const AuthException('unknown');
+    }
+    try {
+      // Reset the cleanup clock so cleanupUnverifiedUsers won't sweep this
+      // user during the new verification window.
+      await _remote
+          .updateUserDoc(user.uid, {'createdAt': FieldValue.serverTimestamp()});
+    } catch (_) {
+      // Non-fatal — if this fails the user might be cleaned up early.
+    }
+  }
+
+  @override
+  Future<void> sendPasswordReset(String email) async {
+    try {
+      await _remote.auth.sendPasswordResetEmail(email: email.trim());
+    } on FirebaseAuthException catch (e) {
+      throw AuthException(e.code);
+    }
+  }
+
+  @override
+  Future<void> updateProfilePhoto(XFile image) async {
+    final uid = _lastUser?.uid;
+    if (uid == null) return;
+    final url = await _remote.uploadProfilePhoto(uid, image.path);
+    await _remote.updateUserDoc(uid, {'photoUrl': url});
+  }
+
+  @override
+  Future<void> updateBodyMetrics(
+      {required int heightCm, required int weightKg}) async {
+    final uid = _lastUser?.uid;
+    if (uid == null) return;
+    await _remote
+        .updateUserDoc(uid, {'heightCm': heightCm, 'weightKg': weightKg});
+  }
+
+  @visibleForTesting
+  Future<void> dispose() async {
+    await _userSub?.cancel();
+    await _authStateSub?.cancel();
+    await _tokenRefreshSub?.cancel();
+    await _userController.close();
+  }
+}

@@ -1,23 +1,30 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get/get.dart'
+    show ExtensionSnackbar, Get, GetNavigation, SnackPosition;
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
-import '../../controller/auth_controller.dart';
-import '../../core/constants/app_colors.dart';
-import '../../core/utils/validators.dart';
-import '../../l10n/app_localizations.dart';
-import '../widgets/branded_button.dart';
-import '../widgets/branded_text_field.dart';
 
-class RegisterScreen extends StatefulWidget {
+import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/validators.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../../../../routes/app_routes.dart';
+import '../../../../screens/widgets/branded_button.dart';
+import '../../../../screens/widgets/branded_text_field.dart';
+import '../../domain/repositories/auth_repository.dart';
+import '../providers/auth_providers.dart';
+import '../utils/auth_error_l10n.dart';
+
+class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
 
   @override
-  State<RegisterScreen> createState() => _RegisterScreenState();
+  ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
+class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
@@ -34,8 +41,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   String _role = 'player';
   DateTime? _dob;
   XFile? _photoFile;
-
-  final _auth = Get.find<AuthController>();
+  bool _loading = false;
 
   @override
   void dispose() {
@@ -131,21 +137,47 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (file != null) setState(() => _photoFile = file);
   }
 
-  void _submit() {
-    if (!_formKey.currentState!.validate()) return;
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate() || _loading) return;
     if (_dob == null) return;
-    _auth.register(
-      name: _nameCtrl.text,
-      email: _emailCtrl.text,
-      password: _passCtrl.text,
-      gender: _gender,
-      dateOfBirth: _dob!,
-      heightCm: int.parse(_heightCtrl.text.trim()),
-      weightKg: int.parse(_weightCtrl.text.trim()),
-      role: _role,
-      coachKey: _coachKeyCtrl.text,
-      photoFile: _photoFile,
-    );
+    final l = AppLocalizations.of(context)!;
+    setState(() => _loading = true);
+    try {
+      final promotion = await ref.read(authRepositoryProvider).register(
+            name: _nameCtrl.text,
+            email: _emailCtrl.text,
+            password: _passCtrl.text,
+            gender: _gender,
+            dateOfBirth: _dob!,
+            heightCm: int.parse(_heightCtrl.text.trim()),
+            weightKg: int.parse(_weightCtrl.text.trim()),
+            role: _role,
+            coachKey: _coachKeyCtrl.text,
+            photoFile: _photoFile,
+          );
+      switch (promotion) {
+        case CoachPromotion.invalidKey:
+          // User stays a player; they keep the account and can retry coach
+          // promotion later. Continue to verify-email either way.
+          Get.snackbar('', l.invalidCoachKey,
+              snackPosition: SnackPosition.BOTTOM,
+              duration: const Duration(seconds: 3));
+        case CoachPromotion.networkError:
+          Get.snackbar('', l.networkError,
+              snackPosition: SnackPosition.BOTTOM,
+              duration: const Duration(seconds: 3));
+        case CoachPromotion.notRequested:
+        case CoachPromotion.promoted:
+          break;
+      }
+      Get.offAllNamed(Routes.verifyEmail);
+    } on AuthException catch (e) {
+      Get.snackbar('', authErrorMessage(l, e.code),
+          snackPosition: SnackPosition.BOTTOM,
+          duration: const Duration(seconds: 3));
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
   @override
@@ -371,11 +403,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
 
               const SizedBox(height: 8),
-              Obx(() => BrandedButton(
-                    label: l.register,
-                    onPressed: _submit,
-                    isLoading: _auth.isLoading.value,
-                  )),
+              BrandedButton(
+                label: l.register,
+                onPressed: _submit,
+                isLoading: _loading,
+              ),
               const SizedBox(height: 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,

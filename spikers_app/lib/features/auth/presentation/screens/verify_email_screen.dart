@@ -1,25 +1,30 @@
 import 'dart:async';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import '../../controller/auth_controller.dart';
-import '../../core/constants/app_colors.dart';
-import '../../core/utils/validators.dart';
-import '../../l10n/app_localizations.dart';
-import '../../routes/app_routes.dart';
-import '../widgets/branded_button.dart';
 
-class VerifyEmailScreen extends StatefulWidget {
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get/get.dart'
+    show ExtensionSnackbar, Get, GetNavigation, Inst, SnackPosition;
+
+import '../../../../controller/auth_controller.dart';
+import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/validators.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../../../../routes/app_routes.dart';
+import '../../../../screens/widgets/branded_button.dart';
+import '../../domain/repositories/auth_repository.dart';
+import '../providers/auth_providers.dart';
+import '../utils/auth_error_l10n.dart';
+
+class VerifyEmailScreen extends ConsumerStatefulWidget {
   const VerifyEmailScreen({super.key});
 
   @override
-  State<VerifyEmailScreen> createState() => _VerifyEmailScreenState();
+  ConsumerState<VerifyEmailScreen> createState() => _VerifyEmailScreenState();
 }
 
-class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
+class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
   static const _resendCooldownSeconds = 60;
 
-  final _auth = Get.find<AuthController>();
   int _resendIn = 0;
   Timer? _ticker;
   bool _checking = false;
@@ -54,24 +59,13 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
 
   Future<void> _check() async {
     final l = AppLocalizations.of(context)!;
+    final repo = ref.read(authRepositoryProvider);
     setState(() => _checking = true);
-    final verified = await _auth.reloadAndCheckVerified();
+    final verified = await repo.reloadAndCheckVerified();
     if (!mounted) return;
     setState(() => _checking = false);
     if (verified) {
-      final uid = _auth.currentUser.value?.uid;
-      if (uid != null) {
-        try {
-          await FirebaseFirestore.instance
-              .collection('users')
-              .doc(uid)
-              .update({
-            'verifiedAt': FieldValue.serverTimestamp(),
-          });
-        } catch (_) {
-          // Cleanup function will heal this on its next pass.
-        }
-      }
+      await repo.markVerifiedAt();
       Get.offAllNamed(Routes.home);
     } else {
       Get.snackbar('', l.verifyEmailNotYet,
@@ -83,25 +77,36 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
     if (_resendIn > 0 || _resending) return;
     final l = AppLocalizations.of(context)!;
     setState(() => _resending = true);
-    await _auth.sendVerificationEmail();
-    if (!mounted) return;
-    setState(() => _resending = false);
-    Get.snackbar('', l.verifyEmailSent, snackPosition: SnackPosition.BOTTOM);
-    _startCooldown();
+    try {
+      await ref.read(authRepositoryProvider).sendVerificationEmail();
+      if (!mounted) return;
+      Get.snackbar('', l.verifyEmailSent, snackPosition: SnackPosition.BOTTOM);
+      _startCooldown();
+    } on AuthException catch (e) {
+      if (!mounted) return;
+      Get.snackbar('', authErrorMessage(l, e.code),
+          snackPosition: SnackPosition.BOTTOM);
+    } finally {
+      if (mounted) setState(() => _resending = false);
+    }
   }
 
   Future<void> _changeEmail() async {
+    final l = AppLocalizations.of(context)!;
+    final repo = ref.read(authRepositoryProvider);
     final newEmail = await showDialog<String>(
       context: context,
-      builder: (_) => _ChangeEmailDialog(initialEmail: _auth.currentEmail),
+      builder: (_) => _ChangeEmailDialog(initialEmail: repo.currentEmail),
     );
 
     if (newEmail == null || !mounted) return;
 
-    final error = await _auth.updatePendingEmail(newEmail);
-    if (!mounted) return;
-    if (error != null) {
-      Get.snackbar('', error, snackPosition: SnackPosition.BOTTOM);
+    try {
+      await repo.updatePendingEmail(newEmail);
+    } on AuthException catch (e) {
+      if (!mounted) return;
+      Get.snackbar('', authErrorMessage(l, e.code),
+          snackPosition: SnackPosition.BOTTOM);
       return;
     }
     // Defer past the current frame so the dialog's InheritedElement dependents
@@ -115,7 +120,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    final email = _auth.currentEmail;
+    final email = ref.read(authRepositoryProvider).currentEmail;
 
     return Scaffold(
       body: SafeArea(
@@ -192,7 +197,9 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                             style: const TextStyle(color: AppColors.gold)),
                       ),
                       TextButton(
-                        onPressed: _auth.signOut,
+                        // Full sign-out (GetX teardown + navigation) lives on
+                        // the shim until the last GetX consumers migrate.
+                        onPressed: Get.find<AuthController>().signOut,
                         child: Text(l.signOut,
                             style: const TextStyle(color: AppColors.grey)),
                       ),

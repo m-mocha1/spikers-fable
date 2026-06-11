@@ -40,7 +40,7 @@ class ProfileTab extends StatelessWidget {
               title: Text(l.pickFromGallery),
               onTap: () {
                 Get.back();
-                _pickAndUpload(ImageSource.gallery, auth);
+                _pickAndUpload(ImageSource.gallery, auth, l);
               },
             ),
             ListTile(
@@ -49,7 +49,7 @@ class ProfileTab extends StatelessWidget {
               title: Text(l.takePhoto),
               onTap: () {
                 Get.back();
-                _pickAndUpload(ImageSource.camera, auth);
+                _pickAndUpload(ImageSource.camera, auth, l);
               },
             ),
             const SizedBox(height: 8),
@@ -60,14 +60,20 @@ class ProfileTab extends StatelessWidget {
   }
 
   static Future<void> _pickAndUpload(
-      ImageSource source, AuthController auth) async {
+      ImageSource source, AuthController auth, AppLocalizations l) async {
     final file = await ImagePicker().pickImage(
       source: source,
       maxWidth: 512,
       maxHeight: 512,
       imageQuality: 80,
     );
-    if (file != null) await auth.updateProfilePhoto(file);
+    if (file == null) return;
+    try {
+      await auth.updateProfilePhoto(file);
+      Get.snackbar('', l.photoUpdated, snackPosition: SnackPosition.BOTTOM);
+    } catch (_) {
+      Get.snackbar('', l.unknownError, snackPosition: SnackPosition.BOTTOM);
+    }
   }
 
   @override
