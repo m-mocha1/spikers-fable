@@ -118,7 +118,10 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
       await FirebaseFunctions.instanceFor(region: 'europe-west1')
           .httpsCallable('archiveExpiredSessionsNow')
           .call();
-    } catch (_) {}
+    } catch (e) {
+      // Non-fatal: the scheduled sessionCleanup function archives it anyway.
+      debugPrint('sessionDetail: on-demand archival failed — $e');
+    }
   }
 
   void _switchToHistory() {
