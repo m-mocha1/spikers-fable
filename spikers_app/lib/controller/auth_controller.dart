@@ -7,6 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -46,6 +47,12 @@ class AuthController extends GetxController {
   static const _kEmail = '_se';
   static const _kPass = '_sp';
 
+  // Credentials live in the platform keystore (Keychain / EncryptedSharedPreferences),
+  // never in plain SharedPreferences — base64 is encoding, not encryption.
+  static const _secureStorage = FlutterSecureStorage(
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+  );
+
   /// Splash screen awaits this before navigating.
   Future<void> waitForAuth() => _readyCompleter.future;
 
@@ -77,11 +84,10 @@ class AuthController extends GetxController {
 
   Future<bool> _tryRestoreSession() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final email = prefs.getString(_kEmail);
-      final encoded = prefs.getString(_kPass);
-      if (email == null || encoded == null) return false;
-      final password = utf8.decode(base64.decode(encoded));
+      await _migrateLegacyCredentials();
+      final email = await _secureStorage.read(key: _kEmail);
+      final password = await _secureStorage.read(key: _kPass);
+      if (email == null || password == null) return false;
       await _auth.signInWithEmailAndPassword(
           email: email, password: password);
       return _auth.currentUser != null;
@@ -91,13 +97,29 @@ class AuthController extends GetxController {
     }
   }
 
-  Future<void> _saveCredentials(String email, String password) async {
+  /// One-time move of credentials saved by older builds out of plain
+  /// SharedPreferences (where the password was only base64-encoded).
+  Future<void> _migrateLegacyCredentials() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_kEmail, email);
-    await prefs.setString(_kPass, base64.encode(utf8.encode(password)));
+    final email = prefs.getString(_kEmail);
+    final encoded = prefs.getString(_kPass);
+    if (email != null && encoded != null) {
+      await _secureStorage.write(key: _kEmail, value: email);
+      await _secureStorage.write(
+          key: _kPass, value: utf8.decode(base64.decode(encoded)));
+    }
+    await prefs.remove(_kEmail);
+    await prefs.remove(_kPass);
+  }
+
+  Future<void> _saveCredentials(String email, String password) async {
+    await _secureStorage.write(key: _kEmail, value: email);
+    await _secureStorage.write(key: _kPass, value: password);
   }
 
   Future<void> _clearCredentials() async {
+    await _secureStorage.delete(key: _kEmail);
+    await _secureStorage.delete(key: _kPass);
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_kEmail);
     await prefs.remove(_kPass);
