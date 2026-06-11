@@ -1,28 +1,28 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get/get.dart'
+    show ExtensionSnackbar, Get, GetNavigation, SnackPosition;
 import 'package:intl/intl.dart';
 import 'package:omni_datetime_picker/omni_datetime_picker.dart';
-import '../../controller/auth_controller.dart';
-import '../../controller/session_controller.dart';
-import '../../controller/template_controller.dart';
-import '../../core/constants/app_colors.dart';
-import '../../l10n/app_localizations.dart';
-import '../../models/session_model.dart';
-import '../../models/session_template_model.dart';
-import '../widgets/branded_button.dart';
-import '../widgets/branded_text_field.dart';
 
-class QuickSessionScreen extends StatefulWidget {
+import '../../../../core/constants/app_colors.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../../../../models/session_model.dart';
+import '../../../../models/session_template_model.dart';
+import '../../../../screens/widgets/branded_button.dart';
+import '../../../../screens/widgets/branded_text_field.dart';
+import '../../../auth/presentation/providers/auth_providers.dart';
+import '../providers/sessions_providers.dart';
+
+class QuickSessionScreen extends ConsumerStatefulWidget {
   const QuickSessionScreen({super.key});
 
   @override
-  State<QuickSessionScreen> createState() => _QuickSessionScreenState();
+  ConsumerState<QuickSessionScreen> createState() =>
+      _QuickSessionScreenState();
 }
 
-class _QuickSessionScreenState extends State<QuickSessionScreen> {
-  final _sessionCtrl = Get.find<SessionController>();
-  final _templateCtrl = Get.find<TemplateController>();
-  final _auth = Get.find<AuthController>();
+class _QuickSessionScreenState extends ConsumerState<QuickSessionScreen> {
   final _fmt = DateFormat('MMM d, yyyy  HH:mm');
   final _startCtrl = TextEditingController();
   final _endCtrl = TextEditingController();
@@ -70,13 +70,15 @@ class _QuickSessionScreenState extends State<QuickSessionScreen> {
     });
   }
 
-  void _submit() {
+  Future<void> _submit() async {
+    final l = AppLocalizations.of(context)!;
     if (_selected == null || _startTime == null || _endTime == null) return;
     if (_endTime!.isBefore(_startTime!)) {
-      Get.snackbar('', 'endTimeError'.tr, snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar('', l.endTimeError, snackPosition: SnackPosition.BOTTOM);
       return;
     }
-    final user = _auth.currentUser.value!;
+    final user = ref.read(currentUserProvider).value;
+    if (user == null) return;
     setState(() => _isSubmitting = true);
 
     final session = SessionModel(
@@ -95,37 +97,59 @@ class _QuickSessionScreenState extends State<QuickSessionScreen> {
       createdAt: DateTime.now(),
     );
 
-    _sessionCtrl.createSession(session).whenComplete(() {
+    try {
+      await ref.read(sessionsRepositoryProvider).create(session);
+      if (!mounted) return;
+      Get.back();
+      Get.snackbar('', l.sessionCreated, snackPosition: SnackPosition.BOTTOM);
+    } catch (_) {
+      Get.snackbar('', l.unknownError, snackPosition: SnackPosition.BOTTOM);
+    } finally {
       if (mounted) setState(() => _isSubmitting = false);
-    });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
+    final templatesAsync = ref.watch(templatesProvider);
+    final uid = ref.watch(currentUserProvider).value?.uid;
+
     return Scaffold(
       appBar: AppBar(title: Text(l.quickSession)),
-      body: Obx(() {
-        final templates = _templateCtrl.templates;
-        if (templates.isEmpty) return _buildEmpty(l);
-        return Column(
-          children: [
-            Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsetsDirectional.fromSTEB(16, 16, 16, 8),
-                itemCount: templates.length,
-                itemBuilder: (_, i) => _TemplateCard(
-                  template: templates[i],
-                  selected: _selected?.id == templates[i].id,
-                  onTap: () => setState(() => _selected = templates[i]),
-                  onDelete: () => _templateCtrl.delete(templates[i].id),
+      body: templatesAsync.when(
+        loading: () => const Center(
+            child: CircularProgressIndicator(color: AppColors.gold)),
+        error: (e, _) => Center(
+          child: Text(l.errorOccurred,
+              style: const TextStyle(color: AppColors.grey, fontSize: 15)),
+        ),
+        data: (templates) {
+          if (templates.isEmpty) return _buildEmpty(l);
+          return Column(
+            children: [
+              Expanded(
+                child: ListView.builder(
+                  padding:
+                      const EdgeInsetsDirectional.fromSTEB(16, 16, 16, 8),
+                  itemCount: templates.length,
+                  itemBuilder: (_, i) => _TemplateCard(
+                    template: templates[i],
+                    selected: _selected?.id == templates[i].id,
+                    onTap: () => setState(() => _selected = templates[i]),
+                    onDelete: uid == null
+                        ? () {}
+                        : () => ref
+                            .read(templatesRepositoryProvider)
+                            .delete(uid, templates[i].id),
+                  ),
                 ),
               ),
-            ),
-            _buildTimeSection(l),
-          ],
-        );
-      }),
+              _buildTimeSection(l),
+            ],
+          );
+        },
+      ),
     );
   }
 
@@ -279,7 +303,8 @@ class _TemplateCard extends StatelessWidget {
             if (selected)
               const Padding(
                 padding: EdgeInsetsDirectional.only(end: 4),
-                child: Icon(Icons.check_circle, color: AppColors.gold, size: 20),
+                child:
+                    Icon(Icons.check_circle, color: AppColors.gold, size: 20),
               ),
             IconButton(
               icon: const Icon(Icons.delete_outline,

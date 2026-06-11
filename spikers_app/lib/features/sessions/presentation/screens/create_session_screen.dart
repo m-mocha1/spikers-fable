@@ -1,26 +1,29 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get/get.dart'
+    show ExtensionSnackbar, Get, GetNavigation, SnackPosition;
 import 'package:intl/intl.dart';
 import 'package:omni_datetime_picker/omni_datetime_picker.dart';
-import '../../controller/auth_controller.dart';
-import '../../controller/session_controller.dart';
-import '../../controller/template_controller.dart';
-import '../../core/constants/app_colors.dart';
-import '../../core/utils/validators.dart';
-import '../../l10n/app_localizations.dart';
-import '../../models/session_model.dart';
-import '../../models/session_template_model.dart';
-import '../widgets/branded_button.dart';
-import '../widgets/branded_text_field.dart';
 
-class CreateSessionScreen extends StatefulWidget {
+import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/validators.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../../../../models/session_model.dart';
+import '../../../../models/session_template_model.dart';
+import '../../../../screens/widgets/branded_button.dart';
+import '../../../../screens/widgets/branded_text_field.dart';
+import '../../../auth/presentation/providers/auth_providers.dart';
+import '../providers/sessions_providers.dart';
+
+class CreateSessionScreen extends ConsumerStatefulWidget {
   const CreateSessionScreen({super.key});
 
   @override
-  State<CreateSessionScreen> createState() => _CreateSessionScreenState();
+  ConsumerState<CreateSessionScreen> createState() =>
+      _CreateSessionScreenState();
 }
 
-class _CreateSessionScreenState extends State<CreateSessionScreen> {
+class _CreateSessionScreenState extends ConsumerState<CreateSessionScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleCtrl = TextEditingController();
   final _locationCtrl = TextEditingController();
@@ -36,8 +39,6 @@ class _CreateSessionScreenState extends State<CreateSessionScreen> {
   DateTime? _endTime;
   bool _saveAsTemplate = false;
 
-  final _auth = Get.find<AuthController>();
-  final _ctrl = Get.find<SessionController>();
   final _fmt = DateFormat('MMM d, yyyy  HH:mm');
 
   bool _isSubmitting = false;
@@ -88,30 +89,33 @@ class _CreateSessionScreenState extends State<CreateSessionScreen> {
   }
 
   Future<void> _submit() async {
+    final l = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) return;
     if (_startTime == null || _endTime == null) return;
     if (_endTime!.isBefore(_startTime!)) {
-      Get.snackbar('', 'endTimeError'.tr,
-          snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar('', l.endTimeError, snackPosition: SnackPosition.BOTTOM);
       return;
     }
 
-    final user = _auth.currentUser.value!;
+    final user = ref.read(currentUserProvider).value;
+    if (user == null) return;
     setState(() => _isSubmitting = true);
 
     try {
       if (_saveAsTemplate) {
-        await Get.find<TemplateController>().save(SessionTemplate(
-          id: '',
-          title: _titleCtrl.text.trim(),
-          location: _locationCtrl.text.trim(),
-          gender: _gender,
-          minAge: int.tryParse(_minAgeCtrl.text) ?? 0,
-          maxAge: int.tryParse(_maxAgeCtrl.text) ?? 99,
-          maxPlayers: int.tryParse(_maxPlayersCtrl.text) ?? 10,
-          waitlistSize: int.tryParse(_waitlistSizeCtrl.text) ?? 0,
-          createdAt: DateTime.now(),
-        ));
+        await ref.read(templatesRepositoryProvider).save(
+            user.uid,
+            SessionTemplate(
+              id: '',
+              title: _titleCtrl.text.trim(),
+              location: _locationCtrl.text.trim(),
+              gender: _gender,
+              minAge: int.tryParse(_minAgeCtrl.text) ?? 0,
+              maxAge: int.tryParse(_maxAgeCtrl.text) ?? 99,
+              maxPlayers: int.tryParse(_maxPlayersCtrl.text) ?? 10,
+              waitlistSize: int.tryParse(_waitlistSizeCtrl.text) ?? 0,
+              createdAt: DateTime.now(),
+            ));
       }
 
       final session = SessionModel(
@@ -130,9 +134,12 @@ class _CreateSessionScreenState extends State<CreateSessionScreen> {
         createdAt: DateTime.now(),
       );
 
-      await _ctrl.createSession(session);
+      await ref.read(sessionsRepositoryProvider).create(session);
+      if (!mounted) return;
+      Get.back();
+      Get.snackbar('', l.sessionCreated, snackPosition: SnackPosition.BOTTOM);
     } catch (_) {
-      Get.snackbar('', 'unknownError'.tr, snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar('', l.unknownError, snackPosition: SnackPosition.BOTTOM);
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
@@ -205,7 +212,8 @@ class _CreateSessionScreenState extends State<CreateSessionScreen> {
                       label: l.minAge,
                       controller: _minAgeCtrl,
                       keyboardType: TextInputType.number,
-                      validator: (v) => Validators.required(v, l.requiredField),
+                      validator: (v) =>
+                          Validators.required(v, l.requiredField),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -214,7 +222,8 @@ class _CreateSessionScreenState extends State<CreateSessionScreen> {
                       label: l.maxAge,
                       controller: _maxAgeCtrl,
                       keyboardType: TextInputType.number,
-                      validator: (v) => Validators.required(v, l.requiredField),
+                      validator: (v) =>
+                          Validators.required(v, l.requiredField),
                     ),
                   ),
                 ],
@@ -253,7 +262,8 @@ class _CreateSessionScreenState extends State<CreateSessionScreen> {
                 controller: _startCtrl,
                 readOnly: true,
                 onTap: () => _pickTime(isStart: true),
-                suffixIcon: const Icon(Icons.event_outlined, color: AppColors.grey),
+                suffixIcon:
+                    const Icon(Icons.event_outlined, color: AppColors.grey),
                 validator: (v) =>
                     (v == null || v.isEmpty) ? l.requiredField : null,
               ),
@@ -265,7 +275,8 @@ class _CreateSessionScreenState extends State<CreateSessionScreen> {
                 controller: _endCtrl,
                 readOnly: true,
                 onTap: () => _pickTime(isStart: false),
-                suffixIcon: const Icon(Icons.event_outlined, color: AppColors.grey),
+                suffixIcon:
+                    const Icon(Icons.event_outlined, color: AppColors.grey),
                 validator: (v) =>
                     (v == null || v.isEmpty) ? l.requiredField : null,
               ),
@@ -273,7 +284,8 @@ class _CreateSessionScreenState extends State<CreateSessionScreen> {
 
               CheckboxListTile(
                 value: _saveAsTemplate,
-                onChanged: (v) => setState(() => _saveAsTemplate = v ?? false),
+                onChanged: (v) =>
+                    setState(() => _saveAsTemplate = v ?? false),
                 title: Text(l.saveAsTemplate,
                     style: const TextStyle(fontWeight: FontWeight.w500)),
                 activeColor: AppColors.gold,
