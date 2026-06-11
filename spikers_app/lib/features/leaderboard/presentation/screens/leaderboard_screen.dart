@@ -1,17 +1,30 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import '../../controller/leaderboard_controller.dart';
-import '../../core/constants/app_colors.dart';
-import '../../l10n/app_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class LeaderboardScreen extends StatelessWidget {
+import '../../../../core/constants/app_colors.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../../domain/entities/leaderboard_entry.dart';
+import '../providers/leaderboard_providers.dart';
+
+class LeaderboardScreen extends ConsumerWidget {
   const LeaderboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context)!;
-    final c = Get.find<LeaderboardController>();
+    final tab = ref.watch(leaderboardTabProvider);
+    final isMonthly = tab == 0;
+    final entriesAsync = ref.watch(
+        isMonthly ? monthlyLeaderboardProvider : allTimeLeaderboardProvider);
+
+    Future<void> refresh() async {
+      ref.invalidate(monthlyLeaderboardProvider);
+      ref.invalidate(allTimeLeaderboardProvider);
+      await ref.read(isMonthly
+          ? monthlyLeaderboardProvider.future
+          : allTimeLeaderboardProvider.future);
+    }
 
     return Scaffold(
       appBar: AppBar(title: Text(l.leaderboard)),
@@ -19,64 +32,79 @@ class LeaderboardScreen extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Obx(() => Row(
-                  children: [
-                    _Chip(
-                      label: l.thisMonth,
-                      active: c.selectedTab.value == 0,
-                      onTap: () => c.selectedTab.value = 0,
-                    ),
-                    const SizedBox(width: 8),
-                    _Chip(
-                      label: l.allTime,
-                      active: c.selectedTab.value == 1,
-                      onTap: () => c.selectedTab.value = 1,
-                    ),
-                  ],
-                )),
+            child: Row(
+              children: [
+                _Chip(
+                  label: l.thisMonth,
+                  active: tab == 0,
+                  onTap: () =>
+                      ref.read(leaderboardTabProvider.notifier).state = 0,
+                ),
+                const SizedBox(width: 8),
+                _Chip(
+                  label: l.allTime,
+                  active: tab == 1,
+                  onTap: () =>
+                      ref.read(leaderboardTabProvider.notifier).state = 1,
+                ),
+              ],
+            ),
           ),
           Expanded(
-            child: Obx(() {
-              final isMonthly = c.selectedTab.value == 0;
-              final loading =
-                  isMonthly ? c.isLoadingMonthly.value : c.isLoadingAllTime.value;
-              final entries =
-                  isMonthly ? c.monthlyEntries : c.allTimeEntries;
-
-              if (loading) {
-                return const Center(
-                    child: CircularProgressIndicator(color: AppColors.gold));
-              }
-
-              if (entries.isEmpty) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.emoji_events_outlined,
-                          size: 64, color: AppColors.grey),
-                      const SizedBox(height: 16),
-                      Text(l.noLeaderboardData,
-                          style: const TextStyle(
-                              color: AppColors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600)),
-                    ],
+            child: entriesAsync.when(
+              loading: () => const Center(
+                  child: CircularProgressIndicator(color: AppColors.gold)),
+              error: (e, _) => Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.error_outline,
+                        size: 64, color: AppColors.grey),
+                    const SizedBox(height: 16),
+                    Text(l.errorOccurred,
+                        style: const TextStyle(
+                            color: AppColors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 12),
+                    TextButton(
+                      onPressed: refresh,
+                      child: Text(l.retry,
+                          style: const TextStyle(color: AppColors.gold)),
+                    ),
+                  ],
+                ),
+              ),
+              data: (entries) {
+                if (entries.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.emoji_events_outlined,
+                            size: 64, color: AppColors.grey),
+                        const SizedBox(height: 16),
+                        Text(l.noLeaderboardData,
+                            style: const TextStyle(
+                                color: AppColors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600)),
+                      ],
+                    ),
+                  );
+                }
+                return RefreshIndicator(
+                  onRefresh: refresh,
+                  color: AppColors.gold,
+                  child: ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+                    itemCount: entries.length,
+                    itemBuilder: (_, i) =>
+                        _LeaderboardTile(rank: i + 1, entry: entries[i]),
                   ),
                 );
-              }
-
-              return RefreshIndicator(
-                onRefresh: c.reload,
-                color: AppColors.gold,
-                child: ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
-                  itemCount: entries.length,
-                  itemBuilder: (_, i) =>
-                      _LeaderboardTile(rank: i + 1, entry: entries[i]),
-                ),
-              );
-            }),
+              },
+            ),
           ),
         ],
       ),

@@ -22,9 +22,8 @@ import '../screens/players/player_profile_screen.dart';
 import '../screens/coaches/coaches_list_screen.dart';
 import '../screens/announcements/announcements_screen.dart';
 import '../screens/announcements/create_announcement_screen.dart';
-import '../controller/leaderboard_controller.dart';
 import '../controller/recurring_session_controller.dart';
-import '../screens/leaderboard/leaderboard_screen.dart';
+import '../features/leaderboard/presentation/screens/leaderboard_screen.dart';
 import '../screens/sessions/recurring_sessions_screen.dart';
 import '../screens/sessions/create_recurring_session_screen.dart';
 
@@ -99,12 +98,10 @@ final List<GetPage> appPages = [
     page: () => const SessionsHistoryScreen(),
     middlewares: [CoachOnlyMiddleware()],
   ),
+  // Riverpod feature — no GetX binding; providers are autoDispose.
   GetPage(
     name: Routes.leaderboard,
     page: () => const LeaderboardScreen(),
-    binding: BindingsBuilder(() {
-      Get.put(LeaderboardController());
-    }),
   ),
   GetPage(
     name: Routes.recurringSessions,
