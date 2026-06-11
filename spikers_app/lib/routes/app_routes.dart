@@ -2,8 +2,6 @@ import 'package:flutter/material.dart' show RouteSettings;
 import 'package:get/get.dart';
 import '../controller/auth_controller.dart';
 import '../controller/notification_controller.dart';
-import '../controller/session_controller.dart';
-import '../controller/template_controller.dart';
 import '../features/auth/presentation/screens/splash_screen.dart';
 import '../features/auth/presentation/screens/login_screen.dart';
 import '../features/auth/presentation/screens/register_screen.dart';
@@ -11,7 +9,7 @@ import '../features/auth/presentation/screens/email_change_notice_screen.dart';
 import '../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../features/auth/presentation/screens/verify_email_screen.dart';
 import '../screens/home/home_screen.dart';
-import '../screens/sessions/session_detail_screen.dart';
+import '../features/sessions/presentation/screens/session_detail_screen.dart';
 import '../features/sessions/presentation/screens/create_session_screen.dart';
 import '../features/sessions/presentation/screens/quick_session_screen.dart';
 import '../features/sessions/presentation/screens/session_chat_screen.dart';
@@ -57,9 +55,7 @@ final List<GetPage> appPages = [
     name: Routes.home,
     page: () => const HomeScreen(),
     binding: BindingsBuilder(() {
-      Get.put(SessionController(), permanent: true);
       Get.put(NotificationController(), permanent: true);
-      Get.put(TemplateController(), permanent: true);
     }),
   ),
   GetPage(name: Routes.sessionDetail,  page: () => const SessionDetailScreen()),

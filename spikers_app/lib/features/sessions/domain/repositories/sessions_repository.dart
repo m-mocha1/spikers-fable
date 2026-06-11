@@ -15,7 +15,12 @@ class SessionActionException implements Exception {
 enum JoinResult { joined, waitlisted, alreadyJoined, alreadyWaitlisted }
 
 /// A users_public profile row used for attendee/sender display.
-typedef PublicProfile = ({String name, String photoUrl});
+typedef PublicProfile = ({
+  String name,
+  String photoUrl,
+  String gender,
+  int attendanceCount,
+});
 
 abstract class SessionsRepository {
   /// Upcoming sessions visible to [viewer]:

@@ -80,6 +80,8 @@ class SessionsRemoteDataSource {
         profiles[doc.id] = (
           name: (data['name'] ?? '') as String,
           photoUrl: (data['photoUrl'] ?? '') as String,
+          gender: (data['gender'] ?? '') as String,
+          attendanceCount: ((data['attendanceCount'] ?? 0) as num).toInt(),
         );
       }
     }

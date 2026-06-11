@@ -7,8 +7,6 @@ import '../features/auth/data/repositories/auth_repository_impl.dart';
 import '../models/user_model.dart';
 import '../routes/app_routes.dart';
 import 'notification_controller.dart';
-import 'session_controller.dart';
-import 'template_controller.dart';
 
 /// MIGRATION SHIM — thin GetX facade over the Riverpod-era AuthRepository.
 ///
@@ -63,15 +61,10 @@ class AuthController extends GetxController {
 
   Future<void> signOut() async {
     await _repo.signOut();
-    // Tear down permanent domain controllers so their Firestore listeners
-    // and cached state don't survive into the next user's session. They
-    // rebuild on the next /home navigation via the route binding.
-    if (Get.isRegistered<SessionController>()) {
-      Get.delete<SessionController>(force: true);
-    }
-    if (Get.isRegistered<TemplateController>()) {
-      Get.delete<TemplateController>(force: true);
-    }
+    // Tear down the remaining permanent GetX controller so its listeners
+    // don't survive into the next user's session. It rebuilds on the next
+    // /home navigation via the route binding. (Riverpod feature state keys
+    // off currentUserProvider and resets itself.)
     if (Get.isRegistered<NotificationController>()) {
       Get.delete<NotificationController>(force: true);
     }

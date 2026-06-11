@@ -10,6 +10,8 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../models/chat_message_model.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
+import '../../domain/repositories/sessions_repository.dart'
+    show PublicProfile;
 import '../providers/sessions_providers.dart';
 
 class SessionChatScreen extends ConsumerStatefulWidget {
@@ -33,7 +35,7 @@ class _SessionChatScreenState extends ConsumerState<SessionChatScreen> {
   List<ChatMessage> _live = [];
   final List<ChatMessage> _older = [];
   // uid -> profile for resolving senders at render time.
-  final Map<String, ({String name, String photoUrl})> _senderInfo = {};
+  final Map<String, PublicProfile> _senderInfo = {};
   StreamSubscription<List<ChatMessage>>? _liveSub;
   bool _initialLoaded = false;
   bool _loadingMore = false;
