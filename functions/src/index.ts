@@ -376,12 +376,37 @@ export const cancelSession = onCall({ region: REGION }, async (request) => {
 // required, so an anonymous attacker can't brute-force. On success the
 // caller's own user doc is promoted to role='coach' here, server-side,
 // so the rules can force role='player' at create.
+const MAX_COACH_KEY_ATTEMPTS = 5;
+const COACH_KEY_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+
 export const validateCoachKey = onCall({ region: REGION }, async (request) => {
   const uid = request.auth?.uid;
   if (!uid) throw new HttpsError("unauthenticated", "Not authenticated");
 
   const key = request.data["key"] as string | undefined;
   if (!key) throw new HttpsError("invalid-argument", "key required");
+
+  // Brute-force guard: per-uid attempt window. Check-and-increment runs in a
+  // transaction so parallel calls can't slip past the cap. Only the Admin SDK
+  // touches this collection — client rules never grant access to it.
+  const attemptsRef = db.collection("coach_key_attempts").doc(uid);
+  await db.runTransaction(async (tx) => {
+    const snap = await tx.get(attemptsRef);
+    const now = Date.now();
+    const windowStart = (snap.data()?.["windowStart"] ?? 0) as number;
+    const count = (snap.data()?.["count"] ?? 0) as number;
+    const inWindow = now - windowStart < COACH_KEY_WINDOW_MS;
+    if (inWindow && count >= MAX_COACH_KEY_ATTEMPTS) {
+      throw new HttpsError(
+        "resource-exhausted",
+        "Too many attempts — try again later"
+      );
+    }
+    tx.set(
+      attemptsRef,
+      inWindow ? { count: count + 1, windowStart } : { count: 1, windowStart: now }
+    );
+  });
 
   const doc = await db.collection("config").doc("coachKey").get();
   const stored = (doc.data()?.["value"] ?? "") as string;
@@ -394,6 +419,9 @@ export const validateCoachKey = onCall({ region: REGION }, async (request) => {
   if (!valid) return { valid: false };
 
   await db.collection("users").doc(uid).update({ role: "coach" });
+  await attemptsRef.delete().catch((e) => {
+    logger.warn("validateCoachKey: failed to clear attempts", { uid, error: e });
+  });
   return { valid: true };
 });
 
