@@ -6,7 +6,6 @@ import 'package:image_picker/image_picker.dart';
 import '../features/auth/data/repositories/auth_repository_impl.dart';
 import '../models/user_model.dart';
 import '../routes/app_routes.dart';
-import 'announcement_controller.dart';
 import 'notification_controller.dart';
 import 'payment_controller.dart';
 import 'recurring_session_controller.dart';
@@ -80,9 +79,6 @@ class AuthController extends GetxController {
     }
     if (Get.isRegistered<NotificationController>()) {
       Get.delete<NotificationController>(force: true);
-    }
-    if (Get.isRegistered<AnnouncementController>()) {
-      Get.delete<AnnouncementController>(force: true);
     }
     if (Get.isRegistered<RecurringSessionController>()) {
       Get.delete<RecurringSessionController>(force: true);

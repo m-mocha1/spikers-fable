@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../controller/announcement_controller.dart';
 import '../../controller/auth_controller.dart';
+import '../../features/announcements/presentation/widgets/announcements_bell.dart';
 import '../../core/constants/app_colors.dart';
 import '../../l10n/app_localizations.dart';
 import '../../routes/app_routes.dart';
@@ -96,8 +96,6 @@ class _HomeScreenState extends State<HomeScreen> {
     final l = AppLocalizations.of(context)!;
     final auth = Get.find<AuthController>();
 
-    final announcements = Get.find<AnnouncementController>();
-
     return Scaffold(
       extendBody: true,
       appBar: AppBar(
@@ -122,35 +120,7 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: const Icon(Icons.emoji_events_outlined),
             onPressed: () => Get.toNamed(Routes.leaderboard),
           ),
-          Obx(() {
-            final latest = announcements.latestAt.value;
-            final seen = auth.currentUser.value?.lastSeenAnnouncementsAt;
-            final hasUnread =
-                latest != null && (seen == null || latest.isAfter(seen));
-            return IconButton(
-              tooltip: l.announcements,
-              icon: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  const Icon(Icons.notifications_outlined),
-                  if (hasUnread)
-                    Positioned(
-                      right: -1,
-                      top: -1,
-                      child: Container(
-                        width: 9,
-                        height: 9,
-                        decoration: const BoxDecoration(
-                          color: AppColors.errorRed,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-              onPressed: () => Get.toNamed(Routes.announcements),
-            );
-          }),
+          const AnnouncementsBell(),
         ],
       ),
       body: Obx(() {

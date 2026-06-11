@@ -210,6 +210,31 @@
   "save": "Save",
   "announcements": "Announcements",
   "noAnnouncements": "No announcements yet",
+  "justNow": "just now",
+  "minutesAgo": "{minutes}m ago",
+  "@minutesAgo": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "hoursAgo": "{hours}h ago",
+  "@hoursAgo": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "daysAgo": "{days}d ago",
+  "@daysAgo": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
   "newAnnouncement": "New Announcement",
   "announcementTitle": "Title",
   "announcementBody": "Message",

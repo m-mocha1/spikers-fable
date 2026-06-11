@@ -1,20 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import '../../controller/announcement_controller.dart';
-import '../../l10n/app_localizations.dart';
-import '../../models/announcement_model.dart';
-import '../widgets/branded_button.dart';
-import '../widgets/branded_text_field.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get/get.dart'
+    show ExtensionSnackbar, Get, GetNavigation, SnackPosition;
 
-class CreateAnnouncementScreen extends StatefulWidget {
+import '../../../../l10n/app_localizations.dart';
+import '../../../../screens/widgets/branded_button.dart';
+import '../../../../screens/widgets/branded_text_field.dart';
+import '../../../auth/presentation/providers/auth_providers.dart';
+import '../../domain/entities/announcement.dart';
+import '../providers/announcements_providers.dart';
+
+class CreateAnnouncementScreen extends ConsumerStatefulWidget {
   const CreateAnnouncementScreen({super.key});
 
   @override
-  State<CreateAnnouncementScreen> createState() =>
+  ConsumerState<CreateAnnouncementScreen> createState() =>
       _CreateAnnouncementScreenState();
 }
 
-class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
+class _CreateAnnouncementScreenState
+    extends ConsumerState<CreateAnnouncementScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleCtrl = TextEditingController();
   final _bodyCtrl = TextEditingController();
@@ -43,14 +48,20 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isSubmitting = true);
     final l = AppLocalizations.of(context)!;
-    final controller = Get.find<AnnouncementController>();
+    final repo = ref.read(announcementsRepositoryProvider);
     final title = _titleCtrl.text.trim();
     final body = _bodyCtrl.text.trim();
     try {
       if (_existing != null) {
-        await controller.edit(id: _existing!.id, title: title, body: body);
+        await repo.edit(id: _existing!.id, title: title, body: body);
       } else {
-        await controller.create(title: title, body: body);
+        final user = ref.read(currentUserProvider).value;
+        if (user == null) return;
+        await repo.create(
+            title: title,
+            body: body,
+            authorId: user.uid,
+            authorName: user.name);
       }
       if (!mounted) return;
       Get.back();
@@ -62,8 +73,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
       );
     } catch (_) {
       if (!mounted) return;
-      Get.snackbar('', l.errorOccurred,
-          snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar('', l.errorOccurred, snackPosition: SnackPosition.BOTTOM);
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }

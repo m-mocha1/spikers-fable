@@ -524,6 +524,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noAnnouncements => 'No announcements yet';
 
   @override
+  String get justNow => 'just now';
+
+  @override
+  String minutesAgo(int minutes) {
+    return '${minutes}m ago';
+  }
+
+  @override
+  String hoursAgo(int hours) {
+    return '${hours}h ago';
+  }
+
+  @override
+  String daysAgo(int days) {
+    return '${days}d ago';
+  }
+
+  @override
   String get newAnnouncement => 'New Announcement';
 
   @override

@@ -520,6 +520,24 @@ class AppLocalizationsAr extends AppLocalizations {
   String get noAnnouncements => 'لا توجد إعلانات بعد';
 
   @override
+  String get justNow => 'الآن';
+
+  @override
+  String minutesAgo(int minutes) {
+    return 'قبل $minutes د';
+  }
+
+  @override
+  String hoursAgo(int hours) {
+    return 'قبل $hours س';
+  }
+
+  @override
+  String daysAgo(int days) {
+    return 'قبل $days ي';
+  }
+
+  @override
   String get newAnnouncement => 'إعلان جديد';
 
   @override

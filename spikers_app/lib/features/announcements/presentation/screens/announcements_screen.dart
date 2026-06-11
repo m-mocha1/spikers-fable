@@ -1,92 +1,81 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import '../../controller/announcement_controller.dart';
-import '../../controller/auth_controller.dart';
-import '../../core/constants/app_colors.dart';
-import '../../l10n/app_localizations.dart';
-import '../../models/announcement_model.dart';
-import '../../routes/app_routes.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get/get.dart'
+    show ExtensionSnackbar, Get, GetNavigation, SnackPosition;
 
-class AnnouncementsScreen extends StatefulWidget {
+import '../../../../core/constants/app_colors.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../../../../routes/app_routes.dart';
+import '../../../auth/presentation/providers/auth_providers.dart';
+import '../../domain/entities/announcement.dart';
+import '../providers/announcements_providers.dart';
+
+class AnnouncementsScreen extends ConsumerStatefulWidget {
   const AnnouncementsScreen({super.key});
 
   @override
-  State<AnnouncementsScreen> createState() => _AnnouncementsScreenState();
+  ConsumerState<AnnouncementsScreen> createState() =>
+      _AnnouncementsScreenState();
 }
 
-class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
+class _AnnouncementsScreenState extends ConsumerState<AnnouncementsScreen> {
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Get.find<AnnouncementController>().markRead();
+      markAnnouncementsRead(ref);
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    final auth = Get.find<AuthController>();
+    final isCoach = ref.watch(isCoachProvider);
+    final announcementsAsync = ref.watch(announcementsProvider);
+    final myUid = ref.watch(currentUserProvider).value?.uid;
 
     return Scaffold(
       appBar: AppBar(title: Text(l.announcements)),
-      floatingActionButton: Obx(() => auth.isCoach
+      floatingActionButton: isCoach
           ? FloatingActionButton(
               onPressed: () async {
                 await Get.toNamed(Routes.createAnnouncement);
-                await Get.find<AnnouncementController>().markRead();
+                await markAnnouncementsRead(ref);
               },
               child: const Icon(Icons.add),
             )
-          : const SizedBox.shrink()),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('announcements')
-            .orderBy('createdAt', descending: true)
-            .snapshots(),
-        builder: (context, snap) {
-          if (snap.connectionState == ConnectionState.waiting) {
-            return const Center(
-                child: CircularProgressIndicator(color: AppColors.gold));
-          }
-          if (snap.hasError) {
-            return Center(
-              child: Text(l.errorOccurred,
-                  style: const TextStyle(
-                      color: AppColors.grey, fontSize: 15)),
-            );
-          }
-          final docs = snap.data?.docs ?? [];
-          if (docs.isEmpty) {
+          : null,
+      body: announcementsAsync.when(
+        loading: () => const Center(
+            child: CircularProgressIndicator(color: AppColors.gold)),
+        error: (e, _) => Center(
+          child: Text(l.errorOccurred,
+              style: const TextStyle(color: AppColors.grey, fontSize: 15)),
+        ),
+        data: (announcements) {
+          if (announcements.isEmpty) {
             return Center(
               child: Text(l.noAnnouncements,
-                  style: const TextStyle(
-                      color: AppColors.grey, fontSize: 15)),
+                  style:
+                      const TextStyle(color: AppColors.grey, fontSize: 15)),
             );
           }
-          return Obx(() {
-            final myUid = auth.currentUser.value?.uid;
-            return ListView.builder(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
-              itemCount: docs.length,
-              itemBuilder: (_, i) {
-                final announcement = AnnouncementModel.fromDoc(docs[i]);
-                return _AnnouncementCard(
-                  announcement: announcement,
-                  isAuthor:
-                      myUid != null && announcement.authorId == myUid,
-                );
-              },
-            );
-          });
+          return ListView.builder(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
+            itemCount: announcements.length,
+            itemBuilder: (_, i) => _AnnouncementCard(
+              announcement: announcements[i],
+              isAuthor:
+                  myUid != null && announcements[i].authorId == myUid,
+            ),
+          );
         },
       ),
     );
   }
 }
 
-class _AnnouncementCard extends StatelessWidget {
+class _AnnouncementCard extends ConsumerWidget {
   final AnnouncementModel announcement;
   final bool isAuthor;
   const _AnnouncementCard({
@@ -94,17 +83,16 @@ class _AnnouncementCard extends StatelessWidget {
     required this.isAuthor,
   });
 
-  String _relativeTime(DateTime d) {
-    final now = DateTime.now();
-    final diff = now.difference(d);
-    if (diff.inMinutes < 1) return 'just now';
-    if (diff.inHours < 1) return '${diff.inMinutes}m ago';
-    if (diff.inDays < 1) return '${diff.inHours}h ago';
-    if (diff.inDays < 7) return '${diff.inDays}d ago';
+  String _relativeTime(AppLocalizations l, DateTime d) {
+    final diff = DateTime.now().difference(d);
+    if (diff.inMinutes < 1) return l.justNow;
+    if (diff.inHours < 1) return l.minutesAgo(diff.inMinutes);
+    if (diff.inDays < 1) return l.hoursAgo(diff.inHours);
+    if (diff.inDays < 7) return l.daysAgo(diff.inDays);
     return '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
   }
 
-  Future<void> _confirmDelete(BuildContext context) async {
+  Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
     final l = AppLocalizations.of(context)!;
     final ok = await showDialog<bool>(
       context: context,
@@ -126,18 +114,19 @@ class _AnnouncementCard extends StatelessWidget {
     );
     if (ok != true) return;
     try {
-      await Get.find<AnnouncementController>().delete(announcement.id);
+      await ref
+          .read(announcementsRepositoryProvider)
+          .delete(announcement.id);
       Get.snackbar('', l.announcementDeleted,
           snackPosition: SnackPosition.BOTTOM,
           duration: const Duration(seconds: 2));
     } catch (_) {
-      Get.snackbar('', l.errorOccurred,
-          snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar('', l.errorOccurred, snackPosition: SnackPosition.BOTTOM);
     }
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context)!;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -164,13 +153,13 @@ class _AnnouncementCard extends StatelessWidget {
                   onTap: () async {
                     await Get.toNamed(Routes.createAnnouncement,
                         arguments: announcement);
-                    await Get.find<AnnouncementController>().markRead();
+                    await markAnnouncementsRead(ref);
                   },
                 ),
                 _CardIconButton(
                   icon: Icons.delete_outline,
                   tooltip: l.delete,
-                  onTap: () => _confirmDelete(context),
+                  onTap: () => _confirmDelete(context, ref),
                 ),
               ],
             ],
@@ -209,7 +198,7 @@ class _AnnouncementCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              Text('· ${_relativeTime(announcement.createdAt)}',
+              Text('· ${_relativeTime(l, announcement.createdAt)}',
                   style: const TextStyle(
                       color: AppColors.grey, fontSize: 12)),
             ],
