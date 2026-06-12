@@ -115,6 +115,7 @@ migration could not have been done safely without them.
 | `39031ae` | home shell + notifications service; **AuthController shim deleted** | Notifications now key off the user stream — sign-out teardown choreography gone |
 | `bd62f5a` | `lib/models` + `lib/screens` dissolved into features/core | Final folder shape per CLAUDE.md |
 | `037c59e` | go_router replaces GetX routing; **`get` removed from pubspec** | Typed constructor params instead of `Get.arguments` casts; root-messenger snackbars; `localeProvider` |
+| `614de9f` | UI/UX polish: shared LoadingView/ErrorView/EmptyStateView + ListShimmer, page-transition theme | CLAUDE.md prescribes these shared components; every list now has skeleton loading, an error state **with retry**, and a consistent icon+title empty state — ~150 lines of duplicated state UI deleted |
 
 ---
 
@@ -135,11 +136,24 @@ migration could not have been done safely without them.
 - **Firestore-rules items D2/D3 untouched**: the audit itself warns the client currently
   relies on those writes, and rules can't be safely changed without deploying.
 
+## UI/UX polish (Phase 11)
+
+- **Shared state components** (`core/widgets/state_views.dart`) — the `LoadingView` /
+  `ErrorView` / `EmptyStateView` set that CLAUDE.md requires, plus `ListShimmer`.
+- **Skeleton loading everywhere** — players, peers, coaches, announcements, templates,
+  recurring schedules, history, and the leaderboard now show shimmer placeholders shaped
+  like their real rows instead of a bare spinner (sessions already had this; now it's
+  uniform).
+- **Recoverable errors** — every list's error state now has an icon, a localized message,
+  and a **Retry** button that re-queries. Before, several screens showed a small grey
+  string with no way to recover except leaving the screen.
+- **Consistent empty states** — plain centered text ("No players", "No coaches", …)
+  upgraded to the icon + title (+ subtitle) pattern.
+- **Page transitions** — Material 3 forward-fade transitions on Android (calmer than the
+  default zoom on the dark navy background); iOS keeps native swipe-back.
+
 ## Deliberately skipped
 
-- **UI/UX polish phase** — wrapped up at your request after the architecture work; the
-  UI is pixel-identical to the original except for the error states noted above and the
-  Material snackbar style.
 - **Anything requiring deployment** (functions, rules, indexes) — this copy must not
   touch the shared backend.
 
