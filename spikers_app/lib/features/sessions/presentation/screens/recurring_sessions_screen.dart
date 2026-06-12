@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/utils/app_snackbar.dart';
+import '../../../../core/widgets/state_views.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'package:spikers_app/features/sessions/domain/entities/recurring_session_model.dart';
 import '../providers/sessions_providers.dart';
@@ -25,35 +26,15 @@ class RecurringSessionsScreen extends ConsumerWidget {
         child: const Icon(Icons.add),
       ),
       body: recurringAsync.when(
-        loading: () => const Center(
-            child: CircularProgressIndicator(color: AppColors.gold)),
-        error: (e, _) => Center(
-          child: Text(l.errorOccurred,
-              style: const TextStyle(color: AppColors.grey, fontSize: 15)),
-        ),
+        loading: () => const ListShimmer(itemHeight: 130),
+        error: (e, _) => ErrorView(
+            onRetry: () => ref.invalidate(recurringSessionsProvider)),
         data: (items) {
           if (items.isEmpty) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(32),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.repeat, size: 64, color: AppColors.grey),
-                    const SizedBox(height: 16),
-                    Text(l.noRecurringSessions,
-                        style: const TextStyle(
-                            color: AppColors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600)),
-                    const SizedBox(height: 8),
-                    Text(l.noRecurringSessionsDesc,
-                        style: const TextStyle(
-                            color: AppColors.grey, fontSize: 14),
-                        textAlign: TextAlign.center),
-                  ],
-                ),
-              ),
+            return EmptyStateView(
+              icon: Icons.repeat,
+              title: l.noRecurringSessions,
+              subtitle: l.noRecurringSessionsDesc,
             );
           }
           return ListView.builder(

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/widgets/state_views.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/player_summary.dart';
 import '../providers/players_providers.dart';
@@ -16,18 +17,13 @@ class PlayersPeerTab extends ConsumerWidget {
     final peersAsync = ref.watch(peersProvider);
 
     return peersAsync.when(
-      loading: () => const Center(
-          child: CircularProgressIndicator(color: AppColors.gold)),
-      error: (e, _) => Center(
-        child: Text(l.errorOccurred,
-            style: const TextStyle(color: AppColors.grey, fontSize: 15)),
-      ),
+      loading: () => const ListShimmer(),
+      error: (e, _) =>
+          ErrorView(onRetry: () => ref.invalidate(peersProvider)),
       data: (peers) {
         if (peers.isEmpty) {
-          return Center(
-            child: Text(l.noPlayers,
-                style: const TextStyle(color: AppColors.grey, fontSize: 15)),
-          );
+          return EmptyStateView(
+              icon: Icons.group_outlined, title: l.noPlayers);
         }
         return ListView.builder(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),

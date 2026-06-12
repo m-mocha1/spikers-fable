@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/widgets/state_views.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/coach_summary.dart';
 import '../providers/coaches_providers.dart';
@@ -16,18 +17,13 @@ class CoachesTab extends ConsumerWidget {
     final coachesAsync = ref.watch(coachesProvider);
 
     return coachesAsync.when(
-      loading: () => const Center(
-          child: CircularProgressIndicator(color: AppColors.gold)),
-      error: (e, _) => Center(
-        child: Text(l.errorOccurred,
-            style: const TextStyle(color: AppColors.grey, fontSize: 15)),
-      ),
+      loading: () => const ListShimmer(itemHeight: 112),
+      error: (e, _) =>
+          ErrorView(onRetry: () => ref.invalidate(coachesProvider)),
       data: (coaches) {
         if (coaches.isEmpty) {
-          return Center(
-            child: Text(l.noCoaches,
-                style: const TextStyle(color: AppColors.grey, fontSize: 15)),
-          );
+          return EmptyStateView(
+              icon: Icons.sports_outlined, title: l.noCoaches);
         }
         return ListView.builder(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),

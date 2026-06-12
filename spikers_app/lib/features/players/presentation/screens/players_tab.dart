@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/utils/age_calculator.dart';
+import '../../../../core/widgets/state_views.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/player_summary.dart';
 import '../providers/players_providers.dart';
@@ -23,12 +24,9 @@ class PlayersTab extends ConsumerWidget {
     final genderFilter = ref.watch(_genderFilterProvider);
 
     return playersAsync.when(
-      loading: () => const Center(
-          child: CircularProgressIndicator(color: AppColors.gold)),
-      error: (e, _) => Center(
-        child: Text(l.errorOccurred,
-            style: const TextStyle(color: AppColors.grey, fontSize: 15)),
-      ),
+      loading: () => const ListShimmer(),
+      error: (e, _) =>
+          ErrorView(onRetry: () => ref.invalidate(playersProvider)),
       data: (players) {
         final filtered = genderFilter == 'all'
             ? players
@@ -74,10 +72,8 @@ class PlayersTab extends ConsumerWidget {
             ),
             Expanded(
               child: filtered.isEmpty
-                  ? Center(
-                      child: Text(l.noPlayers,
-                          style: const TextStyle(
-                              color: AppColors.grey, fontSize: 15)))
+                  ? EmptyStateView(
+                      icon: Icons.group_outlined, title: l.noPlayers)
                   : ListView.builder(
                       padding: const EdgeInsets.fromLTRB(16, 4, 16, 100),
                       itemCount: filtered.length,

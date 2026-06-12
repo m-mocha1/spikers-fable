@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/widgets/state_views.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/leaderboard_entry.dart';
 import '../providers/leaderboard_providers.dart';
@@ -52,45 +53,16 @@ class LeaderboardScreen extends ConsumerWidget {
           ),
           Expanded(
             child: entriesAsync.when(
-              loading: () => const Center(
-                  child: CircularProgressIndicator(color: AppColors.gold)),
-              error: (e, _) => Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.error_outline,
-                        size: 64, color: AppColors.grey),
-                    const SizedBox(height: 16),
-                    Text(l.errorOccurred,
-                        style: const TextStyle(
-                            color: AppColors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600)),
-                    const SizedBox(height: 12),
-                    TextButton(
-                      onPressed: refresh,
-                      child: Text(l.retry,
-                          style: const TextStyle(color: AppColors.gold)),
-                    ),
-                  ],
-                ),
-              ),
+              loading: () => const ListShimmer(
+                  itemHeight: 68,
+                  padding: EdgeInsets.fromLTRB(16, 4, 16, 16)),
+              error: (e, _) =>
+                  ErrorView(icon: Icons.error_outline, onRetry: refresh),
               data: (entries) {
                 if (entries.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.emoji_events_outlined,
-                            size: 64, color: AppColors.grey),
-                        const SizedBox(height: 16),
-                        Text(l.noLeaderboardData,
-                            style: const TextStyle(
-                                color: AppColors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600)),
-                      ],
-                    ),
+                  return EmptyStateView(
+                    icon: Icons.emoji_events_outlined,
+                    title: l.noLeaderboardData,
                   );
                 }
                 return RefreshIndicator(

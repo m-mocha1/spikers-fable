@@ -5,6 +5,7 @@ import 'package:omni_datetime_picker/omni_datetime_picker.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/app_snackbar.dart';
+import '../../../../core/widgets/state_views.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'package:spikers_app/features/sessions/domain/entities/session_model.dart';
 import 'package:spikers_app/features/sessions/domain/entities/session_template_model.dart';
@@ -117,14 +118,17 @@ class _QuickSessionScreenState extends ConsumerState<QuickSessionScreen> {
     return Scaffold(
       appBar: AppBar(title: Text(l.quickSession)),
       body: templatesAsync.when(
-        loading: () => const Center(
-            child: CircularProgressIndicator(color: AppColors.gold)),
-        error: (e, _) => Center(
-          child: Text(l.errorOccurred,
-              style: const TextStyle(color: AppColors.grey, fontSize: 15)),
-        ),
+        loading: () => const ListShimmer(itemHeight: 96),
+        error: (e, _) =>
+            ErrorView(onRetry: () => ref.invalidate(templatesProvider)),
         data: (templates) {
-          if (templates.isEmpty) return _buildEmpty(l);
+          if (templates.isEmpty) {
+            return EmptyStateView(
+              icon: Icons.bookmark_border_outlined,
+              title: l.noTemplates,
+              subtitle: l.noTemplatesDesc,
+            );
+          }
           return Column(
             children: [
               Expanded(
@@ -148,31 +152,6 @@ class _QuickSessionScreenState extends ConsumerState<QuickSessionScreen> {
             ],
           );
         },
-      ),
-    );
-  }
-
-  Widget _buildEmpty(AppLocalizations l) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.bookmark_border_outlined,
-                size: 64, color: AppColors.grey),
-            const SizedBox(height: 16),
-            Text(l.noTemplates,
-                style: const TextStyle(
-                    color: AppColors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600)),
-            const SizedBox(height: 8),
-            Text(l.noTemplatesDesc,
-                style: const TextStyle(color: AppColors.grey, fontSize: 14),
-                textAlign: TextAlign.center),
-          ],
-        ),
       ),
     );
   }

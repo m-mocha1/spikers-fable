@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/widgets/state_views.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'package:spikers_app/features/sessions/domain/entities/chat_message_model.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
@@ -210,27 +211,14 @@ class _SessionChatScreenState extends ConsumerState<SessionChatScreen> {
 
   Widget _buildMessages(AppLocalizations l, String uid) {
     if (_streamError != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Text(
-            _streamError!,
-            style: const TextStyle(color: AppColors.errorRed, fontSize: 13),
-            textAlign: TextAlign.center,
-          ),
-        ),
-      );
+      return ErrorView(icon: Icons.error_outline, message: _streamError);
     }
     if (!_initialLoaded) {
-      return const Center(
-        child: CircularProgressIndicator(color: AppColors.gold),
-      );
+      return const LoadingView();
     }
     if (_live.isEmpty && _older.isEmpty) {
-      return Center(
-        child:
-            Text(l.chatEmpty, style: const TextStyle(color: AppColors.grey)),
-      );
+      return EmptyStateView(
+          icon: Icons.chat_bubble_outline_rounded, title: l.chatEmpty);
     }
 
     final total = _live.length + _older.length;

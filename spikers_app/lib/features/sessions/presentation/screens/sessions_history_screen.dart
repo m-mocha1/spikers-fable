@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../../core/widgets/state_views.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'package:spikers_app/features/sessions/domain/entities/session_model.dart';
 import '../providers/sessions_providers.dart';
@@ -38,19 +39,13 @@ class _SessionsHistoryScreenState
     return Scaffold(
       appBar: AppBar(title: Text(l.sessionsHistory)),
       body: historyAsync.when(
-        loading: () => const Center(
-            child: CircularProgressIndicator(color: AppColors.gold)),
-        error: (e, _) => Center(
-          child: Text(l.errorOccurred,
-              style: const TextStyle(color: AppColors.grey, fontSize: 15)),
-        ),
+        loading: () => const ListShimmer(itemHeight: 110),
+        error: (e, _) => ErrorView(
+            onRetry: () => ref.invalidate(sessionsHistoryProvider)),
         data: (sessions) {
           if (sessions.isEmpty) {
-            return Center(
-              child: Text(l.noSessionsHistory,
-                  style:
-                      const TextStyle(color: AppColors.grey, fontSize: 15)),
-            );
+            return EmptyStateView(
+                icon: Icons.history, title: l.noSessionsHistory);
           }
           return ListView.builder(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),

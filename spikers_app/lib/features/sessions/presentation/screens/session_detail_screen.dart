@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/utils/app_snackbar.dart';
+import '../../../../core/widgets/state_views.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'package:spikers_app/features/sessions/domain/entities/session_model.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
@@ -316,11 +317,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
   Widget build(BuildContext context) {
     final session = _session;
     if (session == null) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(color: AppColors.gold),
-        ),
-      );
+      return const Scaffold(body: LoadingView());
     }
 
     final l = AppLocalizations.of(context)!;

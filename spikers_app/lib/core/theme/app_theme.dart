@@ -8,6 +8,13 @@ class AppTheme {
   static ThemeData get dark => ThemeData(
     brightness: Brightness.dark,
     scaffoldBackgroundColor: AppColors.navyBlue,
+    // Forward-fade route transitions (Material 3 motion) instead of the
+    // default zoom — calmer on the dark navy background and consistent
+    // across Android versions. iOS keeps its native swipe-back slide.
+    pageTransitionsTheme: const PageTransitionsTheme(builders: {
+      TargetPlatform.android: FadeForwardsPageTransitionsBuilder(),
+      TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+    }),
     colorScheme: const ColorScheme.dark(
       primary: AppColors.gold,
       secondary: AppColors.gold,

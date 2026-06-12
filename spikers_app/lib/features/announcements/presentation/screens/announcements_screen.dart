@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/utils/app_snackbar.dart';
+import '../../../../core/widgets/state_views.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../domain/entities/announcement.dart';
@@ -46,18 +47,14 @@ class _AnnouncementsScreenState extends ConsumerState<AnnouncementsScreen> {
             )
           : null,
       body: announcementsAsync.when(
-        loading: () => const Center(
-            child: CircularProgressIndicator(color: AppColors.gold)),
-        error: (e, _) => Center(
-          child: Text(l.errorOccurred,
-              style: const TextStyle(color: AppColors.grey, fontSize: 15)),
-        ),
+        loading: () => const ListShimmer(itemHeight: 110),
+        error: (e, _) => ErrorView(
+            onRetry: () => ref.invalidate(announcementsProvider)),
         data: (announcements) {
           if (announcements.isEmpty) {
-            return Center(
-              child: Text(l.noAnnouncements,
-                  style:
-                      const TextStyle(color: AppColors.grey, fontSize: 15)),
+            return EmptyStateView(
+              icon: Icons.campaign_outlined,
+              title: l.noAnnouncements,
             );
           }
           return ListView.builder(

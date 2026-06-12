@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/widgets/state_views.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'package:spikers_app/features/auth/domain/entities/user_model.dart';
 import 'package:spikers_app/core/widgets/profile_info.dart';
@@ -33,24 +34,19 @@ class PlayerProfileScreen extends ConsumerWidget {
     return userAsync.when(
       loading: () => Scaffold(
         appBar: AppBar(),
-        body: const Center(
-            child: CircularProgressIndicator(color: AppColors.gold)),
+        body: const LoadingView(),
       ),
       error: (e, _) => Scaffold(
         appBar: AppBar(),
-        body: Center(
-          child: Text(l.errorOccurred,
-              style: const TextStyle(color: AppColors.grey)),
-        ),
+        body: ErrorView(
+            onRetry: () => ref.invalidate(playerProvider(userId))),
       ),
       data: (user) {
         if (user == null) {
           return Scaffold(
             appBar: AppBar(),
-            body: Center(
-              child: Text(l.noPlayers,
-                  style: const TextStyle(color: AppColors.grey)),
-            ),
+            body: EmptyStateView(
+                icon: Icons.person_off_outlined, title: l.noPlayers),
           );
         }
 
