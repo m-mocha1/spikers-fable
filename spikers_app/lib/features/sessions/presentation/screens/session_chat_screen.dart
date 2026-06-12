@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get/get.dart' show Get, GetNavigation;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/constants/app_colors.dart';
@@ -15,7 +14,10 @@ import '../../domain/repositories/sessions_repository.dart'
 import '../providers/sessions_providers.dart';
 
 class SessionChatScreen extends ConsumerStatefulWidget {
-  const SessionChatScreen({super.key});
+  final String sessionId;
+  final String sessionTitle;
+  const SessionChatScreen(
+      {super.key, required this.sessionId, required this.sessionTitle});
 
   @override
   ConsumerState<SessionChatScreen> createState() => _SessionChatScreenState();
@@ -45,19 +47,15 @@ class _SessionChatScreenState extends ConsumerState<SessionChatScreen> {
   @override
   void initState() {
     super.initState();
-    final args = Get.arguments;
-    final id = (args is Map) ? args['id']?.toString() : null;
-    if (id == null || id.isEmpty) {
+    _sessionId = widget.sessionId;
+    _sessionTitle = widget.sessionTitle;
+    if (_sessionId.isEmpty) {
       // Invalid navigation — bail out gracefully instead of crashing.
-      _sessionId = '';
-      _sessionTitle = '';
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) Get.back();
+        if (mounted) Navigator.of(context).pop();
       });
       return;
     }
-    _sessionId = id;
-    _sessionTitle = (args as Map)['title']?.toString() ?? '';
     _markSeen();
     _scroll.addListener(_onScroll);
     _listen();

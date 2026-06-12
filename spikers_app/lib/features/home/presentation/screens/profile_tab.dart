@@ -1,12 +1,11 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get/get.dart'
-    show ExtensionSnackbar, Get, GetNavigation, Inst, Obx, SnackPosition;
 import 'package:image_picker/image_picker.dart';
 
-import '../../../../controller/locale_controller.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/providers/locale_provider.dart';
+import '../../../../core/utils/app_snackbar.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'package:spikers_app/core/widgets/edit_body_metrics_dialog.dart';
 import 'package:spikers_app/core/widgets/profile_info.dart';
@@ -48,7 +47,7 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
                   color: AppColors.gold),
               title: Text(l.pickFromGallery),
               onTap: () {
-                Get.back();
+                Navigator.of(context).pop();
                 _pickAndUpload(ImageSource.gallery, l);
               },
             ),
@@ -57,7 +56,7 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
                   color: AppColors.gold),
               title: Text(l.takePhoto),
               onTap: () {
-                Get.back();
+                Navigator.of(context).pop();
                 _pickAndUpload(ImageSource.camera, l);
               },
             ),
@@ -79,9 +78,9 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
     setState(() => _uploading = true);
     try {
       await ref.read(authRepositoryProvider).updateProfilePhoto(file);
-      Get.snackbar('', l.photoUpdated, snackPosition: SnackPosition.BOTTOM);
+      showAppSnackbar(l.photoUpdated);
     } catch (_) {
-      Get.snackbar('', l.unknownError, snackPosition: SnackPosition.BOTTOM);
+      showAppSnackbar(l.unknownError);
     } finally {
       if (mounted) setState(() => _uploading = false);
     }
@@ -92,7 +91,6 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
     final l = AppLocalizations.of(context)!;
     final user = ref.watch(currentUserProvider).value;
     final email = ref.watch(authRepositoryProvider).currentEmail;
-    final locale = Get.find<LocaleController>();
 
     if (user == null) return const SizedBox.shrink();
 
@@ -125,7 +123,7 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
           const SizedBox(height: 16),
           ProfileInfoCard(user: user, l: l),
           const SizedBox(height: 24),
-          _LanguageToggle(locale: locale, l: l),
+          _LanguageToggle(l: l),
           const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
@@ -226,41 +224,38 @@ class _Avatar extends StatelessWidget {
   }
 }
 
-class _LanguageToggle extends StatelessWidget {
-  final LocaleController locale;
+class _LanguageToggle extends ConsumerWidget {
   final AppLocalizations l;
-  const _LanguageToggle({required this.locale, required this.l});
+  const _LanguageToggle({required this.l});
 
   @override
-  Widget build(BuildContext context) {
-    return Obx(() => InkWell(
-          onTap: locale.toggle,
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isArabic = ref.watch(localeProvider).languageCode == 'ar';
+    return InkWell(
+      onTap: () => ref.read(localeProvider.notifier).toggle(),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: AppColors.navyLight,
           borderRadius: BorderRadius.circular(12),
-          child: Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            decoration: BoxDecoration(
-              color: AppColors.navyLight,
-              borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.language_outlined, color: AppColors.gold),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(l.switchLanguage,
+                  style: const TextStyle(fontWeight: FontWeight.w600)),
             ),
-            child: Row(
-              children: [
-                const Icon(Icons.language_outlined, color: AppColors.gold),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(l.switchLanguage,
-                      style: const TextStyle(fontWeight: FontWeight.w600)),
-                ),
-                Icon(
-                  locale.isArabic
-                      ? Icons.arrow_forward_ios
-                      : Icons.arrow_back_ios,
-                  size: 16,
-                  color: AppColors.grey,
-                ),
-              ],
+            Icon(
+              isArabic ? Icons.arrow_forward_ios : Icons.arrow_back_ios,
+              size: 16,
+              color: AppColors.grey,
             ),
-          ),
-        ));
+          ],
+        ),
+      ),
+    );
   }
 }

@@ -3,22 +3,26 @@ import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get/get.dart'
-    show ExtensionSnackbar, Get, GetNavigation, SnackPosition;
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/router/app_router.dart';
+import '../../../../core/utils/app_snackbar.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'package:spikers_app/features/sessions/domain/entities/session_model.dart';
-import '../../../../routes/app_routes.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../domain/repositories/sessions_repository.dart';
 import '../providers/sessions_providers.dart';
 import '../utils/session_error_l10n.dart';
 
 class SessionDetailScreen extends ConsumerStatefulWidget {
-  const SessionDetailScreen({super.key});
+  /// Either a full [session] (from list taps) or just a [sessionId]
+  /// (from notification taps) — never both.
+  final SessionModel? session;
+  final String? sessionId;
+  const SessionDetailScreen({super.key, this.session, this.sessionId});
 
   @override
   ConsumerState<SessionDetailScreen> createState() =>
@@ -50,19 +54,19 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
   @override
   void initState() {
     super.initState();
-    final arg = Get.arguments;
-    if (arg is SessionModel) {
+    final arg = widget.session;
+    if (arg != null) {
       _session = arg;
       _sessionId = arg.id;
       _fetchUsers([...arg.attendeeIds, ...arg.waitlistIds]);
       _fetchCoachName(arg.coachId);
-    } else if (arg is String) {
-      _sessionId = arg;
+    } else if (widget.sessionId != null) {
+      _sessionId = widget.sessionId!;
     }
     if (_sessionId.isEmpty) {
       // No valid session id passed — bail out instead of querying doc('').
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) Get.back();
+        if (mounted) Navigator.of(context).pop();
       });
       return;
     }
@@ -79,9 +83,8 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
         }
         if (!mounted) return;
         final l = AppLocalizations.of(context)!;
-        Get.back();
-        Get.snackbar('', l.sessionCancelled,
-            snackPosition: SnackPosition.BOTTOM);
+        Navigator.of(context).pop();
+        showAppSnackbar(l.sessionCancelled);
         return;
       }
       if (!mounted) return;
@@ -188,16 +191,14 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
     try {
       final result = await _repo.join(_session!.id);
       if (result == JoinResult.waitlisted) {
-        Get.snackbar('', l.waitlistedSnack,
-            snackPosition: SnackPosition.BOTTOM);
+        showAppSnackbar(l.waitlistedSnack);
       }
       // 'joined' and 'already_*' stay silent — the live snapshot will
       // update the UI and a snackbar would be noise.
     } on SessionActionException catch (e) {
-      Get.snackbar('', joinErrorMessage(l, e.code),
-          snackPosition: SnackPosition.BOTTOM);
+      showAppSnackbar(joinErrorMessage(l, e.code));
     } catch (_) {
-      Get.snackbar('', l.unknownError, snackPosition: SnackPosition.BOTTOM);
+      showAppSnackbar(l.unknownError);
     } finally {
       await Future.delayed(_actionCooldown);
       if (mounted) setState(() => _isJoining = false);
@@ -210,7 +211,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
     try {
       await _repo.leave(_session!.id);
     } catch (_) {
-      Get.snackbar('', l.unknownError, snackPosition: SnackPosition.BOTTOM);
+      showAppSnackbar(l.unknownError);
     } finally {
       await Future.delayed(_actionCooldown);
       if (mounted) setState(() => _isJoining = false);
@@ -222,7 +223,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
     try {
       await _repo.markAttended(_session!.id, userId, attended);
     } catch (_) {
-      Get.snackbar('', l.unknownError, snackPosition: SnackPosition.BOTTOM);
+      showAppSnackbar(l.unknownError);
     }
   }
 
@@ -235,13 +236,18 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
         title: Text(l.confirmCancelSession),
         content: Text(l.confirmCancelMessage),
         actions: [
-          TextButton(
-              onPressed: () => Get.back(result: false), child: Text(l.no)),
-          TextButton(
-            onPressed: () => Get.back(result: true),
-            child: Text(l.yes,
-                style: const TextStyle(color: AppColors.errorRed)),
-          ),
+          Builder(builder: (dialogCtx) {
+            return TextButton(
+                onPressed: () => Navigator.of(dialogCtx).pop(false),
+                child: Text(l.no));
+          }),
+          Builder(builder: (dialogCtx) {
+            return TextButton(
+              onPressed: () => Navigator.of(dialogCtx).pop(true),
+              child: Text(l.yes,
+                  style: const TextStyle(color: AppColors.errorRed)),
+            );
+          }),
         ],
       ),
     );
@@ -254,10 +260,9 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
       // listener (null branch) so they fire exactly once, regardless of
       // which path observes the delete first.
     } on SessionActionException catch (e) {
-      Get.snackbar('', cancelErrorMessage(l, e.code),
-          snackPosition: SnackPosition.BOTTOM);
+      showAppSnackbar(cancelErrorMessage(l, e.code));
     } catch (_) {
-      Get.snackbar('', l.unknownError, snackPosition: SnackPosition.BOTTOM);
+      showAppSnackbar(l.unknownError);
     } finally {
       if (mounted) setState(() => _isCancelling = false);
     }
@@ -298,12 +303,11 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
       // Firestore listener can settle before the snackbar mounts into
       // the Overlay (prevents _dependents.isEmpty teardown races).
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        Get.snackbar('', capacityErrorMessage(l, e.code),
-            snackPosition: SnackPosition.BOTTOM);
+        showAppSnackbar(capacityErrorMessage(l, e.code));
       });
     } catch (_) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        Get.snackbar('', l.unknownError, snackPosition: SnackPosition.BOTTOM);
+        showAppSnackbar(l.unknownError);
       });
     }
   }
@@ -337,9 +341,9 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
             _ChatBadgeIcon(
               sessionId: session.id,
               tooltip: l.chat,
-              onTap: () => Get.toNamed(
+              onTap: () => context.push(
                 Routes.sessionChat,
-                arguments: {'id': session.id, 'title': session.title},
+                extra: {'id': session.id, 'title': session.title},
               ),
             ),
           if (isCoach && isOwner && !session.isOngoing && !_isArchived)

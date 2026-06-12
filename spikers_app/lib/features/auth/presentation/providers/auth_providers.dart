@@ -1,8 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get/get.dart' show Get, GetNavigation;
 
 import 'package:spikers_app/features/auth/domain/entities/user_model.dart';
-import '../../../../routes/app_routes.dart';
+import '../../../../core/router/app_router.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../domain/repositories/auth_repository.dart';
 
@@ -22,5 +21,5 @@ final isCoachProvider = Provider<bool>(
 /// user stream emits null.
 Future<void> signOutToLogin(WidgetRef ref) async {
   await ref.read(authRepositoryProvider).signOut();
-  Get.offAllNamed(Routes.login);
+  appRouter.go(Routes.login);
 }

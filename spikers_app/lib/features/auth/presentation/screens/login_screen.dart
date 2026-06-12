@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get/get.dart'
-    show ExtensionSnackbar, Get, GetNavigation, SnackPosition;
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/router/app_router.dart';
+import '../../../../core/utils/app_snackbar.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../../routes/app_routes.dart';
 import 'package:spikers_app/core/widgets/branded_button.dart';
 import 'package:spikers_app/core/widgets/branded_text_field.dart';
 import '../../domain/repositories/auth_repository.dart';
@@ -42,12 +42,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     setState(() => _loading = true);
     try {
       await repo.signIn(_emailCtrl.text, _passCtrl.text);
-      Get.offAllNamed(
-          repo.isEmailVerified ? Routes.home : Routes.verifyEmail);
+      if (!mounted) return;
+      context.go(repo.isEmailVerified ? Routes.home : Routes.verifyEmail);
     } on AuthException catch (e) {
-      Get.snackbar('', authErrorMessage(l, e.code),
-          snackPosition: SnackPosition.BOTTOM,
-          duration: const Duration(seconds: 3));
+      showAppSnackbar(authErrorMessage(l, e.code));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -97,7 +95,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     Align(
                       alignment: AlignmentDirectional.centerEnd,
                       child: TextButton(
-                        onPressed: () => Get.toNamed(Routes.forgotPassword),
+                        onPressed: () =>
+                            context.push(Routes.forgotPassword),
                         child: Text(l.forgotPassword),
                       ),
                     ),
@@ -114,7 +113,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         Text(l.noAccount,
                             style: const TextStyle(color: AppColors.grey)),
                         TextButton(
-                          onPressed: () => Get.toNamed(Routes.register),
+                          onPressed: () => context.push(Routes.register),
                           child: Text(l.register),
                         ),
                       ],

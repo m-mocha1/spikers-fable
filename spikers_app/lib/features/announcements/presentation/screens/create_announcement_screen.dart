@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get/get.dart'
-    show ExtensionSnackbar, Get, GetNavigation, SnackPosition;
 
+import '../../../../core/utils/app_snackbar.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'package:spikers_app/core/widgets/branded_button.dart';
 import 'package:spikers_app/core/widgets/branded_text_field.dart';
@@ -11,7 +10,9 @@ import '../../domain/entities/announcement.dart';
 import '../providers/announcements_providers.dart';
 
 class CreateAnnouncementScreen extends ConsumerStatefulWidget {
-  const CreateAnnouncementScreen({super.key});
+  /// Non-null when editing an existing announcement.
+  final AnnouncementModel? existing;
+  const CreateAnnouncementScreen({super.key, this.existing});
 
   @override
   ConsumerState<CreateAnnouncementScreen> createState() =>
@@ -29,8 +30,8 @@ class _CreateAnnouncementScreenState
   @override
   void initState() {
     super.initState();
-    final arg = Get.arguments;
-    if (arg is AnnouncementModel) {
+    final arg = widget.existing;
+    if (arg != null) {
       _existing = arg;
       _titleCtrl.text = arg.title;
       _bodyCtrl.text = arg.body;
@@ -64,16 +65,14 @@ class _CreateAnnouncementScreenState
             authorName: user.name);
       }
       if (!mounted) return;
-      Get.back();
-      Get.snackbar(
-        '',
+      Navigator.of(context).pop();
+      showAppSnackbar(
         _existing != null ? l.announcementUpdated : l.announcementCreated,
-        snackPosition: SnackPosition.BOTTOM,
         duration: const Duration(seconds: 2),
       );
     } catch (_) {
       if (!mounted) return;
-      Get.snackbar('', l.errorOccurred, snackPosition: SnackPosition.BOTTOM);
+      showAppSnackbar(l.errorOccurred);
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }

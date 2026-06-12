@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get/get.dart' show Get, GetNavigation;
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/router/app_router.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../../routes/app_routes.dart';
 import 'package:spikers_app/core/widgets/floating_nav_bar.dart';
 import '../../../announcements/presentation/widgets/announcements_bell.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
@@ -56,8 +56,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   style:
                       const TextStyle(color: AppColors.grey, fontSize: 12)),
               onTap: () {
-                Get.back();
-                Get.toNamed(Routes.createSession);
+                Navigator.of(context).pop();
+                context.push(Routes.createSession);
               },
             ),
             ListTile(
@@ -71,8 +71,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   style:
                       const TextStyle(color: AppColors.grey, fontSize: 12)),
               onTap: () {
-                Get.back();
-                Get.toNamed(Routes.quickSession);
+                Navigator.of(context).pop();
+                context.push(Routes.quickSession);
               },
             ),
             ListTile(
@@ -86,8 +86,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   style:
                       const TextStyle(color: AppColors.grey, fontSize: 12)),
               onTap: () {
-                Get.back();
-                Get.toNamed(Routes.recurringSessions);
+                Navigator.of(context).pop();
+                context.push(Routes.recurringSessions);
               },
             ),
             const SizedBox(height: 8),
@@ -118,18 +118,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             IconButton(
               tooltip: l.sessionsHistory,
               icon: const Icon(Icons.history),
-              onPressed: () => Get.toNamed(Routes.sessionsHistory),
+              onPressed: () => context.push(Routes.sessionsHistory),
             ),
           if (_index == 1)
             IconButton(
               tooltip: l.coachesTab,
               icon: const Icon(Icons.sports_outlined),
-              onPressed: () => Get.toNamed(Routes.coachesList),
+              onPressed: () => context.push(Routes.coachesList),
             ),
           IconButton(
             tooltip: l.leaderboard,
             icon: const Icon(Icons.emoji_events_outlined),
-            onPressed: () => Get.toNamed(Routes.leaderboard),
+            onPressed: () => context.push(Routes.leaderboard),
           ),
           const AnnouncementsBell(),
         ],

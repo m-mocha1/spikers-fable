@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get/get.dart' show Get, GetNavigation;
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_assets.dart';
-import '../../../../routes/app_routes.dart';
+import '../../../../core/router/app_router.dart';
 import '../providers/auth_providers.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
@@ -36,10 +36,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     await repo.ready;
     if (!mounted) return;
     if (repo.isSignedIn) {
-      Get.offAllNamed(
-          repo.isEmailVerified ? Routes.home : Routes.verifyEmail);
+      context.go(repo.isEmailVerified ? Routes.home : Routes.verifyEmail);
     } else {
-      Get.offAllNamed(Routes.login);
+      context.go(Routes.login);
     }
   }
 

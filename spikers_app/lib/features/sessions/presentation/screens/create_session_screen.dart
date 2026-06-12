@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get/get.dart'
-    show ExtensionSnackbar, Get, GetNavigation, SnackPosition;
 import 'package:intl/intl.dart';
 import 'package:omni_datetime_picker/omni_datetime_picker.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/app_snackbar.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'package:spikers_app/features/sessions/domain/entities/session_model.dart';
@@ -93,7 +92,7 @@ class _CreateSessionScreenState extends ConsumerState<CreateSessionScreen> {
     if (!_formKey.currentState!.validate()) return;
     if (_startTime == null || _endTime == null) return;
     if (_endTime!.isBefore(_startTime!)) {
-      Get.snackbar('', l.endTimeError, snackPosition: SnackPosition.BOTTOM);
+      showAppSnackbar(l.endTimeError);
       return;
     }
 
@@ -136,10 +135,10 @@ class _CreateSessionScreenState extends ConsumerState<CreateSessionScreen> {
 
       await ref.read(sessionsRepositoryProvider).create(session);
       if (!mounted) return;
-      Get.back();
-      Get.snackbar('', l.sessionCreated, snackPosition: SnackPosition.BOTTOM);
+      Navigator.of(context).pop();
+      showAppSnackbar(l.sessionCreated);
     } catch (_) {
-      Get.snackbar('', l.unknownError, snackPosition: SnackPosition.BOTTOM);
+      showAppSnackbar(l.unknownError);
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }

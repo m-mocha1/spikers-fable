@@ -1,7 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get/get.dart' show Get, GetNavigation;
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -11,12 +10,13 @@ import '../widgets/payment_confirm_dialog.dart';
 import '../providers/players_providers.dart';
 
 class PlayerProfileScreen extends ConsumerWidget {
-  const PlayerProfileScreen({super.key});
+  final String? userId;
+  const PlayerProfileScreen({super.key, this.userId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context)!;
-    final userId = Get.arguments as String?;
+    final userId = this.userId;
 
     if (userId == null || userId.isEmpty) {
       return Scaffold(

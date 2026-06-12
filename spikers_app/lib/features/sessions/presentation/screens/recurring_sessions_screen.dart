@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get/get.dart'
-    show ExtensionSnackbar, Get, GetNavigation, SnackPosition;
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/router/app_router.dart';
+import '../../../../core/utils/app_snackbar.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'package:spikers_app/features/sessions/domain/entities/recurring_session_model.dart';
-import '../../../../routes/app_routes.dart';
 import '../providers/sessions_providers.dart';
 
 class RecurringSessionsScreen extends ConsumerWidget {
@@ -21,7 +21,7 @@ class RecurringSessionsScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: Text(l.recurringSessions)),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => Get.toNamed(Routes.createRecurring),
+        onPressed: () => context.push(Routes.createRecurring),
         child: const Icon(Icons.add),
       ),
       body: recurringAsync.when(
@@ -106,11 +106,10 @@ class _RecurringCard extends ConsumerWidget {
     if (ok != true) return;
     try {
       await ref.read(recurringSessionsRepositoryProvider).delete(model.id);
-      Get.snackbar('', l.recurringDeleted,
-          snackPosition: SnackPosition.BOTTOM,
+      showAppSnackbar(l.recurringDeleted,
           duration: const Duration(seconds: 2));
     } catch (_) {
-      Get.snackbar('', l.errorOccurred, snackPosition: SnackPosition.BOTTOM);
+      showAppSnackbar(l.errorOccurred);
     }
   }
 
@@ -120,7 +119,7 @@ class _RecurringCard extends ConsumerWidget {
         '${_fmtTime(model.startHour, model.startMinute)} – ${_fmtTime(model.endHour, model.endMinute)}';
 
     return GestureDetector(
-      onTap: () => Get.toNamed(Routes.createRecurring, arguments: model),
+      onTap: () => context.push(Routes.createRecurring, extra: model),
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),

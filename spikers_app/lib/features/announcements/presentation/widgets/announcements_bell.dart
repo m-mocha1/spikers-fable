@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get/get.dart' show Get, GetNavigation;
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/router/app_router.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../../routes/app_routes.dart';
 import '../providers/announcements_providers.dart';
 
 /// App-bar bell with the unread dot. Riverpod widget embedded in the (still
@@ -38,7 +38,7 @@ class AnnouncementsBell extends ConsumerWidget {
             ),
         ],
       ),
-      onPressed: () => Get.toNamed(Routes.announcements),
+      onPressed: () => context.push(Routes.announcements),
     );
   }
 }

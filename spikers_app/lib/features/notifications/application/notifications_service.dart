@@ -3,11 +3,10 @@ import 'dart:async';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get/get.dart' show Get, GetNavigation;
 
+import '../../../core/router/app_router.dart';
 import '../../../core/services/fcm_service.dart';
 import '../../../core/services/local_notification_service.dart';
-import '../../../routes/app_routes.dart';
 import '../../auth/presentation/providers/auth_providers.dart';
 
 /// Foreground/background FCM wiring: shows local banners for foreground
@@ -50,7 +49,7 @@ class NotificationsService {
   void _handleMessage(RemoteMessage message) {
     final sessionId = message.data['sessionId'] as String?;
     if (sessionId != null && sessionId.isNotEmpty) {
-      Get.toNamed(Routes.sessionDetail, arguments: sessionId);
+      appRouter.push(Routes.sessionDetail, extra: sessionId);
     }
   }
 }

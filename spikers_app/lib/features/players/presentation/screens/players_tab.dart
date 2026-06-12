@@ -1,12 +1,12 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get/get.dart' show Get, GetNavigation;
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/router/app_router.dart';
 import '../../../../core/utils/age_calculator.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../../routes/app_routes.dart';
 import '../../domain/entities/player_summary.dart';
 import '../providers/players_providers.dart';
 import '../widgets/payment_confirm_dialog.dart';
@@ -137,9 +137,9 @@ class _PlayerCard extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () => Get.toNamed(
+          onTap: () => context.push(
             Routes.playerProfile,
-            arguments: player.uid,
+            extra: player.uid,
           ),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),

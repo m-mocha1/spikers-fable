@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get/get.dart'
-    show ExtensionSnackbar, Get, GetNavigation, SnackPosition;
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/app_snackbar.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../providers/players_providers.dart';
@@ -23,7 +22,7 @@ Future<void> confirmTogglePayment(
 }) async {
   final l = AppLocalizations.of(context)!;
   if (isLifetime) {
-    Get.snackbar('', l.lifetimeMember, snackPosition: SnackPosition.BOTTOM);
+    showAppSnackbar(l.lifetimeMember);
     return;
   }
   final paidNow = paidUntil != null && paidUntil.isAfter(DateTime.now());
@@ -79,7 +78,7 @@ Future<void> confirmTogglePayment(
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: () => Get.back(result: false),
+                    onPressed: () => Navigator.of(context).pop(false),
                     style: OutlinedButton.styleFrom(
                       side: const BorderSide(color: AppColors.grey),
                       padding: const EdgeInsets.symmetric(vertical: 12),
@@ -95,7 +94,7 @@ Future<void> confirmTogglePayment(
                 const SizedBox(width: 10),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () => Get.back(result: true),
+                    onPressed: () => Navigator.of(context).pop(true),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: actionColor,
                       foregroundColor: AppColors.white,
@@ -128,6 +127,6 @@ Future<void> confirmTogglePayment(
       await repo.markPaid(uid, coachUid: coach.uid, coachName: coach.name);
     }
   } catch (_) {
-    Get.snackbar('', l.unknownError, snackPosition: SnackPosition.BOTTOM);
+    showAppSnackbar(l.unknownError);
   }
 }

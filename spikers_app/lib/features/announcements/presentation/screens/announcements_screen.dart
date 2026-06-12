@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get/get.dart'
-    show ExtensionSnackbar, Get, GetNavigation, SnackPosition;
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/router/app_router.dart';
+import '../../../../core/utils/app_snackbar.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../../routes/app_routes.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../domain/entities/announcement.dart';
 import '../providers/announcements_providers.dart';
@@ -39,7 +39,7 @@ class _AnnouncementsScreenState extends ConsumerState<AnnouncementsScreen> {
       floatingActionButton: isCoach
           ? FloatingActionButton(
               onPressed: () async {
-                await Get.toNamed(Routes.createAnnouncement);
+                await context.push(Routes.createAnnouncement);
                 await markAnnouncementsRead(ref);
               },
               child: const Icon(Icons.add),
@@ -117,11 +117,10 @@ class _AnnouncementCard extends ConsumerWidget {
       await ref
           .read(announcementsRepositoryProvider)
           .delete(announcement.id);
-      Get.snackbar('', l.announcementDeleted,
-          snackPosition: SnackPosition.BOTTOM,
+      showAppSnackbar(l.announcementDeleted,
           duration: const Duration(seconds: 2));
     } catch (_) {
-      Get.snackbar('', l.errorOccurred, snackPosition: SnackPosition.BOTTOM);
+      showAppSnackbar(l.errorOccurred);
     }
   }
 
@@ -151,8 +150,8 @@ class _AnnouncementCard extends ConsumerWidget {
                   icon: Icons.edit_outlined,
                   tooltip: l.editAnnouncement,
                   onTap: () async {
-                    await Get.toNamed(Routes.createAnnouncement,
-                        arguments: announcement);
+                    await context.push(Routes.createAnnouncement,
+                        extra: announcement);
                     await markAnnouncementsRead(ref);
                   },
                 ),

@@ -2,15 +2,15 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get/get.dart'
-    show ExtensionSnackbar, Get, GetNavigation, SnackPosition;
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/router/app_router.dart';
+import '../../../../core/utils/app_snackbar.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../../routes/app_routes.dart';
 import 'package:spikers_app/core/widgets/branded_button.dart';
 import 'package:spikers_app/core/widgets/branded_text_field.dart';
 import '../../domain/repositories/auth_repository.dart';
@@ -107,7 +107,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   color: AppColors.gold),
               title: Text(l.pickFromGallery),
               onTap: () {
-                Get.back();
+                Navigator.of(context).pop();
                 _pickPhoto(ImageSource.gallery);
               },
             ),
@@ -116,7 +116,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   color: AppColors.gold),
               title: Text(l.takePhoto),
               onTap: () {
-                Get.back();
+                Navigator.of(context).pop();
                 _pickPhoto(ImageSource.camera);
               },
             ),
@@ -159,22 +159,17 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         case CoachPromotion.invalidKey:
           // User stays a player; they keep the account and can retry coach
           // promotion later. Continue to verify-email either way.
-          Get.snackbar('', l.invalidCoachKey,
-              snackPosition: SnackPosition.BOTTOM,
-              duration: const Duration(seconds: 3));
+          showAppSnackbar(l.invalidCoachKey);
         case CoachPromotion.networkError:
-          Get.snackbar('', l.networkError,
-              snackPosition: SnackPosition.BOTTOM,
-              duration: const Duration(seconds: 3));
+          showAppSnackbar(l.networkError);
         case CoachPromotion.notRequested:
         case CoachPromotion.promoted:
           break;
       }
-      Get.offAllNamed(Routes.verifyEmail);
+      if (!mounted) return;
+      context.go(Routes.verifyEmail);
     } on AuthException catch (e) {
-      Get.snackbar('', authErrorMessage(l, e.code),
-          snackPosition: SnackPosition.BOTTOM,
-          duration: const Duration(seconds: 3));
+      showAppSnackbar(authErrorMessage(l, e.code));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -415,7 +410,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   Text(l.haveAccount,
                       style: const TextStyle(color: AppColors.grey)),
                   TextButton(
-                    onPressed: Get.back,
+                    onPressed: () => context.pop(),
                     child: Text(l.signIn),
                   ),
                 ],

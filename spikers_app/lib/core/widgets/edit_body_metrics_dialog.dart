@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get/get.dart' show ExtensionSnackbar, Get, SnackPosition;
 import '../../core/constants/app_colors.dart';
+import '../../core/utils/app_snackbar.dart';
 import '../../core/utils/validators.dart';
 import '../../features/auth/presentation/providers/auth_providers.dart';
 import '../../l10n/app_localizations.dart';
@@ -65,7 +65,7 @@ class _EditBodyMetricsDialogState
     } catch (_) {
       if (!mounted) return;
       setState(() => _saving = false);
-      Get.snackbar('', l.unknownError, snackPosition: SnackPosition.BOTTOM);
+      showAppSnackbar(l.unknownError);
     }
   }
 

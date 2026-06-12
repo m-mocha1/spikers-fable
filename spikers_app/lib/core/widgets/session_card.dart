@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../core/constants/app_assets.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/router/app_router.dart';
+import '../../l10n/app_localizations.dart';
 import 'package:spikers_app/features/sessions/domain/entities/session_model.dart';
-import '../../routes/app_routes.dart';
 
 class SessionCard extends StatelessWidget {
   final SessionModel session;
@@ -12,11 +13,12 @@ class SessionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final designAsset = AppAssets
         .cardDesigns[session.designIndex % AppAssets.cardDesigns.length];
 
     return GestureDetector(
-      onTap: () => Get.toNamed(Routes.sessionDetail, arguments: session),
+      onTap: () => context.push(Routes.sessionDetail, extra: session),
       child: Container(
         margin: const EdgeInsets.only(bottom: 20),
         decoration: BoxDecoration(
@@ -44,9 +46,10 @@ class SessionCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 10),
-                  if (session.isOngoing) _Badge('live'.tr.toUpperCase(), AppColors.success),
+                  if (session.isOngoing)
+                    _Badge(l.live.toUpperCase(), AppColors.success),
                   if (session.isFull && !session.isOngoing)
-                    _Badge('full'.tr.toUpperCase(), AppColors.errorRed),
+                    _Badge(l.full.toUpperCase(), AppColors.errorRed),
                 ],
               ),
               const SizedBox(height: 10),
@@ -161,11 +164,12 @@ class _GenderBadge extends StatelessWidget {
           const SizedBox(width: 4),
           Text(
             gender == 'male'
-                ? 'male'.tr
+                ? AppLocalizations.of(context)!.male
                 : gender == 'female'
-                    ? 'female'.tr
-                    : 'mixed'.tr,
-            style: TextStyle(fontSize: 13, color: color, fontWeight: FontWeight.w600),
+                    ? AppLocalizations.of(context)!.female
+                    : AppLocalizations.of(context)!.genderMixed,
+            style: TextStyle(
+                fontSize: 13, color: color, fontWeight: FontWeight.w600),
           ),
         ],
       ),

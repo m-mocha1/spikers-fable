@@ -27,11 +27,9 @@ dependencies:
   # Security
   firebase_app_check: ^0.3.2
 
-  # State management / routing / DI
-  # GetX is being phased out feature-by-feature in favor of Riverpod
-  # (feature-first + repository pattern, per CLAUDE.md).
-  get: ^4.7.2
+  # State management / routing
   flutter_riverpod: ^2.6.1
+  go_router: ^14.8.1
 
   # Notifications
   flutter_local_notifications: ^18.0.1

@@ -1,13 +1,13 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get/get.dart' show Get, GetNavigation;
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/router/app_router.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'package:spikers_app/features/sessions/domain/entities/session_model.dart';
-import '../../../../routes/app_routes.dart';
 import '../providers/sessions_providers.dart';
 
 class SessionsHistoryScreen extends ConsumerStatefulWidget {
@@ -129,7 +129,7 @@ class _HistoryCardState extends ConsumerState<_HistoryCard> {
     final session = widget.session;
 
     return GestureDetector(
-      onTap: () => Get.toNamed(Routes.sessionDetail, arguments: session),
+      onTap: () => context.push(Routes.sessionDetail, extra: session),
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),

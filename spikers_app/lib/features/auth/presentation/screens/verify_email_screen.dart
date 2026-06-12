@@ -2,13 +2,13 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get/get.dart'
-    show ExtensionSnackbar, Get, GetNavigation, SnackPosition;
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/router/app_router.dart';
+import '../../../../core/utils/app_snackbar.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../../routes/app_routes.dart';
 import 'package:spikers_app/core/widgets/branded_button.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../providers/auth_providers.dart';
@@ -65,10 +65,10 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
     setState(() => _checking = false);
     if (verified) {
       await repo.markVerifiedAt();
-      Get.offAllNamed(Routes.home);
+      if (!mounted) return;
+      context.go(Routes.home);
     } else {
-      Get.snackbar('', l.verifyEmailNotYet,
-          snackPosition: SnackPosition.BOTTOM);
+      showAppSnackbar(l.verifyEmailNotYet);
     }
   }
 
@@ -79,12 +79,11 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
     try {
       await ref.read(authRepositoryProvider).sendVerificationEmail();
       if (!mounted) return;
-      Get.snackbar('', l.verifyEmailSent, snackPosition: SnackPosition.BOTTOM);
+      showAppSnackbar(l.verifyEmailSent);
       _startCooldown();
     } on AuthException catch (e) {
       if (!mounted) return;
-      Get.snackbar('', authErrorMessage(l, e.code),
-          snackPosition: SnackPosition.BOTTOM);
+      showAppSnackbar(authErrorMessage(l, e.code));
     } finally {
       if (mounted) setState(() => _resending = false);
     }
@@ -104,15 +103,15 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
       await repo.updatePendingEmail(newEmail);
     } on AuthException catch (e) {
       if (!mounted) return;
-      Get.snackbar('', authErrorMessage(l, e.code),
-          snackPosition: SnackPosition.BOTTOM);
+      showAppSnackbar(authErrorMessage(l, e.code));
       return;
     }
     // Defer past the current frame so the dialog's InheritedElement dependents
-    // have detached before offAllNamed disposes the route stack — otherwise the
+    // have detached before go() disposes the route stack — otherwise the
     // framework trips `_dependents.isEmpty`.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Get.offAllNamed(Routes.emailChangeNotice, arguments: newEmail);
+      if (!mounted) return;
+      context.go(Routes.emailChangeNotice, extra: newEmail);
     });
   }
 

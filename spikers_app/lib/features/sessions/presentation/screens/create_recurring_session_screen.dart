@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get/get.dart'
-    show ExtensionSnackbar, Get, GetNavigation, SnackPosition;
-
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/app_snackbar.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'package:spikers_app/features/sessions/domain/entities/recurring_session_model.dart';
@@ -13,7 +11,9 @@ import '../../../auth/presentation/providers/auth_providers.dart';
 import '../providers/sessions_providers.dart';
 
 class CreateRecurringSessionScreen extends ConsumerStatefulWidget {
-  const CreateRecurringSessionScreen({super.key});
+  /// Non-null when editing an existing schedule.
+  final RecurringSessionModel? editing;
+  const CreateRecurringSessionScreen({super.key, this.editing});
 
   @override
   ConsumerState<CreateRecurringSessionScreen> createState() =>
@@ -43,8 +43,8 @@ class _CreateRecurringSessionScreenState
   @override
   void initState() {
     super.initState();
-    final arg = Get.arguments;
-    if (arg is RecurringSessionModel) {
+    final arg = widget.editing;
+    if (arg != null) {
       _editing = arg;
       _titleCtrl.text = arg.title;
       _locationCtrl.text = arg.location;
@@ -103,7 +103,7 @@ class _CreateRecurringSessionScreenState
     final l = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) return;
     if (_selectedDays.isEmpty) {
-      Get.snackbar('', l.selectDays, snackPosition: SnackPosition.BOTTOM);
+      showAppSnackbar(l.selectDays);
       return;
     }
 
@@ -128,9 +128,9 @@ class _CreateRecurringSessionScreenState
           'endHour': _endTime.hour,
           'endMinute': _endTime.minute,
         });
-        Get.back();
-        Get.snackbar('', l.recurringUpdated,
-            snackPosition: SnackPosition.BOTTOM,
+        if (!mounted) return;
+        Navigator.of(context).pop();
+        showAppSnackbar(l.recurringUpdated,
             duration: const Duration(seconds: 2));
       } else {
         final model = RecurringSessionModel(
@@ -151,13 +151,13 @@ class _CreateRecurringSessionScreenState
           createdAt: DateTime.now(),
         );
         await repo.create(model);
-        Get.back();
-        Get.snackbar('', l.recurringCreated,
-            snackPosition: SnackPosition.BOTTOM,
+        if (!mounted) return;
+        Navigator.of(context).pop();
+        showAppSnackbar(l.recurringCreated,
             duration: const Duration(seconds: 2));
       }
     } catch (_) {
-      Get.snackbar('', l.errorOccurred, snackPosition: SnackPosition.BOTTOM);
+      showAppSnackbar(l.errorOccurred);
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
