@@ -5,9 +5,14 @@
 # the "Failed to install dependencies ... Directory was not found" error, which
 # happened because Codemagic was looking for pubspec.yaml at the repo root.
 #
-# Prerequisite (already done): an App Store Connect API key integration named
-# `spikers_asc` under Team settings > Integrations > App Store Connect. The key
-# needs Admin (or App Manager) access so it can create signing files.
+# Auth: the App Store Connect API key is supplied via environment variables in
+# the `appstore_credentials` group (set them in the Codemagic app settings >
+# Environment variables). Named `integrations:` are team-only and don't work on
+# a personal account, so we use env vars instead. Required variables:
+#   APP_STORE_CONNECT_ISSUER_ID      = 37e891ef-8ff5-4c2a-aa3d-4d72b7a32e5f
+#   APP_STORE_CONNECT_KEY_IDENTIFIER = D4T7NCYFP3
+#   APP_STORE_CONNECT_PRIVATE_KEY    = <full contents of AuthKey_D4T7NCYFP3.p8>  (mark Secure)
+# The `app-store-connect` CLI reads these automatically.
 
 workflows:
   ios-testflight:
@@ -17,15 +22,11 @@ workflows:
     working_directory: spikers_app
 
     environment:
+      groups:
+        - appstore_credentials   # holds APP_STORE_CONNECT_ISSUER_ID / _KEY_IDENTIFIER / _PRIVATE_KEY
       flutter: stable          # pin to e.g. 3.41.9 once confirmed available on Codemagic
       xcode: latest
       cocoapods: default
-
-    # The App Store Connect API key integration named in the Codemagic UI
-    # (Team settings > Integrations > App Store Connect). It supplies the
-    # credentials used below to fetch/create signing files and to publish.
-    integrations:
-      app_store_connect: spikers_asc
 
     scripts:
       # --- Code signing -------------------------------------------------------
@@ -86,7 +87,9 @@ workflows:
       # Publish the build to TestFlight so your testers install via the
       # standard App Store / TestFlight flow.
       app_store_connect:
-        auth: integration
+        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
+        key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
+        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
         submit_to_testflight: true
         # Optionally add beta_groups to auto-assign testers:
         # beta_groups:
