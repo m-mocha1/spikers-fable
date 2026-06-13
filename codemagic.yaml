@@ -5,11 +5,9 @@
 # the "Failed to install dependencies ... Directory was not found" error, which
 # happened because Codemagic was looking for pubspec.yaml at the repo root.
 #
-# Before the first successful run you must configure, in the Codemagic UI:
-#   1. An App Store Connect API key integration (Team settings > Integrations).
-#   2. A code signing certificate / bundle id `com.jerusalem.spikers` registered
-#      in your Apple Developer account.
-# Then replace the placeholder values marked TODO below.
+# Prerequisite (already done): an App Store Connect API key integration named
+# `spikers_asc` under Team settings > Integrations > App Store Connect. The key
+# needs Admin (or App Manager) access so it can create signing files.
 
 workflows:
   ios-testflight:
@@ -23,17 +21,35 @@ workflows:
       xcode: latest
       cocoapods: default
 
-      # App Store Connect API key integration.
-      # Create it under Team settings > Integrations > App Store Connect,
-      # then set `integrations.app_store_connect` to that integration's name.
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: com.jerusalem.spikers
-
+    # The App Store Connect API key integration named in the Codemagic UI
+    # (Team settings > Integrations > App Store Connect). It supplies the
+    # credentials used below to fetch/create signing files and to publish.
     integrations:
       app_store_connect: spikers_asc
 
     scripts:
+      # --- Code signing -------------------------------------------------------
+      # We sign explicitly via the App Store Connect API key rather than relying
+      # on the `ios_signing` automatic block: the earlier TestFlight builds used
+      # Xcode-managed profiles, which the API cannot see ("No matching profiles
+      # found"). `--create` makes a dedicated App Store profile + distribution
+      # certificate that Codemagic owns.
+      - name: Set up keychain for code signing
+        script: keychain initialize
+
+      - name: Fetch (and create if missing) App Store signing files
+        script: |
+          app-store-connect fetch-signing-files com.jerusalem.spikers \
+            --type IOS_APP_STORE \
+            --create
+
+      - name: Add fetched certificates to keychain
+        script: keychain add-certificates
+
+      - name: Set up code signing settings on Xcode project
+        script: xcode-project use-profiles
+
+      # --- Build --------------------------------------------------------------
       - name: Flutter pub get
         script: flutter pub get
 
@@ -45,12 +61,20 @@ workflows:
         script: flutter analyze
         ignore_failure: true
 
-      - name: Set up code signing settings on Xcode project
-        script: xcode-project use-profiles
-
-      - name: Build iOS (IPA for distribution)
+      - name: Build iOS (IPA, auto-incremented build number)
+        # Resolve the app's numeric Apple ID from its bundle id, then build with
+        # (latest TestFlight build number + 1) so uploads never collide with an
+        # existing build. Overrides the `+N` in pubspec.yaml, which stays as a
+        # harmless fallback.
         script: |
+          APP_ID=$(app-store-connect list-apps \
+            --bundle-id-identifier "com.jerusalem.spikers" \
+            --bundle-id-identifier-strict-match \
+            --json | jq -r '.[0].id')
+          BUILD_NUMBER=$(($(app-store-connect get-latest-testflight-build-number "$APP_ID") + 1))
+          echo "Building TestFlight build number $BUILD_NUMBER for app $APP_ID"
           flutter build ipa --release \
+            --build-number=$BUILD_NUMBER \
             --export-options-plist=/Users/builder/export_options.plist
 
     artifacts:
