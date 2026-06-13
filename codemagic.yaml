@@ -29,8 +29,6 @@ workflows:
       ios_signing:
         distribution_type: app_store
         bundle_identifier: com.jerusalem.spikers
-      groups:
-        - app_store_credentials # TODO: env var group holding APP_STORE_APP_ID, etc.
 
     integrations:
       app_store_connect: ASC_KEY  # TODO: replace with your App Store Connect API key name
