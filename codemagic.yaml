@@ -31,7 +31,7 @@ workflows:
         bundle_identifier: com.jerusalem.spikers
 
     integrations:
-      app_store_connect: ASC_KEY  # TODO: replace with your App Store Connect API key name
+      app_store_connect: D4T7NCYFP3
 
     scripts:
       - name: Flutter pub get
