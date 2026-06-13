@@ -5,16 +5,11 @@
 # the "Failed to install dependencies ... Directory was not found" error, which
 # happened because Codemagic was looking for pubspec.yaml at the repo root.
 #
-# Auth: the App Store Connect CLI reads three env vars automatically. The issuer
-# ID and key ID are NOT secrets, so they're pinned directly in `environment.vars`
-# below (they can never be "missing" that way). Only the .p8 private key is
-# secret, so it stays in the `appstore_credentials` group (Codemagic app settings
-# > Environment variables). Named `integrations:` are team-only and don't work on
-# a personal account, so we use env vars instead.
-#   APP_STORE_CONNECT_ISSUER_ID      -> plaintext var below
-#   APP_STORE_CONNECT_KEY_IDENTIFIER -> plaintext var below
-#   APP_STORE_CONNECT_PRIVATE_KEY    = <full contents of AuthKey_D4T7NCYFP3.p8>
-#                                      in the `appstore_credentials` group, marked Secure
+# Before the first successful run you must configure, in the Codemagic UI:
+#   1. An App Store Connect API key integration (Team settings > Integrations).
+#   2. A code signing certificate / bundle id `com.jerusalem.spikers` registered
+#      in your Apple Developer account.
+# Then replace the placeholder values marked TODO below.
 
 workflows:
   ios-testflight:
@@ -24,53 +19,23 @@ workflows:
     working_directory: spikers_app
 
     environment:
-      vars:
-        APP_STORE_CONNECT_ISSUER_ID: 37e891ef-8ff5-4c2a-aa3d-4d72b7a32e5f
-        APP_STORE_CONNECT_KEY_IDENTIFIER: D4T7NCYFP3
-      groups:
-        - appstore_credentials   # must supply APP_STORE_CONNECT_PRIVATE_KEY (mark Secure)
       flutter: stable          # pin to e.g. 3.41.9 once confirmed available on Codemagic
       xcode: latest
       cocoapods: default
 
+      # App Store Connect API key integration.
+      # Create it under Team settings > Integrations > App Store Connect,
+      # then set `integrations.app_store_connect` to that integration's name.
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.jerusalem.spikers
+      groups:
+        - app_store_credentials # TODO: env var group holding APP_STORE_APP_ID, etc.
+
+    integrations:
+      app_store_connect: ASC_KEY  # TODO: replace with your App Store Connect API key name
+
     scripts:
-      # --- Sanity check -------------------------------------------------------
-      # Fail fast with a clear message if the secret private key didn't reach the
-      # build (the issuer/key IDs are plaintext vars, so they're always present).
-      - name: Verify App Store Connect credentials are present
-        script: |
-          if [ -z "$APP_STORE_CONNECT_PRIVATE_KEY" ]; then
-            echo "ERROR: APP_STORE_CONNECT_PRIVATE_KEY is empty."
-            echo "Fix it in App settings > Environment variables: the variable must be"
-            echo "marked Secure AND assigned to a group named exactly 'appstore_credentials'."
-            exit 1
-          fi
-          echo "Issuer:  ${APP_STORE_CONNECT_ISSUER_ID:0:8}…"
-          echo "Key ID:  $APP_STORE_CONNECT_KEY_IDENTIFIER"
-          echo "Private key: present (${#APP_STORE_CONNECT_PRIVATE_KEY} chars)"
-
-      # --- Code signing -------------------------------------------------------
-      # We sign explicitly via the App Store Connect API key rather than relying
-      # on the `ios_signing` automatic block: the earlier TestFlight builds used
-      # Xcode-managed profiles, which the API cannot see ("No matching profiles
-      # found"). `--create` makes a dedicated App Store profile + distribution
-      # certificate that Codemagic owns.
-      - name: Set up keychain for code signing
-        script: keychain initialize
-
-      - name: Fetch (and create if missing) App Store signing files
-        script: |
-          app-store-connect fetch-signing-files com.jerusalem.spikers \
-            --type IOS_APP_STORE \
-            --create
-
-      - name: Add fetched certificates to keychain
-        script: keychain add-certificates
-
-      - name: Set up code signing settings on Xcode project
-        script: xcode-project use-profiles
-
-      # --- Build --------------------------------------------------------------
       - name: Flutter pub get
         script: flutter pub get
 
@@ -82,20 +47,12 @@ workflows:
         script: flutter analyze
         ignore_failure: true
 
-      - name: Build iOS (IPA, auto-incremented build number)
-        # Resolve the app's numeric Apple ID from its bundle id, then build with
-        # (latest TestFlight build number + 1) so uploads never collide with an
-        # existing build. Overrides the `+N` in pubspec.yaml, which stays as a
-        # harmless fallback.
+      - name: Set up code signing settings on Xcode project
+        script: xcode-project use-profiles
+
+      - name: Build iOS (IPA for distribution)
         script: |
-          APP_ID=$(app-store-connect list-apps \
-            --bundle-id-identifier "com.jerusalem.spikers" \
-            --bundle-id-identifier-strict-match \
-            --json | jq -r '.[0].id')
-          BUILD_NUMBER=$(($(app-store-connect get-latest-testflight-build-number "$APP_ID") + 1))
-          echo "Building TestFlight build number $BUILD_NUMBER for app $APP_ID"
           flutter build ipa --release \
-            --build-number=$BUILD_NUMBER \
             --export-options-plist=/Users/builder/export_options.plist
 
     artifacts:
@@ -107,9 +64,7 @@ workflows:
       # Publish the build to TestFlight so your testers install via the
       # standard App Store / TestFlight flow.
       app_store_connect:
-        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
-        key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
-        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
+        auth: integration
         submit_to_testflight: true
         # Optionally add beta_groups to auto-assign testers:
         # beta_groups:
