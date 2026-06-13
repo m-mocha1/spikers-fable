@@ -5,14 +5,16 @@
 # the "Failed to install dependencies ... Directory was not found" error, which
 # happened because Codemagic was looking for pubspec.yaml at the repo root.
 #
-# Auth: the App Store Connect API key is supplied via environment variables in
-# the `appstore_credentials` group (set them in the Codemagic app settings >
-# Environment variables). Named `integrations:` are team-only and don't work on
-# a personal account, so we use env vars instead. Required variables:
-#   APP_STORE_CONNECT_ISSUER_ID      = 37e891ef-8ff5-4c2a-aa3d-4d72b7a32e5f
-#   APP_STORE_CONNECT_KEY_IDENTIFIER = D4T7NCYFP3
-#   APP_STORE_CONNECT_PRIVATE_KEY    = <full contents of AuthKey_D4T7NCYFP3.p8>  (mark Secure)
-# The `app-store-connect` CLI reads these automatically.
+# Auth: the App Store Connect CLI reads three env vars automatically. The issuer
+# ID and key ID are NOT secrets, so they're pinned directly in `environment.vars`
+# below (they can never be "missing" that way). Only the .p8 private key is
+# secret, so it stays in the `appstore_credentials` group (Codemagic app settings
+# > Environment variables). Named `integrations:` are team-only and don't work on
+# a personal account, so we use env vars instead.
+#   APP_STORE_CONNECT_ISSUER_ID      -> plaintext var below
+#   APP_STORE_CONNECT_KEY_IDENTIFIER -> plaintext var below
+#   APP_STORE_CONNECT_PRIVATE_KEY    = <full contents of AuthKey_D4T7NCYFP3.p8>
+#                                      in the `appstore_credentials` group, marked Secure
 
 workflows:
   ios-testflight:
@@ -22,13 +24,31 @@ workflows:
     working_directory: spikers_app
 
     environment:
+      vars:
+        APP_STORE_CONNECT_ISSUER_ID: 37e891ef-8ff5-4c2a-aa3d-4d72b7a32e5f
+        APP_STORE_CONNECT_KEY_IDENTIFIER: D4T7NCYFP3
       groups:
-        - appstore_credentials   # holds APP_STORE_CONNECT_ISSUER_ID / _KEY_IDENTIFIER / _PRIVATE_KEY
+        - appstore_credentials   # must supply APP_STORE_CONNECT_PRIVATE_KEY (mark Secure)
       flutter: stable          # pin to e.g. 3.41.9 once confirmed available on Codemagic
       xcode: latest
       cocoapods: default
 
     scripts:
+      # --- Sanity check -------------------------------------------------------
+      # Fail fast with a clear message if the secret private key didn't reach the
+      # build (the issuer/key IDs are plaintext vars, so they're always present).
+      - name: Verify App Store Connect credentials are present
+        script: |
+          if [ -z "$APP_STORE_CONNECT_PRIVATE_KEY" ]; then
+            echo "ERROR: APP_STORE_CONNECT_PRIVATE_KEY is empty."
+            echo "Fix it in App settings > Environment variables: the variable must be"
+            echo "marked Secure AND assigned to a group named exactly 'appstore_credentials'."
+            exit 1
+          fi
+          echo "Issuer:  ${APP_STORE_CONNECT_ISSUER_ID:0:8}…"
+          echo "Key ID:  $APP_STORE_CONNECT_KEY_IDENTIFIER"
+          echo "Private key: present (${#APP_STORE_CONNECT_PRIVATE_KEY} chars)"
+
       # --- Code signing -------------------------------------------------------
       # We sign explicitly via the App Store Connect API key rather than relying
       # on the `ios_signing` automatic block: the earlier TestFlight builds used
