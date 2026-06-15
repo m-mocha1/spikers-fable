@@ -2,7 +2,7 @@ name: spikers_app
 description: "Jerusalem Spikers Volleyball Club App"
 publish_to: 'none'
 
-version: 1.0.1+7
+version: 1.0.1+8
 
 environment:
   sdk: ^3.11.5
