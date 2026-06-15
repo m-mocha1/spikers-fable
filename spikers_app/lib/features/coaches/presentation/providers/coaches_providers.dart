@@ -8,7 +8,10 @@ import '../../domain/repositories/coaches_repository.dart';
 
 final coachesRepositoryProvider = Provider<CoachesRepository>(
   (ref) => CoachesRepositoryImpl(
-    CoachesRemoteDataSource(ref.watch(firestoreProvider)),
+    CoachesRemoteDataSource(
+      ref.watch(firestoreProvider),
+      ref.watch(firebaseFunctionsProvider),
+    ),
   ),
 );
 

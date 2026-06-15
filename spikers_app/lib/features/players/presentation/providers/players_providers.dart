@@ -10,7 +10,10 @@ import '../../domain/repositories/players_repository.dart';
 
 final playersRepositoryProvider = Provider<PlayersRepository>(
   (ref) => PlayersRepositoryImpl(
-    PlayersRemoteDataSource(ref.watch(firestoreProvider)),
+    PlayersRemoteDataSource(
+      ref.watch(firestoreProvider),
+      ref.watch(firebaseFunctionsProvider),
+    ),
   ),
 );
 

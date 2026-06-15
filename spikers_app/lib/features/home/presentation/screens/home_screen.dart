@@ -135,8 +135,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ],
       ),
       body: IndexedStack(index: safeIndex, children: tabs),
-      floatingActionButton: isCoach
-          ? FloatingActionButton(
+      floatingActionButton: (isCoach && _index == 0)
+          ? FloatingActionButton.small(
               onPressed: () => _showSessionOptions(context, l),
               child: const Icon(Icons.add),
             )

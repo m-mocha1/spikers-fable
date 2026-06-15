@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/utils/app_snackbar.dart';
+import '../../../../core/widgets/confirm_dialog.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'package:spikers_app/features/sessions/domain/entities/session_model.dart';
@@ -228,6 +229,25 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
     }
   }
 
+  Future<void> _removeAttendee(String userId, String name) async {
+    final l = AppLocalizations.of(context)!;
+    final confirmed = await showDeleteConfirm(
+      context,
+      title: l.removePlayer,
+      message: l.confirmRemovePlayer(name),
+      confirmLabel: l.remove,
+      cancelLabel: l.cancel,
+    );
+    if (!confirmed) return;
+    try {
+      await _repo.removeAttendee(_session!.id, userId);
+    } on SessionActionException catch (_) {
+      showAppSnackbar(l.unknownError);
+    } catch (_) {
+      showAppSnackbar(l.unknownError);
+    }
+  }
+
   Future<void> _confirmCancel(AppLocalizations l) async {
     if (_isCancelling) return;
     final confirm = await showDialog<bool>(
@@ -324,6 +344,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
     final me = ref.watch(currentUserProvider).value;
     final uid = me?.uid ?? '';
     final isCoach = me?.isCoach ?? false;
+    final isAdmin = me?.isAdmin ?? false;
     final isOwner = session.coachId == uid;
     final isJoined = session.isJoinedBy(uid);
     final isWaitlisted = session.isWaitlistedBy(uid);
@@ -343,7 +364,9 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
                 extra: {'id': session.id, 'title': session.title},
               ),
             ),
-          if (isCoach && isOwner && !session.isOngoing && !_isArchived)
+          if (((isCoach && isOwner) || isAdmin) &&
+              !session.isOngoing &&
+              !_isArchived)
             TextButton(
               onPressed: _isCancelling ? null : () => _confirmCancel(l),
               child: _isCancelling
@@ -375,7 +398,9 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
               userMap: _userMap,
               isCoach: isCoach,
               isOwner: isOwner,
+              canManage: (isCoach && isOwner) || isAdmin,
               onToggleAttended: _markAttended,
+              onRemove: _removeAttendee,
               onEditCapacity: () => _editCapacity(l),
             ),
             const SizedBox(height: 30),
@@ -574,7 +599,9 @@ class _AttendeesSection extends StatelessWidget {
   final Map<String, PublicProfile> userMap;
   final bool isCoach;
   final bool isOwner;
+  final bool canManage;
   final void Function(String uid, bool attended) onToggleAttended;
+  final void Function(String uid, String name) onRemove;
   final VoidCallback onEditCapacity;
   const _AttendeesSection({
     required this.session,
@@ -582,7 +609,9 @@ class _AttendeesSection extends StatelessWidget {
     required this.userMap,
     required this.isCoach,
     required this.isOwner,
+    required this.canManage,
     required this.onToggleAttended,
+    required this.onRemove,
     required this.onEditCapacity,
   });
 
@@ -679,7 +708,9 @@ class _AttendeesSection extends StatelessWidget {
                 attendanceCount: a.attendanceCount,
                 isAttended: isAttended,
                 canMark: isCoach && isOwner,
+                canRemove: canManage,
                 onToggle: onToggleAttended,
+                onRemove: onRemove,
               );
             }),
           ],
@@ -714,10 +745,13 @@ class _AttendeesSection extends StatelessWidget {
                 if (u == null) return const SizedBox.shrink();
                 return _WaitlistItem(
                   key: ValueKey('wl_$uid'),
+                  uid: uid,
                   position: pos,
                   name: u.name,
                   gender: u.gender,
                   photoUrl: u.photoUrl,
+                  canRemove: canManage,
+                  onRemove: onRemove,
                 );
               }),
             ],
@@ -736,7 +770,9 @@ class _AttendeeItem extends StatelessWidget {
   final int attendanceCount;
   final bool isAttended;
   final bool canMark;
+  final bool canRemove;
   final void Function(String uid, bool attended) onToggle;
+  final void Function(String uid, String name) onRemove;
 
   const _AttendeeItem({
     super.key,
@@ -747,7 +783,9 @@ class _AttendeeItem extends StatelessWidget {
     required this.attendanceCount,
     required this.isAttended,
     required this.canMark,
+    required this.canRemove,
     required this.onToggle,
+    required this.onRemove,
   });
 
   @override
@@ -760,20 +798,20 @@ class _AttendeeItem extends StatelessWidget {
         isAttended ? AppColors.success : AppColors.gold.withValues(alpha: 0.4);
 
     final avatar = Container(
-      padding: const EdgeInsets.all(2),
-      decoration: BoxDecoration(shape: BoxShape.circle, color: ringColor),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: ringColor, width: 2),
+      ),
       child: CircleAvatar(
         radius: 19,
-        backgroundColor: isAttended
-            ? AppColors.success.withValues(alpha: 0.2)
-            : AppColors.gold.withValues(alpha: 0.15),
+        backgroundColor: AppColors.gold.withValues(alpha: 0.15),
         backgroundImage:
             photoUrl.isNotEmpty ? CachedNetworkImageProvider(photoUrl) : null,
         child: photoUrl.isEmpty
             ? Text(
                 initials,
-                style: TextStyle(
-                    color: isAttended ? AppColors.success : AppColors.gold,
+                style: const TextStyle(
+                    color: AppColors.gold,
                     fontWeight: FontWeight.w700,
                     fontSize: 13),
               )
@@ -833,6 +871,19 @@ class _AttendeeItem extends StatelessWidget {
               ),
             ),
           ],
+          if (canRemove) ...[
+            const SizedBox(width: 2),
+            IconButton(
+              visualDensity: VisualDensity.compact,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+              splashRadius: 20,
+              tooltip: l.removePlayer,
+              onPressed: () => onRemove(uid, name),
+              icon: const Icon(Icons.person_remove_outlined,
+                  size: 20, color: AppColors.errorRed),
+            ),
+          ],
         ],
       ),
     );
@@ -840,20 +891,27 @@ class _AttendeeItem extends StatelessWidget {
 }
 
 class _WaitlistItem extends StatelessWidget {
+  final String uid;
   final int position;
   final String name;
   final String gender;
   final String photoUrl;
+  final bool canRemove;
+  final void Function(String uid, String name) onRemove;
   const _WaitlistItem({
     super.key,
+    required this.uid,
     required this.position,
     required this.name,
     required this.gender,
     required this.photoUrl,
+    required this.canRemove,
+    required this.onRemove,
   });
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final initials = name.trim().isEmpty
         ? '?'
         : name.trim().split(' ').map((w) => w[0]).take(2).join().toUpperCase();
@@ -894,6 +952,19 @@ class _WaitlistItem extends StatelessWidget {
             size: 18,
             color: gender == 'male' ? AppColors.gold : Colors.pinkAccent,
           ),
+          if (canRemove) ...[
+            const SizedBox(width: 2),
+            IconButton(
+              visualDensity: VisualDensity.compact,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+              splashRadius: 18,
+              tooltip: l.removePlayer,
+              onPressed: () => onRemove(uid, name),
+              icon: const Icon(Icons.person_remove_outlined,
+                  size: 18, color: AppColors.errorRed),
+            ),
+          ],
         ],
       ),
     );

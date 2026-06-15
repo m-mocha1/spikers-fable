@@ -1,12 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 
 import 'package:spikers_app/features/auth/domain/entities/user_model.dart';
 import '../../domain/entities/player_summary.dart';
 
 class PlayersRemoteDataSource {
   final FirebaseFirestore _db;
+  final FirebaseFunctions _functions;
 
-  PlayersRemoteDataSource(this._db);
+  PlayersRemoteDataSource(this._db, this._functions);
 
   static const _paymentPeriodDays = 30;
 
@@ -94,4 +96,9 @@ class PlayersRemoteDataSource {
     });
     await batch.commit();
   }
+
+  /// Admin-only permanent account deletion. The callable enforces that the
+  /// caller is an admin server-side.
+  Future<void> deletePlayer(String uid) =>
+      _functions.httpsCallable('adminDeleteUser').call({'userId': uid});
 }

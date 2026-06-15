@@ -16,6 +16,9 @@ final currentUserProvider = StreamProvider<UserModel?>(
 final isCoachProvider = Provider<bool>(
     (ref) => ref.watch(currentUserProvider).value?.isCoach ?? false);
 
+final isAdminProvider = Provider<bool>(
+    (ref) => ref.watch(currentUserProvider).value?.isAdmin ?? false);
+
 /// Signs out and returns to the login screen. Feature state that keys off
 /// currentUserProvider (sessions, notifications, ...) resets itself when the
 /// user stream emits null.

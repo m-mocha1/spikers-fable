@@ -353,6 +353,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get noPlayers => 'لا يوجد لاعبون';
 
   @override
+  String get noPlayersMatch => 'لا يوجد لاعبون مطابقون لبحثك';
+
+  @override
+  String get searchPlayers => 'ابحث عن لاعبين';
+
+  @override
   String get noCoaches => 'لا يوجد مدربون';
 
   @override
@@ -384,6 +390,31 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String confirmMarkUnpaid(String name) {
     return 'وضع علامة على $name كغير مدفوع؟';
+  }
+
+  @override
+  String get delete => 'حذف';
+
+  @override
+  String get deleteAccountTitle => 'حذف الحساب';
+
+  @override
+  String deleteAccountConfirm(String name) {
+    return 'حذف حساب $name نهائياً؟ سيؤدي ذلك إلى إزالة تسجيل دخوله وجميع بياناته ولا يمكن التراجع عن ذلك.';
+  }
+
+  @override
+  String get accountDeleted => 'تم حذف الحساب';
+
+  @override
+  String get remove => 'إزالة';
+
+  @override
+  String get removePlayer => 'إزالة لاعب';
+
+  @override
+  String confirmRemovePlayer(String name) {
+    return 'إزالة $name من هذه الجلسة؟';
   }
 
   @override
@@ -563,9 +594,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get confirmDeleteAnnouncementBody => 'لا يمكن التراجع عن هذا الإجراء.';
-
-  @override
-  String get delete => 'حذف';
 
   @override
   String get sessionsHistory => 'سجل الجلسات';

@@ -123,6 +123,12 @@ class SessionsRemoteDataSource {
         'attended': attended,
       });
 
+  Future<void> removeAttendee(String sessionId, String userId) =>
+      _fns.httpsCallable('removeAttendee').call({
+        'sessionId': sessionId,
+        'userId': userId,
+      });
+
   Future<void> archiveExpiredNow() async {
     try {
       await _fns.httpsCallable('archiveExpiredSessionsNow').call();

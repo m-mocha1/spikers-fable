@@ -356,6 +356,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noPlayers => 'No players found';
 
   @override
+  String get noPlayersMatch => 'No players match your search';
+
+  @override
+  String get searchPlayers => 'Search players';
+
+  @override
   String get noCoaches => 'No coaches found';
 
   @override
@@ -388,6 +394,31 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String confirmMarkUnpaid(String name) {
     return 'Mark $name as unpaid?';
+  }
+
+  @override
+  String get delete => 'Delete';
+
+  @override
+  String get deleteAccountTitle => 'Delete account';
+
+  @override
+  String deleteAccountConfirm(String name) {
+    return 'Permanently delete $name\'s account? This removes their login and all data and cannot be undone.';
+  }
+
+  @override
+  String get accountDeleted => 'Account deleted';
+
+  @override
+  String get remove => 'Remove';
+
+  @override
+  String get removePlayer => 'Remove player';
+
+  @override
+  String confirmRemovePlayer(String name) {
+    return 'Remove $name from this session?';
   }
 
   @override
@@ -567,9 +598,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get confirmDeleteAnnouncementBody => 'This cannot be undone.';
-
-  @override
-  String get delete => 'Delete';
 
   @override
   String get sessionsHistory => 'Sessions History';

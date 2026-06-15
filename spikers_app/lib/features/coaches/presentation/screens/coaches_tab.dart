@@ -3,8 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/app_snackbar.dart';
+import '../../../../core/widgets/confirm_dialog.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../domain/entities/coach_summary.dart';
 import '../providers/coaches_providers.dart';
 
@@ -35,12 +38,32 @@ class CoachesTab extends ConsumerWidget {
   }
 }
 
-class _CoachCard extends StatelessWidget {
+class _CoachCard extends ConsumerWidget {
   final CoachSummary coach;
   const _CoachCard({required this.coach});
 
+  Future<void> _confirmDelete(
+      BuildContext context, WidgetRef ref, AppLocalizations l) async {
+    final confirmed = await showDeleteConfirm(
+      context,
+      title: l.deleteAccountTitle,
+      message: l.deleteAccountConfirm(coach.name),
+      confirmLabel: l.delete,
+      cancelLabel: l.cancel,
+    );
+    if (!confirmed) return;
+    try {
+      await ref.read(coachesRepositoryProvider).deleteCoach(coach.uid);
+      showAppSnackbar(l.accountDeleted);
+    } catch (_) {
+      showAppSnackbar(l.unknownError);
+    }
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
+    final isAdmin = ref.watch(isAdminProvider);
     final initials = coach.name.trim().isEmpty
         ? '?'
         : coach.name
@@ -84,6 +107,26 @@ class _CoachCard extends StatelessWidget {
                   style: const TextStyle(
                       fontWeight: FontWeight.w600, fontSize: 19)),
             ),
+            if (isAdmin)
+              PopupMenuButton<String>(
+                icon: const Icon(Icons.more_vert, color: AppColors.grey),
+                color: AppColors.navyLight,
+                onSelected: (_) => _confirmDelete(context, ref, l),
+                itemBuilder: (_) => [
+                  PopupMenuItem<String>(
+                    value: 'delete',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.delete_outline,
+                            color: AppColors.errorRed, size: 20),
+                        const SizedBox(width: 10),
+                        Text(l.delete,
+                            style: const TextStyle(color: AppColors.white)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
           ],
         ),
       ),

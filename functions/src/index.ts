@@ -42,6 +42,33 @@ async function fetchUserName(uid: string): Promise<string> {
   }
 }
 
+// Reads users/{uid}.role and returns true if the caller is an admin.
+async function isAdminUid(uid: string): Promise<boolean> {
+  if (!uid) return false;
+  try {
+    const doc = await db.collection("users").doc(uid).get();
+    return doc.data()?.["role"] === "admin";
+  } catch {
+    return false;
+  }
+}
+
+// Asserts the caller is an authenticated, email-verified admin and returns
+// their uid. Throws an HttpsError otherwise.
+async function requireAdmin(
+  request: { auth?: { uid?: string; token?: { email_verified?: boolean } } }
+): Promise<string> {
+  const uid = request.auth?.uid;
+  if (!uid) throw new HttpsError("unauthenticated", "Not authenticated");
+  if (request.auth?.token?.email_verified !== true) {
+    throw new HttpsError("permission-denied", "Email not verified");
+  }
+  if (!(await isAdminUid(uid))) {
+    throw new HttpsError("permission-denied", "Admins only");
+  }
+  return uid;
+}
+
 // FCM tokens live at users/{uid}/private/fcm.token (moved off the user doc
 // so token refreshes don't fan out to client listeners on the users
 // collection). Fetches in parallel; skips uids with no token document.
@@ -313,7 +340,7 @@ export const cancelSession = onCall({ region: REGION }, async (request) => {
     throw new HttpsError("not-found", "Session not found");
 
   const session = sessionDoc.data()!;
-  if (session["coachId"] !== uid) {
+  if (session["coachId"] !== uid && !(await isAdminUid(uid))) {
     throw new HttpsError("permission-denied", "Not your session");
   }
 
@@ -365,6 +392,114 @@ export const cancelSession = onCall({ region: REGION }, async (request) => {
   }
 
   await sessionRef.delete();
+  return { success: true };
+});
+
+// Removes a user from every session they belong to (attendee or waitlist),
+// promoting the head of the waitlist into any vacated attendee slot and
+// notifying the promotee. Best-effort per session — failures are logged, not
+// thrown, so account deletion still completes.
+async function removeUserFromAllSessions(userId: string): Promise<void> {
+  const [asAttendee, asWaitlisted] = await Promise.all([
+    db.collection("sessions").where("attendeeIds", "array-contains", userId).get(),
+    db.collection("sessions").where("waitlistIds", "array-contains", userId).get(),
+  ]);
+
+  const seen = new Set<string>();
+  const promotions: { uid: string; sessionId: string; title: string }[] = [];
+
+  for (const doc of [...asAttendee.docs, ...asWaitlisted.docs]) {
+    if (seen.has(doc.id)) continue;
+    seen.add(doc.id);
+
+    const session = doc.data();
+    const attendeeIds: string[] = session["attendeeIds"] ?? [];
+    const waitlistIds: string[] = session["waitlistIds"] ?? [];
+    const attendedIds: string[] = session["attendedIds"] ?? [];
+    const update: Record<string, unknown> = {};
+
+    if (attendeeIds.includes(userId)) {
+      const next = attendeeIds.filter((x) => x !== userId);
+      if (waitlistIds.length > 0) {
+        const promoted = waitlistIds[0];
+        if (!next.includes(promoted)) next.push(promoted);
+        update["waitlistIds"] = waitlistIds.slice(1);
+        promotions.push({
+          uid: promoted,
+          sessionId: doc.id,
+          title: (session["title"] as string) ?? "",
+        });
+      }
+      update["attendeeIds"] = next;
+      if (attendedIds.includes(userId)) {
+        update["attendedIds"] = attendedIds.filter((x) => x !== userId);
+      }
+    } else if (waitlistIds.includes(userId)) {
+      update["waitlistIds"] = waitlistIds.filter((x) => x !== userId);
+    }
+
+    if (Object.keys(update).length > 0) {
+      await doc.ref.update(update).catch((e) => {
+        logger.warn("adminDeleteUser: session cleanup failed", {
+          sessionId: doc.id,
+          error: e,
+        });
+        return undefined;
+      });
+    }
+  }
+
+  for (const p of promotions) {
+    await notifyPromoted([p.uid], p.sessionId, p.title).catch(() => undefined);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// adminDeleteUser — admin-only permanent deletion of a user account
+// (players and coaches are both /users docs). Removes the user from any
+// sessions, the profile photo, the Firestore user doc + subcollections
+// (mirrorUserPublic then drops the public mirror), and the Firebase Auth login.
+// ---------------------------------------------------------------------------
+export const adminDeleteUser = onCall({ region: REGION }, async (request) => {
+  const callerUid = await requireAdmin(request);
+
+  const userId = request.data["userId"] as string | undefined;
+  if (!userId) throw new HttpsError("invalid-argument", "userId required");
+  if (userId === callerUid) {
+    throw new HttpsError("permission-denied", "Cannot delete yourself");
+  }
+
+  // Drop the user from any sessions they're in (with waitlist promotion).
+  await removeUserFromAllSessions(userId);
+
+  // Profile photo (best-effort).
+  await admin
+    .storage()
+    .bucket()
+    .file(`profilePhotos/${userId}.jpg`)
+    .delete()
+    .catch((e) => {
+      logger.warn("adminDeleteUser: profile photo delete failed", {
+        userId,
+        error: e,
+      });
+      return undefined;
+    });
+
+  // User doc + subcollections (payments, templates, private). The
+  // mirrorUserPublic trigger deletes users_public/{userId} afterwards.
+  await db.recursiveDelete(db.collection("users").doc(userId));
+
+  // Auth login (best-effort — may already be gone).
+  await admin
+    .auth()
+    .deleteUser(userId)
+    .catch((e) => {
+      logger.warn("adminDeleteUser: deleteUser failed", { userId, error: e });
+      return undefined;
+    });
+
+  logger.info("adminDeleteUser: deleted", { userId, by: callerUid });
   return { success: true };
 });
 
@@ -576,6 +711,78 @@ export const leaveSession = onCall({ region: REGION }, async (request) => {
     if (waitlistIds.includes(uid)) {
       tx.update(sessionRef, {
         waitlistIds: waitlistIds.filter((x) => x !== uid),
+      });
+      return;
+    }
+    // Not a member — no-op (idempotent).
+  });
+
+  if (promotedUid) {
+    await notifyPromoted([promotedUid], sessionId, sessionTitle);
+  }
+
+  return { success: true };
+});
+
+// ---------------------------------------------------------------------------
+// removeAttendee — owner-coach or admin removes a specific player from a
+// session (attendee or waitlist). Mirrors leaveSession's waitlist promotion,
+// but acts on an arbitrary targetUid instead of the caller.
+// ---------------------------------------------------------------------------
+export const removeAttendee = onCall({ region: REGION }, async (request) => {
+  const uid = request.auth?.uid;
+  if (!uid) throw new HttpsError("unauthenticated", "Not authenticated");
+  if (request.auth?.token?.email_verified !== true) {
+    throw new HttpsError("permission-denied", "Email not verified");
+  }
+
+  const sessionId = request.data?.["sessionId"] as string | undefined;
+  const targetUid = request.data?.["userId"] as string | undefined;
+  if (!sessionId || !targetUid) {
+    throw new HttpsError("invalid-argument", "sessionId and userId required");
+  }
+
+  const callerIsAdmin = await isAdminUid(uid);
+  const sessionRef = db.collection("sessions").doc(sessionId);
+  let promotedUid: string | null = null;
+  let sessionTitle = "";
+
+  await db.runTransaction(async (tx) => {
+    const sessionDoc = await tx.get(sessionRef);
+    if (!sessionDoc.exists)
+      throw new HttpsError("not-found", "Session not found");
+
+    const session = sessionDoc.data()!;
+    // Only the owning coach or an admin may remove someone.
+    if (session["coachId"] !== uid && !callerIsAdmin) {
+      throw new HttpsError("permission-denied", "Not allowed");
+    }
+
+    const attendeeIds: string[] = session["attendeeIds"] ?? [];
+    const waitlistIds: string[] = session["waitlistIds"] ?? [];
+    const attendedIds: string[] = session["attendedIds"] ?? [];
+    sessionTitle = (session["title"] as string) ?? "";
+
+    if (attendeeIds.includes(targetUid)) {
+      const next = attendeeIds.filter((x) => x !== targetUid);
+      const update: Record<string, unknown> = { attendeeIds: next };
+      if (waitlistIds.length > 0) {
+        promotedUid = waitlistIds[0];
+        if (!next.includes(promotedUid)) next.push(promotedUid);
+        update["attendeeIds"] = next;
+        update["waitlistIds"] = waitlistIds.slice(1);
+      }
+      // Drop any attendance mark for the removed player.
+      if (attendedIds.includes(targetUid)) {
+        update["attendedIds"] = attendedIds.filter((x) => x !== targetUid);
+      }
+      tx.update(sessionRef, update);
+      return;
+    }
+
+    if (waitlistIds.includes(targetUid)) {
+      tx.update(sessionRef, {
+        waitlistIds: waitlistIds.filter((x) => x !== targetUid),
       });
       return;
     }

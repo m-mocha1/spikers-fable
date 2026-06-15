@@ -776,6 +776,18 @@ abstract class AppLocalizations {
   /// **'No players found'**
   String get noPlayers;
 
+  /// No description provided for @noPlayersMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'No players match your search'**
+  String get noPlayersMatch;
+
+  /// No description provided for @searchPlayers.
+  ///
+  /// In en, this message translates to:
+  /// **'Search players'**
+  String get searchPlayers;
+
   /// No description provided for @noCoaches.
   ///
   /// In en, this message translates to:
@@ -835,6 +847,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Mark {name} as unpaid?'**
   String confirmMarkUnpaid(String name);
+
+  /// No description provided for @delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get delete;
+
+  /// No description provided for @deleteAccountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete account'**
+  String get deleteAccountTitle;
+
+  /// No description provided for @deleteAccountConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Permanently delete {name}\'s account? This removes their login and all data and cannot be undone.'**
+  String deleteAccountConfirm(String name);
+
+  /// No description provided for @accountDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Account deleted'**
+  String get accountDeleted;
+
+  /// No description provided for @remove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get remove;
+
+  /// No description provided for @removePlayer.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove player'**
+  String get removePlayer;
+
+  /// No description provided for @confirmRemovePlayer.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {name} from this session?'**
+  String confirmRemovePlayer(String name);
 
   /// No description provided for @daysLeft.
   ///
@@ -1159,12 +1213,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This cannot be undone.'**
   String get confirmDeleteAnnouncementBody;
-
-  /// No description provided for @delete.
-  ///
-  /// In en, this message translates to:
-  /// **'Delete'**
-  String get delete;
 
   /// No description provided for @sessionsHistory.
   ///

@@ -21,4 +21,9 @@ abstract class PlayersRepository {
   /// members.
   Future<void> markUnpaid(String playerUid,
       {required String coachUid, required String coachName});
+
+  /// Admin-only: permanently deletes the player's account (Auth + Firestore
+  /// + photo) via the adminDeleteUser callable. Authorization is enforced
+  /// server-side.
+  Future<void> deletePlayer(String uid);
 }

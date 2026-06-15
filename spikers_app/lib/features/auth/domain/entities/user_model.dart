@@ -35,7 +35,9 @@ class UserModel {
   });
 
   int get age => AgeCalculator.fromDate(dateOfBirth);
-  bool get isCoach => role == 'coach';
+  bool get isAdmin => role == 'admin';
+  // Admins inherit all coach abilities, so coach-gated UI also covers admins.
+  bool get isCoach => role == 'coach' || role == 'admin';
   bool get isPaid =>
       lifetimeMember ||
       (paidUntil != null && paidUntil!.isAfter(DateTime.now()));

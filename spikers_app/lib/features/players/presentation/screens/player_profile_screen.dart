@@ -1,18 +1,46 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/app_snackbar.dart';
+import '../../../../core/widgets/confirm_dialog.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'package:spikers_app/features/auth/domain/entities/user_model.dart';
 import 'package:spikers_app/core/widgets/profile_info.dart';
+import '../../../auth/presentation/providers/auth_providers.dart';
 import '../widgets/payment_confirm_dialog.dart';
 import '../providers/players_providers.dart';
 
 class PlayerProfileScreen extends ConsumerWidget {
   final String? userId;
   const PlayerProfileScreen({super.key, this.userId});
+
+  Future<void> _confirmDeleteUser(
+    BuildContext context,
+    WidgetRef ref,
+    String uid,
+    String name,
+    AppLocalizations l,
+  ) async {
+    final confirmed = await showDeleteConfirm(
+      context,
+      title: l.deleteAccountTitle,
+      message: l.deleteAccountConfirm(name),
+      confirmLabel: l.delete,
+      cancelLabel: l.cancel,
+    );
+    if (!confirmed) return;
+    try {
+      await ref.read(playersRepositoryProvider).deletePlayer(uid);
+      showAppSnackbar(l.accountDeleted);
+      if (context.mounted) context.pop();
+    } catch (_) {
+      showAppSnackbar(l.unknownError);
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -50,10 +78,22 @@ class PlayerProfileScreen extends ConsumerWidget {
           );
         }
 
+        final isAdmin = ref.watch(isAdminProvider);
+
         return Scaffold(
           appBar: AppBar(
             title:
                 Text(user.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+            actions: [
+              if (isAdmin)
+                IconButton(
+                  tooltip: l.delete,
+                  icon: const Icon(Icons.delete_outline,
+                      color: AppColors.errorRed),
+                  onPressed: () =>
+                      _confirmDeleteUser(context, ref, user.uid, user.name, l),
+                ),
+            ],
           ),
           body: SingleChildScrollView(
             padding: const EdgeInsets.all(24),

@@ -124,6 +124,8 @@
   "coachesTab": "المدربون",
   "allGenders": "الكل",
   "noPlayers": "لا يوجد لاعبون",
+  "noPlayersMatch": "لا يوجد لاعبون مطابقون لبحثك",
+  "searchPlayers": "ابحث عن لاعبين",
   "noCoaches": "لا يوجد مدربون",
   "paid": "مدفوع",
   "unpaid": "غير مدفوع",
@@ -140,6 +142,23 @@
   },
   "confirmMarkUnpaid": "وضع علامة على {name} كغير مدفوع؟",
   "@confirmMarkUnpaid": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "delete": "حذف",
+  "deleteAccountTitle": "حذف الحساب",
+  "deleteAccountConfirm": "حذف حساب {name} نهائياً؟ سيؤدي ذلك إلى إزالة تسجيل دخوله وجميع بياناته ولا يمكن التراجع عن ذلك.",
+  "@deleteAccountConfirm": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "accountDeleted": "تم حذف الحساب",
+  "remove": "إزالة",
+  "removePlayer": "إزالة لاعب",
+  "confirmRemovePlayer": "إزالة {name} من هذه الجلسة؟",
+  "@confirmRemovePlayer": {
     "placeholders": {
       "name": { "type": "String" }
     }

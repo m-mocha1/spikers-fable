@@ -26,19 +26,17 @@ class FloatingNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        16,
-        0,
-        16,
-        MediaQuery.of(context).padding.bottom + 12,
-      ),
-      child: Material(
-        color: AppColors.navyLight,
-        borderRadius: BorderRadius.circular(28),
-        clipBehavior: Clip.antiAlias,
-        child: SizedBox(
+    return Material(
+      color: AppColors.navyBlue,
+      child: SafeArea(
+        top: false,
+        child: Container(
           height: 56,
+          decoration: BoxDecoration(
+            border: Border(
+              top: BorderSide(color: AppColors.white.withValues(alpha: 0.08)),
+            ),
+          ),
           child: Row(
             children: [
               for (var i = 0; i < items.length; i++)

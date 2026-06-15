@@ -77,6 +77,10 @@ class SessionsRepositoryImpl implements SessionsRepository {
       _wrap(() => _remote.markAttended(sessionId, userId, attended));
 
   @override
+  Future<void> removeAttendee(String sessionId, String userId) =>
+      _wrap(() => _remote.removeAttendee(sessionId, userId));
+
+  @override
   Future<void> archiveExpiredNow() => _remote.archiveExpiredNow();
 
   Future<void> _wrap(Future<void> Function() call) async {

@@ -63,6 +63,10 @@ abstract class SessionsRepository {
   /// Throws [SessionActionException].
   Future<void> markAttended(String sessionId, String userId, bool attended);
 
+  /// Owner-coach or admin removes a player from the session (attendee or
+  /// waitlist). Throws [SessionActionException].
+  Future<void> removeAttendee(String sessionId, String userId);
+
   /// Best-effort on-demand archival; never throws (the scheduled cleanup
   /// function archives expired sessions anyway).
   Future<void> archiveExpiredNow();

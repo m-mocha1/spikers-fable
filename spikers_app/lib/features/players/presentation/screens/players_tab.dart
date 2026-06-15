@@ -14,11 +14,25 @@ import '../widgets/payment_confirm_dialog.dart';
 
 final _genderFilterProvider = StateProvider.autoDispose<String>((ref) => 'all');
 
-class PlayersTab extends ConsumerWidget {
+class PlayersTab extends ConsumerStatefulWidget {
   const PlayersTab({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<PlayersTab> createState() => _PlayersTabState();
+}
+
+class _PlayersTabState extends ConsumerState<PlayersTab> {
+  final _searchController = TextEditingController();
+  String _query = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     final playersAsync = ref.watch(playersProvider);
     final genderFilter = ref.watch(_genderFilterProvider);
@@ -28,9 +42,13 @@ class PlayersTab extends ConsumerWidget {
       error: (e, _) =>
           ErrorView(onRetry: () => ref.invalidate(playersProvider)),
       data: (players) {
-        final filtered = genderFilter == 'all'
-            ? players
-            : players.where((p) => p.gender == genderFilter).toList();
+        final q = _query.trim().toLowerCase();
+        final filtered = players.where((p) {
+          final matchesGender =
+              genderFilter == 'all' || p.gender == genderFilter;
+          final matchesQuery = q.isEmpty || p.name.toLowerCase().contains(q);
+          return matchesGender && matchesQuery;
+        }).toList();
 
         return Column(
           children: [
@@ -47,7 +65,7 @@ class PlayersTab extends ConsumerWidget {
                   ),
                   const SizedBox(width: 8),
                   _Chip(
-                    label: l.male,
+                    icon: Icons.male,
                     active: genderFilter == 'male',
                     onTap: () => ref
                         .read(_genderFilterProvider.notifier)
@@ -55,17 +73,51 @@ class PlayersTab extends ConsumerWidget {
                   ),
                   const SizedBox(width: 8),
                   _Chip(
-                    label: l.female,
+                    icon: Icons.female,
                     active: genderFilter == 'female',
                     onTap: () => ref
                         .read(_genderFilterProvider.notifier)
                         .state = 'female',
                   ),
-                  const Spacer(),
-                  Text(
-                    '${filtered.length}',
-                    style:
-                        const TextStyle(color: AppColors.grey, fontSize: 13),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextField(
+                      controller: _searchController,
+                      onChanged: (v) => setState(() => _query = v),
+                      textInputAction: TextInputAction.search,
+                      style: const TextStyle(
+                          color: AppColors.white, fontSize: 14),
+                      decoration: InputDecoration(
+                        isDense: true,
+                        hintText: l.searchPlayers,
+                        hintStyle: const TextStyle(
+                            color: AppColors.grey, fontSize: 13),
+                        prefixIcon: const Icon(Icons.search,
+                            color: AppColors.grey, size: 20),
+                        prefixIconConstraints: const BoxConstraints(
+                            minWidth: 36, minHeight: 36),
+                        suffixIcon: _query.isEmpty
+                            ? null
+                            : IconButton(
+                                visualDensity: VisualDensity.compact,
+                                icon: const Icon(Icons.close,
+                                    color: AppColors.grey, size: 18),
+                                onPressed: () {
+                                  _searchController.clear();
+                                  setState(() => _query = '');
+                                },
+                              ),
+                        suffixIconConstraints: const BoxConstraints(
+                            minWidth: 36, minHeight: 36),
+                        filled: true,
+                        fillColor: AppColors.navyLight,
+                        contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -73,7 +125,8 @@ class PlayersTab extends ConsumerWidget {
             Expanded(
               child: filtered.isEmpty
                   ? EmptyStateView(
-                      icon: Icons.group_outlined, title: l.noPlayers)
+                      icon: Icons.group_outlined,
+                      title: q.isEmpty ? l.noPlayers : l.noPlayersMatch)
                   : ListView.builder(
                       padding: const EdgeInsets.fromLTRB(16, 4, 16, 100),
                       itemCount: filtered.length,
@@ -282,14 +335,17 @@ class _PaidBadge extends StatelessWidget {
 }
 
 class _Chip extends StatelessWidget {
-  final String label;
+  final String? label;
+  final IconData? icon;
   final bool active;
   final VoidCallback onTap;
   const _Chip(
-      {required this.label, required this.active, required this.onTap});
+      {this.label, this.icon, required this.active, required this.onTap})
+      : assert(label != null || icon != null);
 
   @override
   Widget build(BuildContext context) {
+    final color = active ? AppColors.navyBlue : AppColors.white;
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
@@ -301,14 +357,16 @@ class _Chip extends StatelessWidget {
           border: Border.all(
               color: active ? AppColors.gold : AppColors.grey),
         ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: active ? AppColors.navyBlue : AppColors.white,
-            fontWeight: FontWeight.w600,
-            fontSize: 13,
-          ),
-        ),
+        child: icon != null
+            ? Icon(icon, color: color, size: 18)
+            : Text(
+                label!,
+                style: TextStyle(
+                  color: color,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                ),
+              ),
       ),
     );
   }

@@ -7,9 +7,15 @@ service cloud.firestore {
     function isVerified() {
       return isAuth() && request.auth.token.email_verified == true;
     }
+    function roleOf() {
+      return get(/databases/$(database)/documents/users/$(uid())).data.role;
+    }
+    // Admins inherit every coach ability, so coach checks accept both roles.
     function isCoach() {
-      return isAuth() &&
-             get(/databases/$(database)/documents/users/$(uid())).data.role == 'coach';
+      return isAuth() && (roleOf() == 'coach' || roleOf() == 'admin');
+    }
+    function isAdmin() {
+      return isAuth() && roleOf() == 'admin';
     }
     function sessionData(sessionId) {
       return get(/databases/$(database)/documents/sessions/$(sessionId)).data;

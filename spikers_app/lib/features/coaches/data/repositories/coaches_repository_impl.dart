@@ -9,4 +9,7 @@ class CoachesRepositoryImpl implements CoachesRepository {
 
   @override
   Stream<List<CoachSummary>> watchCoaches() => _remote.watchCoaches();
+
+  @override
+  Future<void> deleteCoach(String uid) => _remote.deleteCoach(uid);
 }

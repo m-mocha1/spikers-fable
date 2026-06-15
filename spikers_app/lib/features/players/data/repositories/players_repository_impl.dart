@@ -28,4 +28,7 @@ class PlayersRepositoryImpl implements PlayersRepository {
   Future<void> markUnpaid(String playerUid,
           {required String coachUid, required String coachName}) =>
       _remote.markUnpaid(playerUid, coachUid: coachUid, coachName: coachName);
+
+  @override
+  Future<void> deletePlayer(String uid) => _remote.deletePlayer(uid);
 }
