@@ -3,6 +3,7 @@ description: "Jerusalem Spikers Volleyball Club App"
 publish_to: 'none'
 
 version: 1.0.1+10
+# comment: "version: x.y.z+build_number" where:
 
 environment:
   sdk: ^3.11.5
