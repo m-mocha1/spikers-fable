@@ -40,10 +40,10 @@ abstract class AuthRepository {
     required String name,
     required String email,
     required String password,
-    required String gender,
-    required DateTime dateOfBirth,
-    required int heightCm,
-    required int weightKg,
+    String? gender,
+    DateTime? dateOfBirth,
+    int? heightCm,
+    int? weightKg,
     required String role,
     required String coachKey,
     XFile? photoFile,
@@ -72,4 +72,9 @@ abstract class AuthRepository {
   Future<void> updateProfilePhoto(XFile image);
 
   Future<void> updateBodyMetrics({required int heightCm, required int weightKg});
+
+  /// Sets gender and/or date of birth. Only writes the provided fields; the
+  /// Firestore rules enforce set-once (a missing value can be filled in, but
+  /// an existing one cannot be changed).
+  Future<void> updateProfileBasics({String? gender, DateTime? dateOfBirth});
 }

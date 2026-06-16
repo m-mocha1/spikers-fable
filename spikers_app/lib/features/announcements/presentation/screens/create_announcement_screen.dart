@@ -26,6 +26,7 @@ class _CreateAnnouncementScreenState
   final _bodyCtrl = TextEditingController();
   bool _isSubmitting = false;
   AnnouncementModel? _existing;
+  String _audience = 'all';
 
   @override
   void initState() {
@@ -35,6 +36,7 @@ class _CreateAnnouncementScreenState
       _existing = arg;
       _titleCtrl.text = arg.title;
       _bodyCtrl.text = arg.body;
+      _audience = arg.audience;
     }
   }
 
@@ -54,7 +56,11 @@ class _CreateAnnouncementScreenState
     final body = _bodyCtrl.text.trim();
     try {
       if (_existing != null) {
-        await repo.edit(id: _existing!.id, title: title, body: body);
+        await repo.edit(
+            id: _existing!.id,
+            title: title,
+            body: body,
+            audience: _audience);
       } else {
         final user = ref.read(currentUserProvider).value;
         if (user == null) return;
@@ -62,7 +68,8 @@ class _CreateAnnouncementScreenState
             title: title,
             body: body,
             authorId: user.uid,
-            authorName: user.name);
+            authorName: user.name,
+            audience: _audience);
       }
       if (!mounted) return;
       Navigator.of(context).pop();
@@ -106,6 +113,24 @@ class _CreateAnnouncementScreenState
                   maxLines: 6,
                   validator: (v) =>
                       (v == null || v.trim().isEmpty) ? l.requiredField : null,
+                ),
+                const SizedBox(height: 24),
+                Text(l.audience,
+                    style: const TextStyle(fontWeight: FontWeight.w600)),
+                const SizedBox(height: 8),
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: SegmentedButton<String>(
+                    segments: [
+                      ButtonSegment(value: 'all', label: Text(l.allGenders)),
+                      ButtonSegment(value: 'male', label: Text(l.male)),
+                      ButtonSegment(value: 'female', label: Text(l.female)),
+                    ],
+                    selected: {_audience},
+                    showSelectedIcon: false,
+                    onSelectionChanged: (s) =>
+                        setState(() => _audience = s.first),
+                  ),
                 ),
                 const SizedBox(height: 24),
                 BrandedButton(

@@ -50,6 +50,10 @@ class NotificationsService {
     final sessionId = message.data['sessionId'] as String?;
     if (sessionId != null && sessionId.isNotEmpty) {
       appRouter.push(Routes.sessionDetail, extra: sessionId);
+      return;
+    }
+    if (message.data['kind'] == 'announcement') {
+      appRouter.push(Routes.announcements);
     }
   }
 }

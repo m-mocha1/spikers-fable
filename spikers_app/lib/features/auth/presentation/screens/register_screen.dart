@@ -37,7 +37,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   bool _showPass = false;
   bool _showConfirm = false;
-  String _gender = 'male';
+  String? _gender; // optional — null means "not provided"
   String _role = 'player';
   DateTime? _dob;
   XFile? _photoFile;
@@ -139,7 +139,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate() || _loading) return;
-    if (_dob == null) return;
     final l = AppLocalizations.of(context)!;
     setState(() => _loading = true);
     try {
@@ -148,9 +147,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             email: _emailCtrl.text,
             password: _passCtrl.text,
             gender: _gender,
-            dateOfBirth: _dob!,
-            heightCm: int.parse(_heightCtrl.text.trim()),
-            weightKg: int.parse(_weightCtrl.text.trim()),
+            dateOfBirth: _dob,
+            heightCm: int.tryParse(_heightCtrl.text.trim()),
+            weightKg: int.tryParse(_weightCtrl.text.trim()),
             role: _role,
             coachKey: _coachKeyCtrl.text,
             photoFile: _photoFile,
@@ -170,6 +169,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       context.go(Routes.verifyEmail);
     } on AuthException catch (e) {
       showAppSnackbar(authErrorMessage(l, e.code));
+    } catch (_) {
+      // Any non-auth failure (e.g. a rejected user-doc write) must surface
+      // rather than silently leaving the user on the form.
+      showAppSnackbar(l.errorOccurred);
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -286,8 +289,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               ),
               const SizedBox(height: 24),
 
-              // --- Gender ---
-              Text(l.gender,
+              // --- Gender (optional) ---
+              Text('${l.gender} (${l.optional})',
                   style: const TextStyle(
                       color: AppColors.gold, fontWeight: FontWeight.w600)),
               const SizedBox(height: 8),
@@ -296,60 +299,55 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   _GenderChip(
                     label: l.male,
                     selected: _gender == 'male',
-                    onTap: () => setState(() => _gender = 'male'),
+                    // Tapping a selected chip clears it — gender is optional.
+                    onTap: () => setState(
+                        () => _gender = _gender == 'male' ? null : 'male'),
                   ),
                   const SizedBox(width: 12),
                   _GenderChip(
                     label: l.female,
                     selected: _gender == 'female',
-                    onTap: () => setState(() => _gender = 'female'),
+                    onTap: () => setState(
+                        () => _gender = _gender == 'female' ? null : 'female'),
                   ),
                 ],
               ),
               const SizedBox(height: 24),
 
-              // --- Date of Birth ---
+              // --- Date of Birth (optional) ---
               BrandedTextField(
-                label: l.dateOfBirth,
+                label: '${l.dateOfBirth} (${l.optional})',
                 hint: l.selectDate,
                 controller: _dobCtrl,
                 readOnly: true,
                 onTap: _pickDate,
                 suffixIcon: const Icon(Icons.calendar_today_outlined,
                     color: AppColors.grey),
-                validator: (v) =>
-                    (v == null || v.isEmpty) ? l.requiredField : null,
               ),
               const SizedBox(height: 16),
 
-              // --- Height & Weight ---
+              // --- Height & Weight (optional) ---
               Row(
                 children: [
                   Expanded(
                     child: BrandedTextField(
-                      label: l.height,
+                      label: '${l.height} (${l.optional})',
                       hint: l.heightHint,
                       controller: _heightCtrl,
                       keyboardType: TextInputType.number,
-                      validator: (v) => Validators.intInRange(v,
-                          min: 100,
-                          max: 250,
-                          emptyMsg: l.requiredField,
-                          invalidMsg: l.invalidHeight),
+                      validator: (v) => Validators.optionalIntInRange(v,
+                          min: 100, max: 250, invalidMsg: l.invalidHeight),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: BrandedTextField(
-                      label: l.weight,
+                      label: '${l.weight} (${l.optional})',
                       hint: l.weightHint,
                       controller: _weightCtrl,
                       keyboardType: TextInputType.number,
-                      validator: (v) => Validators.intInRange(v,
-                          min: 20,
-                          max: 200,
-                          emptyMsg: l.requiredField,
-                          invalidMsg: l.invalidWeight),
+                      validator: (v) => Validators.optionalIntInRange(v,
+                          min: 20, max: 200, invalidMsg: l.invalidWeight),
                     ),
                   ),
                 ],

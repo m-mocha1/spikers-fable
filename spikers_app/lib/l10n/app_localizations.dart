@@ -212,6 +212,30 @@ abstract class AppLocalizations {
   /// **'Gender'**
   String get gender;
 
+  /// No description provided for @audience.
+  ///
+  /// In en, this message translates to:
+  /// **'Audience'**
+  String get audience;
+
+  /// No description provided for @optional.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional'**
+  String get optional;
+
+  /// No description provided for @notSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get notSet;
+
+  /// No description provided for @completeProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete profile'**
+  String get completeProfile;
+
   /// No description provided for @dateOfBirth.
   ///
   /// In en, this message translates to:
@@ -373,6 +397,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Check back later for upcoming sessions'**
   String get noSessionsDesc;
+
+  /// No description provided for @completeProfileForSessions.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete your profile'**
+  String get completeProfileForSessions;
+
+  /// No description provided for @completeProfileForSessionsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your gender and date of birth so we can show the sessions that match you.'**
+  String get completeProfileForSessionsDesc;
 
   /// No description provided for @sessionCreated.
   ///

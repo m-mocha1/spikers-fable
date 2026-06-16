@@ -1,5 +1,87 @@
 # CLAUDE.md
 
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+---
+
+# REPOSITORY GUIDE (CONCRETE — READ FIRST)
+
+The team standards / philosophy follow below this section. This top section is the factual, this-repo-specific guide. Where the two disagree (e.g. the idealized folder tree below references `docs/` and `memory/` directories that do not exist), trust this section and the actual code.
+
+## Repo layout
+
+This is a monorepo with three concerns:
+
+- `spikers_app/` — the Flutter app (all `flutter` commands run from here).
+- `functions/` — Firebase Cloud Functions (TypeScript, Node 22, 2nd gen, region `europe-west1`).
+- Repo root — Firebase config: `firebase.json`, `firestore.rules`, `firestore.indexes.json`, `storage.rules`, `cors.json`. All `firebase deploy` commands run from here.
+
+## Common commands
+
+Flutter (run from `spikers_app/`):
+
+```bash
+flutter pub get                      # install deps
+flutter run                          # run on a device/emulator
+flutter analyze                      # lint (must be clean before done)
+flutter test                         # full test suite
+flutter test test/features/auth/auth_repository_test.dart   # single test file
+flutter test --plain-name "writes only the provided fields" # single test by name
+flutter gen-l10n                     # REGENERATE localizations after editing lib/l10n/*.arb
+dart run flutter_launcher_icons      # regenerate app icons after changing assets/images/logo.png
+flutter build apk | appbundle | ios  # release builds
+```
+
+Cloud Functions (run from `functions/`):
+
+```bash
+npm run build        # tsc compile (catches type errors before deploy)
+npm run build:watch
+```
+
+Firebase deploy (run from repo root — these touch production):
+
+```bash
+firebase deploy --only firestore:rules
+firebase deploy --only firestore:indexes
+firebase deploy --only storage
+firebase deploy --only functions
+firebase deploy --only functions:onAnnouncementCreated   # single function
+```
+
+The Functions region (`europe-west1`) must stay in sync between `functions/src/index.ts` (`REGION`) and the client (`kFunctionsRegion` in `lib/core/firebase/firebase_providers.dart`).
+
+## Architecture (the parts that span multiple files)
+
+**Strict layering — never skip a layer:**
+`presentation (screens/widgets)` → Riverpod `providers` → `domain/repositories` (abstract interface) → `data/repositories` (`*_impl`) → `data/datasources` (`*_remote_datasource`) → Firebase SDK. Each feature lives under `lib/features/<feature>/{data,domain,presentation}`; cross-feature shared code lives in `lib/core/`.
+
+**Firebase access is always indirected through providers.** Repositories never touch `FirebaseFirestore.instance` etc. directly — they receive the SDK objects from the providers in `lib/core/firebase/firebase_providers.dart`. This is what lets tests override them with `fake_cloud_firestore` / `firebase_auth_mocks`.
+
+**Auth is a shared singleton, not a plain provider.** `AuthRepositoryImpl.instance` (in `data/repositories/auth_repository_impl.dart`) is a process-wide singleton bootstrapped in `main.dart` *before* `runApp`, because a legacy GetX shim and the go_router redirects (which run outside the widget tree) need the same session as Riverpod. `authRepositoryProvider` just returns that instance. `currentUserProvider` is the `StreamProvider<UserModel?>` everything keys off — when it emits `null` (sign-out), dependent feature state (sessions, notifications) tears itself down. Session restore reads credentials from `flutter_secure_storage` and re-signs-in on launch.
+
+**Routing is centralized** in `lib/core/router/app_router.dart`. Path constants live in the `Routes` class (no hardcoded route strings elsewhere). Coach-only routes use the `_coachOnly` redirect, which reads `AuthRepositoryImpl.instance` directly.
+
+**Security is server-enforced — the UI is never the authority.** Two layers hold the truth:
+- `firestore.rules` — role checks (`isCoach`/`isAdmin` read `users/{uid}.role`), email-verification gating (`isVerified` checks the `email_verified` token claim), and field whitelists via `diff().affectedKeys().hasOnly([...])`. Note: `sessions` are `allow update: if false` and `allow delete: if false` from the client; users `create` forces `role == 'player'`; gender/DOB are set-once (may appear in the update diff only if not already present).
+- Cloud Functions (`functions/src/index.ts`, Admin SDK, bypass rules) own every privileged mutation: `joinSession`/`leaveSession`/`removeAttendee`/`updateSessionCapacity` (transactional, with FIFO waitlist promotion), `cancelSession`, `markAttended` (also increments `attendanceCount`), `validateCoachKey` (the coach secret never reaches the client; promotes the caller to `role:'coach'` server-side, rate-limited), and `adminDeleteUser`.
+
+**Public vs private user data.** The full `users/{uid}` doc is readable only by the owner and coaches. The `mirrorUserPublic` trigger maintains `users_public/{uid}` with just the safe fields (`name`, `photoUrl`, `role`, `gender`, `attendanceCount`) for any verified user to read. FCM tokens live at `users/{uid}/private/fcm` specifically so token refreshes don't fan out to the many client listeners on the `users` collection.
+
+**Scheduled / trigger functions:** `cleanupUnverifiedUsers` (every 5 min — deletes registrations unverified after 30 min, self-heals ones that actually verified), `sessionCleanup` (archives ended sessions into `sessions_history`), `createRecurringSessions` (nightly 21:00 Asia/Jerusalem, materializes tomorrow's sessions from `recurring_sessions`), `onSessionCreated` / `onAnnouncementCreated` (FCM fan-out, audience-aware).
+
+**Notifications:** Functions send FCM multicasts; the client `NotificationsService` (`features/notifications/application/`) shows foreground banners via local notifications and routes taps (`sessionId` → session detail, `kind:'announcement'` → announcements). It is disabled under `kDebugMode`.
+
+## Conventions & gotchas
+
+- **Localization is mandatory for user-facing strings.** Add keys to BOTH `lib/l10n/app_en.arb` and `lib/l10n/app_ar.arb`, then run `flutter gen-l10n`. Arabic (`ar`) is a first-class locale; RTL `Directionality` is set in `main.dart`.
+- **`fake_cloud_firestore` does NOT enforce security rules.** Repository tests verify app logic only; rule changes must be validated manually against deployed rules. Tests use `mocktail` (remember `registerFallbackValue` for `Map`/custom-type matchers).
+- **Email-verification token refresh:** after a user verifies, `reload()` alone is not enough — Firestore authenticates via the ID token, so you must call `getIdToken(true)` to refresh the `email_verified` claim before verified-only reads succeed (see `reloadAndCheckVerified`).
+- **App Check** is active (`main.dart`): debug provider in debug builds, Play Integrity / DeviceCheck in release.
+- Version/build number is in `spikers_app/pubspec.yaml` (`version:` line) — bump the build number before an App Store / Play resubmission.
+
+---
+
 # AI DEVELOPMENT OPERATING SYSTEM
 
 You are not merely a coding assistant.

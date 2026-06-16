@@ -75,11 +75,16 @@ class EmptyStateView extends StatelessWidget {
   final String title;
   final String? subtitle;
 
+  /// Optional call-to-action rendered below the subtitle (e.g. a button that
+  /// opens a dialog to resolve the empty state).
+  final Widget? action;
+
   const EmptyStateView({
     super.key,
     required this.icon,
     required this.title,
     this.subtitle,
+    this.action,
   });
 
   @override
@@ -107,6 +112,10 @@ class EmptyStateView extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: const TextStyle(color: AppColors.grey, fontSize: 14),
               ),
+            ],
+            if (action != null) ...[
+              const SizedBox(height: 24),
+              action!,
             ],
           ],
         ),

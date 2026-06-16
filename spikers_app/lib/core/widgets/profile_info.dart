@@ -62,7 +62,9 @@ class ProfileInfoCard extends StatelessWidget {
           _InfoRow(
             icon: Icons.person_outline,
             label: l.gender,
-            value: user.gender == 'male' ? l.male : l.female,
+            value: user.gender == null
+                ? l.notSet
+                : (user.gender == 'male' ? l.male : l.female),
           ),
           if (!user.isCoach) ...[
             const Divider(height: 20),
@@ -92,7 +94,8 @@ class ProfileStatsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final safeAge = user.age < 0 ? 0 : user.age;
+    final age = user.age;
+    final ageText = (age == null || age < 0) ? '—' : '$age';
     final height = user.heightCm?.toString() ?? '—';
     final weight = user.weightKg?.toString() ?? '—';
 
@@ -109,7 +112,7 @@ class ProfileStatsRow extends StatelessWidget {
           const _StatDivider(),
           Expanded(child: _StatCell(value: weight, unit: l.weightHint)),
           const _StatDivider(),
-          Expanded(child: _StatCell(value: '$safeAge', unit: l.years)),
+          Expanded(child: _StatCell(value: ageText, unit: l.years)),
         ],
       ),
     );

@@ -82,6 +82,21 @@ void main() {
       expect(list, isEmpty);
     });
 
+    test('players with an incomplete profile get an empty list', () async {
+      await seedSession('s1');
+      final incomplete = UserModel(
+        uid: 'u1',
+        name: 'U',
+        role: 'player',
+        createdAt: DateTime(2026),
+        paidUntil: DateTime.now().add(const Duration(days: 10)),
+        // gender and dateOfBirth deliberately omitted
+      );
+      final list =
+          await repo.watchUpcoming(incomplete, emailVerified: true).first;
+      expect(list, isEmpty);
+    });
+
     test('players see gender-matching sessions within their age range',
         () async {
       await seedSession('mixed-ok');

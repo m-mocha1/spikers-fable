@@ -24,6 +24,12 @@ final playersProvider = StreamProvider.autoDispose<List<PlayerSummary>>(
 final peersProvider = StreamProvider.autoDispose<List<PeerSummary>>((ref) {
   final me = ref.watch(currentUserProvider).value;
   if (me == null) return const Stream.empty();
+  // users_public reads require email_verified in the rules; return empty
+  // instead of hitting PERMISSION_DENIED while unverified. Re-subscribes
+  // once verification flips (currentUser re-emits). See upcomingSessionsProvider.
+  if (!ref.watch(authRepositoryProvider).isEmailVerified) {
+    return Stream.value(const []);
+  }
   return ref
       .watch(playersRepositoryProvider)
       .watchPeers(myUid: me.uid, myGender: me.gender);

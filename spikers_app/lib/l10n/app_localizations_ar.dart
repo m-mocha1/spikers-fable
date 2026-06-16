@@ -66,6 +66,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get gender => 'الجنس';
 
   @override
+  String get audience => 'الفئة المستهدفة';
+
+  @override
+  String get optional => 'اختياري';
+
+  @override
+  String get notSet => 'غير محدد';
+
+  @override
+  String get completeProfile => 'إكمال الملف الشخصي';
+
+  @override
   String get dateOfBirth => 'تاريخ الميلاد';
 
   @override
@@ -147,6 +159,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get noSessionsDesc => 'تحقق لاحقاً من الجلسات القادمة';
+
+  @override
+  String get completeProfileForSessions => 'أكمل ملفك الشخصي';
+
+  @override
+  String get completeProfileForSessionsDesc =>
+      'أضف الجنس وتاريخ الميلاد حتى نعرض لك الجلسات المناسبة لك.';
 
   @override
   String get sessionCreated => 'تم إنشاء الجلسة بنجاح';

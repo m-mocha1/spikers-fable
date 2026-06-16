@@ -15,11 +15,19 @@ void main() {
 
   test('create then watchAll returns newest first', () async {
     await repo.create(
-        title: 'first', body: 'b1', authorId: 'c1', authorName: 'Coach');
+        title: 'first',
+        body: 'b1',
+        authorId: 'c1',
+        authorName: 'Coach',
+        audience: 'all');
     // fake server timestamps can collide within the same instant; nudge.
     await Future<void>.delayed(const Duration(milliseconds: 5));
     await repo.create(
-        title: 'second', body: 'b2', authorId: 'c1', authorName: 'Coach');
+        title: 'second',
+        body: 'b2',
+        authorId: 'c1',
+        authorName: 'Coach',
+        audience: 'all');
 
     final list = await repo.watchAll().first;
     expect(list.length, 2);
@@ -27,22 +35,32 @@ void main() {
     expect(list.last.title, 'first');
   });
 
-  test('watchLatestAt is null when empty and updates after create', () async {
-    expect(await repo.watchLatestAt().first, isNull);
+  test('create persists the chosen audience', () async {
     await repo.create(
-        title: 't', body: 'b', authorId: 'c1', authorName: 'Coach');
-    expect(await repo.watchLatestAt().first, isA<DateTime>());
+        title: 't',
+        body: 'b',
+        authorId: 'c1',
+        authorName: 'Coach',
+        audience: 'female');
+    final a = (await repo.watchAll().first).first;
+    expect(a.audience, 'female');
   });
 
-  test('edit updates fields, delete removes the doc', () async {
+  test('edit updates fields including audience, delete removes the doc',
+      () async {
     await repo.create(
-        title: 'orig', body: 'b', authorId: 'c1', authorName: 'Coach');
+        title: 'orig',
+        body: 'b',
+        authorId: 'c1',
+        authorName: 'Coach',
+        audience: 'all');
     final id = (await repo.watchAll().first).first.id;
 
-    await repo.edit(id: id, title: 'edited', body: 'b2');
+    await repo.edit(id: id, title: 'edited', body: 'b2', audience: 'male');
     final edited = (await repo.watchAll().first).first;
     expect(edited.title, 'edited');
     expect(edited.body, 'b2');
+    expect(edited.audience, 'male');
 
     await repo.delete(id);
     expect(await repo.watchAll().first, isEmpty);

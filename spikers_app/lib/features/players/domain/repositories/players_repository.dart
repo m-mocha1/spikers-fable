@@ -5,9 +5,10 @@ abstract class PlayersRepository {
   /// All players with payment data, name-sorted (coach roster view).
   Stream<List<PlayerSummary>> watchPlayers();
 
-  /// Same-gender peers from the public mirror, excluding the viewer.
+  /// Same-gender peers from the public mirror, excluding the viewer. When
+  /// [myGender] is null (not provided) all players are returned.
   Stream<List<PeerSummary>> watchPeers(
-      {required String myUid, required String myGender});
+      {required String myUid, String? myGender});
 
   /// Live user document for the profile screen; null when missing.
   Stream<UserModel?> watchPlayer(String uid);

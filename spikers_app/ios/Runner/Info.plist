@@ -67,9 +67,9 @@
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>NSCameraUsageDescription</key>
-	<string>This app needs camera access to take photos</string>
+	<string>Spikers uses the camera so you can take a profile photo for your account. For example, your photo helps coaches and teammates recognize you at training sessions. Adding a photo is optional.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>This app needs access to your photo library to select images</string>
+	<string>Spikers accesses your photo library so you can choose an existing picture as your profile photo — for example, to help coaches recognize you at training sessions. Selecting a photo is optional.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>

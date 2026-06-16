@@ -1,12 +1,9 @@
 import '../entities/announcement.dart';
 
 abstract class AnnouncementsRepository {
-  /// All announcements, newest first.
+  /// All announcements, newest first. Audience filtering for players happens
+  /// client-side (see visibleAnnouncementsProvider); coaches see the full list.
   Stream<List<AnnouncementModel>> watchAll();
-
-  /// createdAt of the newest announcement; null when there are none.
-  /// Drives the unread badge.
-  Stream<DateTime?> watchLatestAt();
 
   /// Stamps the user's lastSeenAnnouncementsAt to now.
   Future<void> markRead(String uid);
@@ -16,12 +13,14 @@ abstract class AnnouncementsRepository {
     required String body,
     required String authorId,
     required String authorName,
+    required String audience,
   });
 
   Future<void> edit({
     required String id,
     required String title,
     required String body,
+    required String audience,
   });
 
   Future<void> delete(String id);

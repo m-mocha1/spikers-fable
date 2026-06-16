@@ -33,4 +33,18 @@ class Validators {
     if (n == null || n < min || n > max) return invalidMsg;
     return null;
   }
+
+  /// Like [intInRange] but treats an empty value as valid (the field is
+  /// optional). A non-empty value must still be a number within range.
+  static String? optionalIntInRange(
+    String? value, {
+    required int min,
+    required int max,
+    required String invalidMsg,
+  }) {
+    if (value == null || value.trim().isEmpty) return null;
+    final n = int.tryParse(value.trim());
+    if (n == null || n < min || n > max) return invalidMsg;
+    return null;
+  }
 }

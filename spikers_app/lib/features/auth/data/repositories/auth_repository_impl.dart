@@ -93,6 +93,7 @@ class AuthRepositoryImpl implements AuthRepository {
     if (user != null) {
       try {
         await _listenToUser(user.uid);
+        await _refreshTokenIfVerified();
         _updateFcmToken(user.uid);
       } catch (e) {
         debugPrint('auth: initial user listen/FCM setup failed — $e');
@@ -124,6 +125,7 @@ class AuthRepositoryImpl implements AuthRepository {
         _emit(null);
       } else {
         await _listenToUser(user.uid);
+        await _refreshTokenIfVerified();
         _updateFcmToken(user.uid);
       }
     } catch (_) {
@@ -163,6 +165,21 @@ class AuthRepositoryImpl implements AuthRepository {
     await firstSnap.future;
   }
 
+  /// Forces an ID-token refresh so the `email_verified` claim is present
+  /// before any verified-only Firestore reads run. signIn/restore mint a
+  /// token that can momentarily lack the claim; without this the home
+  /// shell's verified-only listeners (peers, announcements) hit
+  /// PERMISSION_DENIED, and a failed Firestore listen never recovers.
+  /// Mirror of the getIdToken(true) call in reloadAndCheckVerified.
+  Future<void> _refreshTokenIfVerified() async {
+    try {
+      final user = _remote.auth.currentUser;
+      if (user?.emailVerified == true) await user!.getIdToken(true);
+    } catch (_) {
+      // Non-fatal — reads may flash an error until the next token refresh.
+    }
+  }
+
   Future<void> _updateFcmToken(String uid) async {
     final messaging = _messaging;
     if (messaging == null) return;
@@ -196,6 +213,7 @@ class AuthRepositoryImpl implements AuthRepository {
       await _remote.signIn(email.trim(), password);
       await _credentials.save(email.trim(), password);
       await ready;
+      await _refreshTokenIfVerified();
     } on FirebaseAuthException catch (e) {
       throw AuthException(e.code);
     }
@@ -206,10 +224,10 @@ class AuthRepositoryImpl implements AuthRepository {
     required String name,
     required String email,
     required String password,
-    required String gender,
-    required DateTime dateOfBirth,
-    required int heightCm,
-    required int weightKg,
+    String? gender,
+    DateTime? dateOfBirth,
+    int? heightCm,
+    int? weightKg,
     required String role,
     required String coachKey,
     XFile? photoFile,
@@ -356,6 +374,21 @@ class AuthRepositoryImpl implements AuthRepository {
     if (uid == null) return;
     await _remote
         .updateUserDoc(uid, {'heightCm': heightCm, 'weightKg': weightKg});
+  }
+
+  @override
+  Future<void> updateProfileBasics(
+      {String? gender, DateTime? dateOfBirth}) async {
+    final uid = _lastUser?.uid;
+    if (uid == null) return;
+    // Only writes the provided fields. The set-once rule guarantees this can
+    // fill a missing value but never overwrite one that's already set.
+    final data = <String, dynamic>{
+      'gender': ?gender,
+      if (dateOfBirth != null) 'dateOfBirth': Timestamp.fromDate(dateOfBirth),
+    };
+    if (data.isEmpty) return;
+    await _remote.updateUserDoc(uid, data);
   }
 
   @visibleForTesting

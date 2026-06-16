@@ -11,9 +11,6 @@ class AnnouncementsRepositoryImpl implements AnnouncementsRepository {
   Stream<List<AnnouncementModel>> watchAll() => _remote.watchAll();
 
   @override
-  Stream<DateTime?> watchLatestAt() => _remote.watchLatestAt();
-
-  @override
   Future<void> markRead(String uid) => _remote.markRead(uid);
 
   @override
@@ -22,14 +19,23 @@ class AnnouncementsRepositoryImpl implements AnnouncementsRepository {
     required String body,
     required String authorId,
     required String authorName,
+    required String audience,
   }) =>
       _remote.create(
-          title: title, body: body, authorId: authorId, authorName: authorName);
+          title: title,
+          body: body,
+          authorId: authorId,
+          authorName: authorName,
+          audience: audience);
 
   @override
-  Future<void> edit(
-          {required String id, required String title, required String body}) =>
-      _remote.edit(id: id, title: title, body: body);
+  Future<void> edit({
+    required String id,
+    required String title,
+    required String body,
+    required String audience,
+  }) =>
+      _remote.edit(id: id, title: title, body: body, audience: audience);
 
   @override
   Future<void> delete(String id) => _remote.delete(id);

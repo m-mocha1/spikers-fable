@@ -32,7 +32,7 @@ class _AnnouncementsScreenState extends ConsumerState<AnnouncementsScreen> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     final isCoach = ref.watch(isCoachProvider);
-    final announcementsAsync = ref.watch(announcementsProvider);
+    final announcementsAsync = ref.watch(visibleAnnouncementsProvider);
     final myUid = ref.watch(currentUserProvider).value?.uid;
 
     return Scaffold(
@@ -79,6 +79,18 @@ class _AnnouncementCard extends ConsumerWidget {
     required this.announcement,
     required this.isAuthor,
   });
+
+  /// Human label for a non-'all' audience, e.g. "Male" / "Female".
+  String _audienceLabel(AppLocalizations l) {
+    switch (announcement.audience) {
+      case 'male':
+        return l.male;
+      case 'female':
+        return l.female;
+      default:
+        return l.allGenders;
+    }
+  }
 
   String _relativeTime(AppLocalizations l, DateTime d) {
     final diff = DateTime.now().difference(d);
@@ -193,6 +205,30 @@ class _AnnouncementCard extends ConsumerWidget {
                   ),
                 ),
               ),
+              if (announcement.audience != 'all') ...[
+                const SizedBox(width: 8),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: AppColors.grey.withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.group_outlined,
+                          size: 14, color: AppColors.grey),
+                      const SizedBox(width: 6),
+                      Text(_audienceLabel(l),
+                          style: const TextStyle(
+                              color: AppColors.grey,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600)),
+                    ],
+                  ),
+                ),
+              ],
               const SizedBox(width: 8),
               Text('· ${_relativeTime(l, announcement.createdAt)}',
                   style: const TextStyle(

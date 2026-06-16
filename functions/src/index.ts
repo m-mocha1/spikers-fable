@@ -320,6 +320,73 @@ export const onSessionCreated = onDocumentCreated(
 );
 
 // ---------------------------------------------------------------------------
+// onAnnouncementCreated — sends FCM to every verified user (except the
+// author) when a coach posts an announcement. Mirrors onSessionCreated.
+// ---------------------------------------------------------------------------
+export const onAnnouncementCreated = onDocumentCreated(
+  { document: "announcements/{announcementId}", region: REGION },
+  async (event) => {
+    const snap = event.data;
+    if (!snap) return;
+
+    const data = snap.data();
+    if (data["notified"] === true) return; // retry/idempotency guard
+
+    const title = (data["title"] as string) ?? "";
+    const body = (data["body"] as string) ?? "";
+    const authorId = (data["authorId"] as string) ?? "";
+    const authorName = (data["authorName"] as string) ?? "";
+    const audience = (data["audience"] as string) ?? "all";
+
+    // Target audience, excluding the author. Verified = verifiedAt != null
+    // (the same field cleanupUnverifiedUsers keys off of). For a gender
+    // target we query by gender (single-field index) and filter out
+    // unverified users in code to avoid a composite index.
+    let docs: FirebaseFirestore.QueryDocumentSnapshot[];
+    if (audience === "male" || audience === "female") {
+      const snap = await db
+        .collection("users")
+        .where("gender", "==", audience)
+        .get();
+      docs = snap.docs.filter((d) => d.data()["verifiedAt"] != null);
+    } else {
+      const snap = await db
+        .collection("users")
+        .where("verifiedAt", "!=", null)
+        .get();
+      docs = snap.docs;
+    }
+    const uids = docs.map((d) => d.id).filter((id) => id !== authorId);
+
+    const tokens = await fetchFcmTokens(uids);
+    if (tokens.length > 0) {
+      try {
+        for (const chunk of chunkArray(tokens, 500)) {
+          await admin.messaging().sendEachForMulticast({
+            tokens: chunk,
+            notification: {
+              title: `${authorName} posted: ${title}`,
+              body,
+            },
+            data: {
+              announcementId: event.params["announcementId"],
+              kind: "announcement",
+            },
+          });
+        }
+      } catch (e) {
+        logger.error("onAnnouncementCreated: FCM send failed", {
+          announcementId: event.params["announcementId"],
+          error: e,
+        });
+      }
+    }
+
+    await snap.ref.update({ notified: true });
+  }
+);
+
+// ---------------------------------------------------------------------------
 // cancelSession — deletes session + notifies all attendees
 // ---------------------------------------------------------------------------
 export const cancelSession = onCall({ region: REGION }, async (request) => {

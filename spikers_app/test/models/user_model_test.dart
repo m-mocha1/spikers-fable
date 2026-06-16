@@ -75,11 +75,30 @@ void main() {
       });
       final parsed = UserModel.fromDoc(snap);
       expect(parsed.name, '');
-      expect(parsed.gender, 'male');
+      expect(parsed.gender, isNull);
       expect(parsed.role, 'player');
       expect(parsed.photoUrl, isNull);
       expect(parsed.paidUntil, isNull);
       expect(parsed.lifetimeMember, false);
+    });
+
+    test('gender/DOB are optional: omitted from toMap and age is null',
+        () async {
+      final user = UserModel(
+        uid: 'u1',
+        name: 'No Profile',
+        role: 'player',
+        createdAt: DateTime(2026),
+      );
+      final map = user.toMap();
+      expect(map.containsKey('gender'), isFalse);
+      expect(map.containsKey('dateOfBirth'), isFalse);
+      expect(user.age, isNull);
+
+      final parsed = UserModel.fromDoc(await writeAndRead(map));
+      expect(parsed.gender, isNull);
+      expect(parsed.dateOfBirth, isNull);
+      expect(parsed.age, isNull);
     });
 
     test('isPaid: lifetime member is paid regardless of paidUntil', () {

@@ -9,6 +9,7 @@ import '../../../../core/utils/app_snackbar.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'package:spikers_app/core/widgets/edit_body_metrics_dialog.dart';
 import 'package:spikers_app/core/widgets/profile_info.dart';
+import 'package:spikers_app/core/widgets/set_profile_basics_dialog.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 
 class ProfileTab extends ConsumerStatefulWidget {
@@ -122,6 +123,13 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
           ),
           const SizedBox(height: 16),
           ProfileInfoCard(user: user, l: l),
+          if (user.gender == null || user.dateOfBirth == null) ...[
+            const SizedBox(height: 12),
+            _CompleteProfileCard(
+              l: l,
+              onTap: () => showSetProfileBasicsDialog(context, user),
+            ),
+          ],
           const SizedBox(height: 24),
           _LanguageToggle(l: l),
           const SizedBox(height: 16),
@@ -141,6 +149,50 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Shown on the owner's profile when gender and/or date of birth are not set
+/// yet. Opens the set-once dialog. Disappears once both are filled in.
+class _CompleteProfileCard extends StatelessWidget {
+  final AppLocalizations l;
+  final VoidCallback onTap;
+  const _CompleteProfileCard({required this.l, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(16),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.gold.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.gold),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.badge_outlined,
+                  size: 18, color: AppColors.gold),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  l.completeProfile,
+                  style: const TextStyle(
+                      color: AppColors.gold, fontWeight: FontWeight.w600),
+                ),
+              ),
+              const Icon(Icons.chevron_right, color: AppColors.gold),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -13,7 +13,7 @@ class PlayersRepositoryImpl implements PlayersRepository {
 
   @override
   Stream<List<PeerSummary>> watchPeers(
-          {required String myUid, required String myGender}) =>
+          {required String myUid, String? myGender}) =>
       _remote.watchPeers(myUid: myUid, myGender: myGender);
 
   @override

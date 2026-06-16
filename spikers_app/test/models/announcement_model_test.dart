@@ -22,6 +22,7 @@ void main() {
         'body': 'We start at 19:00 this week.',
         'authorId': 'coach1',
         'authorName': 'Coach Dana',
+        'audience': 'female',
         'createdAt': Timestamp.fromDate(created),
       });
       final parsed = AnnouncementModel.fromDoc(snap);
@@ -30,6 +31,7 @@ void main() {
       expect(parsed.body, 'We start at 19:00 this week.');
       expect(parsed.authorId, 'coach1');
       expect(parsed.authorName, 'Coach Dana');
+      expect(parsed.audience, 'female');
       expect(parsed.createdAt, created);
     });
 
@@ -40,6 +42,44 @@ void main() {
       expect(parsed.createdAt.isBefore(before), isFalse);
       expect(parsed.authorId, '');
       expect(parsed.authorName, '');
+    });
+
+    test('missing audience defaults to "all" (legacy docs stay visible)',
+        () async {
+      final snap = await writeAndRead({'title': 't', 'body': 'b'});
+      final parsed = AnnouncementModel.fromDoc(snap);
+      expect(parsed.audience, 'all');
+    });
+  });
+
+  group('AnnouncementModel.visibleTo', () {
+    AnnouncementModel withAudience(String audience) => AnnouncementModel(
+          id: 'a',
+          title: 't',
+          body: 'b',
+          authorId: 'c',
+          authorName: 'Coach',
+          createdAt: DateTime(2026),
+          audience: audience,
+        );
+
+    test('coaches and admins see every announcement', () {
+      for (final a in ['all', 'male', 'female']) {
+        expect(withAudience(a).visibleTo(isCoach: true, gender: 'male'), isTrue);
+      }
+    });
+
+    test('everyone audience is visible to any player', () {
+      expect(withAudience('all').visibleTo(isCoach: false, gender: 'male'),
+          isTrue);
+      expect(withAudience('all').visibleTo(isCoach: false, gender: 'female'),
+          isTrue);
+    });
+
+    test('players only see their own gender for a targeted announcement', () {
+      final girls = withAudience('female');
+      expect(girls.visibleTo(isCoach: false, gender: 'female'), isTrue);
+      expect(girls.visibleTo(isCoach: false, gender: 'male'), isFalse);
     });
   });
 }

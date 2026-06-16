@@ -26,20 +26,24 @@ class PlayersRemoteDataSource {
       });
 
   Stream<List<PeerSummary>> watchPeers(
-          {required String myUid, required String myGender}) =>
-      _db
-          .collection('users_public')
-          .where('role', isEqualTo: 'player')
-          .where('gender', isEqualTo: myGender)
-          .snapshots()
-          .map((snap) {
-        final peers = snap.docs
-            .where((d) => d.id != myUid)
-            .map(PeerSummary.fromDoc)
-            .toList()
-          ..sort((a, b) => a.name.compareTo(b.name));
-        return peers;
-      });
+      {required String myUid, String? myGender}) {
+    // Gender is optional on the profile. Without it we can't show same-gender
+    // peers, so we fall back to showing all players.
+    Query<Map<String, dynamic>> q = _db
+        .collection('users_public')
+        .where('role', isEqualTo: 'player');
+    if (myGender != null) {
+      q = q.where('gender', isEqualTo: myGender);
+    }
+    return q.snapshots().map((snap) {
+      final peers = snap.docs
+          .where((d) => d.id != myUid)
+          .map(PeerSummary.fromDoc)
+          .toList()
+        ..sort((a, b) => a.name.compareTo(b.name));
+      return peers;
+    });
+  }
 
   Stream<UserModel?> watchPlayer(String uid) => _db
       .collection('users')

@@ -18,6 +18,12 @@ class SessionsRepositoryImpl implements SessionsRepository {
     // hitting PERMISSION_DENIED.
     if (!emailVerified) return Stream.value(const []);
     if (!viewer.isCoach && !viewer.isPaid) return Stream.value(const []);
+    // Players must provide gender + date of birth before we can match them to
+    // gender-/age-gated sessions. Coaches manage all sessions, so they're
+    // exempt. The sessions tab surfaces a "complete your profile" prompt.
+    if (!viewer.isCoach && !viewer.hasCompleteProfile) {
+      return Stream.value(const []);
+    }
     return _remote.watchUpcoming(viewer);
   }
 

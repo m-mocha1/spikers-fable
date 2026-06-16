@@ -45,8 +45,12 @@ service cloud.firestore {
                     // server-side via the validateCoachKey callable.
                     && request.resource.data.role == 'player'
                     && isValidName(request.resource.data.name)
-                    && isValidGender(request.resource.data.gender)
-                    && isValidDob(request.resource.data.dateOfBirth)
+                    // gender and dateOfBirth are optional (App Store 5.1.1(v));
+                    // validate only when present.
+                    && (!hasField(request.resource.data, 'gender')
+                        || isValidGender(request.resource.data.gender))
+                    && (!hasField(request.resource.data, 'dateOfBirth')
+                        || isValidDob(request.resource.data.dateOfBirth))
                     && (!hasField(request.resource.data, 'heightCm')
                         || isValidHeight(request.resource.data.heightCm))
                     && (!hasField(request.resource.data, 'weightKg')
@@ -71,8 +75,17 @@ service cloud.firestore {
                               'lastSeenAnnouncementsAt'
                             ])
                         && isValidName(request.resource.data.name)
-                        && isValidGender(request.resource.data.gender)
-                        && isValidDob(request.resource.data.dateOfBirth)
+                        && (!hasField(request.resource.data, 'gender')
+                            || isValidGender(request.resource.data.gender))
+                        && (!hasField(request.resource.data, 'dateOfBirth')
+                            || isValidDob(request.resource.data.dateOfBirth))
+                        // gender and dateOfBirth are set-once: they may appear
+                        // in the diff only if they weren't already set, so a
+                        // user can fill in a missing value but never change one.
+                        && (!('gender' in request.resource.data.diff(resource.data).affectedKeys())
+                            || !hasField(resource.data, 'gender'))
+                        && (!('dateOfBirth' in request.resource.data.diff(resource.data).affectedKeys())
+                            || !hasField(resource.data, 'dateOfBirth'))
                         && (!hasField(request.resource.data, 'heightCm')
                             || isValidHeight(request.resource.data.heightCm))
                         && (!hasField(request.resource.data, 'weightKg')
@@ -154,13 +167,20 @@ service cloud.firestore {
     match /announcements/{announcementId} {
       allow read: if isVerified();
 
+      // audience is optional for backward compatibility: older app builds
+      // omit it, and a missing audience is treated as 'all' everywhere
+      // (model, providers, and the Cloud Function all default to 'all').
       allow create: if isVerified() && isCoach()
-                    && request.resource.data.authorId == uid();
+                    && request.resource.data.authorId == uid()
+                    && (!('audience' in request.resource.data)
+                        || request.resource.data.audience in ['all', 'male', 'female']);
 
       allow update: if isVerified() && isCoach()
                     && resource.data.authorId == uid()
                     && request.resource.data.diff(resource.data).affectedKeys()
-                        .hasOnly(['title', 'body']);
+                        .hasOnly(['title', 'body', 'audience'])
+                    && (!('audience' in request.resource.data)
+                        || request.resource.data.audience in ['all', 'male', 'female']);
 
       allow delete: if isVerified() && isCoach()
                     && resource.data.authorId == uid();

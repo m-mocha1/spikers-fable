@@ -13,15 +13,6 @@ class AnnouncementsRemoteDataSource {
       .snapshots()
       .map((snap) => snap.docs.map(AnnouncementModel.fromDoc).toList());
 
-  Stream<DateTime?> watchLatestAt() => _db
-      .collection('announcements')
-      .orderBy('createdAt', descending: true)
-      .limit(1)
-      .snapshots()
-      .map((snap) => snap.docs.isEmpty
-          ? null
-          : (snap.docs.first.data()['createdAt'] as Timestamp?)?.toDate());
-
   Future<void> markRead(String uid) =>
       _db.collection('users').doc(uid).update({
         'lastSeenAnnouncementsAt': FieldValue.serverTimestamp(),
@@ -32,12 +23,14 @@ class AnnouncementsRemoteDataSource {
     required String body,
     required String authorId,
     required String authorName,
+    required String audience,
   }) =>
       _db.collection('announcements').add({
         'title': title,
         'body': body,
         'authorId': authorId,
         'authorName': authorName,
+        'audience': audience,
         'createdAt': FieldValue.serverTimestamp(),
       });
 
@@ -45,10 +38,12 @@ class AnnouncementsRemoteDataSource {
     required String id,
     required String title,
     required String body,
+    required String audience,
   }) =>
       _db.collection('announcements').doc(id).update({
         'title': title,
         'body': body,
+        'audience': audience,
       });
 
   Future<void> delete(String id) =>

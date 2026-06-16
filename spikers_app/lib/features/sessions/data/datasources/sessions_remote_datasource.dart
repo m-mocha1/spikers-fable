@@ -27,7 +27,10 @@ class SessionsRemoteDataSource {
         .collection('sessions')
         .where('endTime', isGreaterThan: Timestamp.fromDate(DateTime.now()));
 
-    if (!viewer.isCoach) {
+    // Gender/age are optional on the profile. When a player hasn't provided
+    // them we skip that filter dimension and show the broader set rather than
+    // matching on a value we don't have.
+    if (!viewer.isCoach && viewer.gender != null) {
       query = query.where('gender', whereIn: [viewer.gender, 'mixed']);
     }
     query = query.orderBy('endTime').orderBy('startTime');
@@ -40,7 +43,9 @@ class SessionsRemoteDataSource {
           .toList();
       if (!viewer.isCoach) {
         final age = viewer.age;
-        all = all.where((s) => age >= s.minAge && age <= s.maxAge).toList();
+        if (age != null) {
+          all = all.where((s) => age >= s.minAge && age <= s.maxAge).toList();
+        }
       }
       all.sort((a, b) => a.startTime.compareTo(b.startTime));
       return all;

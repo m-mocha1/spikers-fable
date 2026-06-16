@@ -35,6 +35,8 @@ void main() {
         messaging: null,
       );
 
+  setUpAll(() => registerFallbackValue(<String, dynamic>{}));
+
   setUp(() {
     remote = _MockRemote();
     credentials = _MemoryCredentialStore();
@@ -133,6 +135,53 @@ void main() {
 
       expect(credentials.stored, isNull);
       expect(repo.currentUserNow, isNull);
+    });
+  });
+
+  group('updateProfileBasics', () {
+    Future<AuthRepositoryImpl> signedInRepo() async {
+      mockAuth =
+          MockFirebaseAuth(mockUser: MockUser(uid: 'u1', email: 'a@b.c'));
+      when(() => remote.auth).thenReturn(mockAuth);
+      credentials.stored = const StoredCredentials('a@b.c', 'secret');
+      when(() => remote.signIn(any(), any())).thenAnswer((_) async {
+        await mockAuth.signInWithEmailAndPassword(
+            email: 'a@b.c', password: 'secret');
+      });
+      when(() => remote.updateUserDoc(any(), any())).thenAnswer((_) async {});
+      await seedUserDoc('u1');
+      final repo = makeRepo();
+      await repo.init();
+      await repo.ready;
+      await repo.watchCurrentUser().first; // ensure _lastUser is populated
+      return repo;
+    }
+
+    test('writes only the provided fields', () async {
+      final repo = await signedInRepo();
+      await repo.updateProfileBasics(gender: 'female');
+      final data = verify(() => remote.updateUserDoc('u1', captureAny()))
+          .captured
+          .single as Map<String, dynamic>;
+      expect(data['gender'], 'female');
+      expect(data.containsKey('dateOfBirth'), isFalse);
+    });
+
+    test('writes dateOfBirth as a Timestamp when provided', () async {
+      final repo = await signedInRepo();
+      final dob = DateTime(2005, 6, 1);
+      await repo.updateProfileBasics(dateOfBirth: dob);
+      final data = verify(() => remote.updateUserDoc('u1', captureAny()))
+          .captured
+          .single as Map<String, dynamic>;
+      expect(data['dateOfBirth'], Timestamp.fromDate(dob));
+      expect(data.containsKey('gender'), isFalse);
+    });
+
+    test('no-op when nothing is provided', () async {
+      final repo = await signedInRepo();
+      await repo.updateProfileBasics();
+      verifyNever(() => remote.updateUserDoc(any(), any()));
     });
   });
 }

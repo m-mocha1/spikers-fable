@@ -66,6 +66,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get gender => 'Gender';
 
   @override
+  String get audience => 'Audience';
+
+  @override
+  String get optional => 'Optional';
+
+  @override
+  String get notSet => 'Not set';
+
+  @override
+  String get completeProfile => 'Complete profile';
+
+  @override
   String get dateOfBirth => 'Date of Birth';
 
   @override
@@ -147,6 +159,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noSessionsDesc => 'Check back later for upcoming sessions';
+
+  @override
+  String get completeProfileForSessions => 'Complete your profile';
+
+  @override
+  String get completeProfileForSessionsDesc =>
+      'Add your gender and date of birth so we can show the sessions that match you.';
 
   @override
   String get sessionCreated => 'Session created successfully';
