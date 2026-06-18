@@ -184,6 +184,13 @@ class AuthRepositoryImpl implements AuthRepository {
     final messaging = _messaging;
     if (messaging == null) return;
     try {
+      // iOS: getToken() throws `apns-token-not-set` if the APNs token hasn't
+      // been registered yet. Method swizzling registers it shortly after
+      // launch / permission grant, so wait for it before requesting the FCM
+      // token (Android returns null here and is unaffected).
+      if (defaultTargetPlatform == TargetPlatform.iOS) {
+        await _awaitApnsToken(messaging);
+      }
       final token = await messaging.getToken();
       if (token != null) await _writeTokenIfChanged(uid, token);
       await _tokenRefreshSub?.cancel();
@@ -192,6 +199,17 @@ class AuthRepositoryImpl implements AuthRepository {
       });
     } catch (e) {
       debugPrint('auth: FCM token update failed — $e');
+    }
+  }
+
+  /// Polls for the iOS APNs token (up to ~5s) so the subsequent getToken()
+  /// call doesn't throw `apns-token-not-set`. Returns once available or after
+  /// the timeout — getToken() then surfaces any remaining error to the caller.
+  Future<void> _awaitApnsToken(FirebaseMessaging messaging) async {
+    for (var i = 0; i < 10; i++) {
+      final apns = await messaging.getAPNSToken();
+      if (apns != null) return;
+      await Future<void>.delayed(const Duration(milliseconds: 500));
     }
   }
 
