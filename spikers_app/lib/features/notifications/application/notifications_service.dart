@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/router/app_router.dart';
@@ -16,7 +15,9 @@ class NotificationsService {
   StreamSubscription? _onMessageOpenedSub;
 
   Future<void> init() async {
-    if (kDebugMode) return;
+    // Foreground banners run in debug builds too, so push can be tested
+    // without a release build (background/system-tray delivery already
+    // worked in debug — only this foreground display was gated off).
     await FcmService.init();
 
     // Foreground: FCM delivers silently on iOS when

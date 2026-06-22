@@ -7,7 +7,6 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/firebase/firebase_providers.dart' show kFunctionsRegion;
 import 'package:spikers_app/features/auth/domain/entities/user_model.dart';
@@ -183,6 +182,18 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<void> _updateFcmToken(String uid) async {
     final messaging = _messaging;
     if (messaging == null) return;
+
+    // Attach the refresh listener FIRST, before the getToken() attempt below.
+    // On iOS the first getToken() can throw `apns-token-not-set`; if the
+    // listener were attached after it (as it once was), that throw would skip
+    // the listener and the token iOS issues moments later — once registration
+    // completes — would never be written. Captured here, a late token still
+    // lands in Firestore.
+    await _tokenRefreshSub?.cancel();
+    _tokenRefreshSub = messaging.onTokenRefresh.listen((t) {
+      _writeToken(uid, t);
+    });
+
     try {
       // iOS: getToken() throws `apns-token-not-set` if the APNs token hasn't
       // been registered yet. Method swizzling registers it shortly after
@@ -192,13 +203,12 @@ class AuthRepositoryImpl implements AuthRepository {
         await _awaitApnsToken(messaging);
       }
       final token = await messaging.getToken();
-      if (token != null) await _writeTokenIfChanged(uid, token);
-      await _tokenRefreshSub?.cancel();
-      _tokenRefreshSub = messaging.onTokenRefresh.listen((t) {
-        _writeTokenIfChanged(uid, t);
-      });
+      debugPrint(
+        '[FCM] getToken for $uid -> ${token == null ? 'NULL' : '${token.substring(0, 12)}… (len ${token.length})'}',
+      );
+      if (token != null) await _writeToken(uid, token);
     } catch (e) {
-      debugPrint('auth: FCM token update failed — $e');
+      debugPrint('[FCM] token update failed — $e');
     }
   }
 
@@ -213,15 +223,20 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
-  Future<void> _writeTokenIfChanged(String uid, String token) async {
+  // Always writes the token to users/{uid}/private/fcm. We intentionally do
+  // NOT short-circuit on a locally cached "last token": that optimization
+  // silently breaks delivery whenever local cache and Firestore diverge (app
+  // reinstall, a write that never landed, a server-side token cleanup) — the
+  // device keeps a valid token but never re-writes it, so the server has
+  // nothing to send to. The doc lives in /private specifically so this write
+  // doesn't fan out to user-collection listeners, making an idempotent write
+  // on each startup/sign-in/refresh cheap and safe.
+  Future<void> _writeToken(String uid, String token) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final key = 'fcm_last_token_$uid';
-      if (prefs.getString(key) == token) return;
       await _remote.writeFcmToken(uid, token);
-      await prefs.setString(key, token);
+      debugPrint('[FCM] token WRITTEN to users/$uid/private/fcm');
     } catch (e) {
-      debugPrint('auth: FCM token write failed — $e');
+      debugPrint('[FCM] token write FAILED — $e');
     }
   }
 
