@@ -71,20 +71,150 @@ async function requireAdmin(
 
 // FCM tokens live at users/{uid}/private/fcm.token (moved off the user doc
 // so token refreshes don't fan out to client listeners on the users
-// collection). Fetches in parallel; skips uids with no token document.
-async function fetchFcmTokens(uids: string[]): Promise<string[]> {
+// collection). Fetches in parallel, keeping each token's doc ref so dead
+// tokens can be pruned after a send. Skips uids with no token document.
+async function fetchFcmTokenRefs(
+  uids: string[]
+): Promise<{ token: string; ref: FirebaseFirestore.DocumentReference }[]> {
   if (uids.length === 0) return [];
   const docs = await Promise.all(
     uids.map((uid) =>
       db.collection("users").doc(uid).collection("private").doc("fcm").get()
     )
   );
-  const tokens: string[] = [];
+  const out: { token: string; ref: FirebaseFirestore.DocumentReference }[] = [];
   for (const doc of docs) {
     const t = doc.data()?.["token"] as string | undefined;
-    if (t) tokens.push(t);
+    if (t) out.push({ token: t, ref: doc.ref });
   }
-  return tokens;
+  return out;
+}
+
+// All players matching a session's gender + DOB + paid + age window. Shared
+// by onSessionCreated and cancelSession so the "who was this session for"
+// audience is computed identically in both places.
+async function matchSessionPlayers(
+  session: FirebaseFirestore.DocumentData
+): Promise<string[]> {
+  const gender = session["gender"];
+  const minAge = session["minAge"];
+  const maxAge = session["maxAge"];
+  if (
+    typeof gender !== "string" ||
+    !["male", "female", "mixed"].includes(gender) ||
+    typeof minAge !== "number" ||
+    typeof maxAge !== "number"
+  ) {
+    return [];
+  }
+  const genders = gender === "mixed" ? ["male", "female"] : [gender];
+  const snap = await db
+    .collection("users")
+    .where("role", "==", "player")
+    .where("gender", "in", genders)
+    .get();
+  const out: string[] = [];
+  for (const doc of snap.docs) {
+    const p = doc.data();
+    if (!p["dateOfBirth"]) continue;
+    if (!isPaid(p)) continue;
+    const age = calcAge(p["dateOfBirth"] as admin.firestore.Timestamp);
+    if (age >= minAge && age <= maxAge) out.push(doc.id);
+  }
+  return out;
+}
+
+// Every coach + admin uid. Staff are notified of every session create/cancel
+// regardless of the session's gender/age (they manage the program).
+async function fetchStaffUids(): Promise<string[]> {
+  const snap = await db
+    .collection("users")
+    .where("role", "in", ["coach", "admin"])
+    .get();
+  return snap.docs.map((d) => d.id);
+}
+
+// FCM error codes that mean a token is permanently dead (app uninstalled,
+// token rotated by a reinstall/update, or otherwise unroutable). Tokens that
+// fail with one of these are pruned so they stop silently swallowing sends.
+const PRUNABLE_FCM_ERRORS = new Set([
+  "messaging/registration-token-not-registered",
+  "messaging/invalid-registration-token",
+  "messaging/invalid-argument",
+]);
+
+type FcmContent = {
+  notification: { title: string; body: string };
+  data?: { [key: string]: string };
+};
+
+// Sends an FCM notification to a set of users and — crucially —
+// INSPECTS the per-token results. sendEachForMulticast resolves successfully
+// even when every individual token fails, so without this the senders were
+// blind: stale tokens failed silently and were never pruned, which is how
+// delivery can stop with nothing in the logs. We log success/failure counts
+// (+ a sample error code) and delete tokens FCM reports as permanently dead.
+async function sendFcmToUids(
+  uids: string[],
+  content: FcmContent,
+  label: string
+): Promise<void> {
+  const targets = await fetchFcmTokenRefs(uids);
+  if (targets.length === 0) {
+    logger.info(`${label}: no FCM tokens to send to`, { audience: uids.length });
+    return;
+  }
+
+  let success = 0;
+  let failure = 0;
+  const deadRefs: FirebaseFirestore.DocumentReference[] = [];
+  const errorCodes = new Set<string>();
+
+  for (const chunk of chunkArray(targets, 500)) {
+    let resp: admin.messaging.BatchResponse;
+    try {
+      resp = await admin.messaging().sendEachForMulticast({
+        tokens: chunk.map((t) => t.token),
+        notification: content.notification,
+        data: content.data,
+      });
+    } catch (e) {
+      // A thrown error means the whole batch failed (e.g. an FCM API /
+      // credential problem) — surface it, but don't prune on an inconclusive
+      // result.
+      logger.error(`${label}: FCM batch send threw`, { error: e });
+      failure += chunk.length;
+      continue;
+    }
+    success += resp.successCount;
+    failure += resp.failureCount;
+    resp.responses.forEach((r, i) => {
+      if (r.success) return;
+      const code = r.error?.code ?? "unknown";
+      errorCodes.add(code);
+      if (PRUNABLE_FCM_ERRORS.has(code)) deadRefs.push(chunk[i].ref);
+    });
+  }
+
+  logger.info(`${label}: FCM send complete`, {
+    audience: uids.length, // matched recipients
+    targeted: targets.length, // of those, how many had a token
+    success,
+    failure,
+    pruned: deadRefs.length,
+    errorCodes: [...errorCodes],
+  });
+
+  // Prune dead tokens so they stop silently failing every future send.
+  await Promise.all(
+    deadRefs.map((ref) =>
+      ref
+        .delete()
+        .catch((e) =>
+          logger.warn(`${label}: failed to prune dead token`, { error: e })
+        )
+    )
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -274,46 +404,28 @@ export const onSessionCreated = onDocumentCreated(
       return;
     }
 
-    const genders = gender === "mixed" ? ["male", "female"] : [gender];
+    // Matching players + all staff (coaches/admins), minus the creator.
+    const [players, staff] = await Promise.all([
+      matchSessionPlayers(session),
+      fetchStaffUids(),
+    ]);
+    const coachId = session["coachId"] as string;
+    const recipients = [...new Set([...players, ...staff])].filter(
+      (id) => id !== coachId
+    );
 
-    const playersSnap = await db
-      .collection("users")
-      .where("role", "==", "player")
-      .where("gender", "in", genders)
-      .get();
-
-    const matchedUids: string[] = [];
-    for (const doc of playersSnap.docs) {
-      const p = doc.data();
-      if (!p["dateOfBirth"]) continue;
-      if (!isPaid(p)) continue;
-      const age = calcAge(p["dateOfBirth"] as admin.firestore.Timestamp);
-      if (age >= minAge && age <= maxAge) {
-        matchedUids.push(doc.id);
-      }
-    }
-    const tokens = await fetchFcmTokens(matchedUids);
-
-    if (tokens.length > 0) {
-      const coachName = await fetchUserName(session["coachId"] as string);
-      try {
-        for (const chunk of chunkArray(tokens, 500)) {
-          await admin.messaging().sendEachForMulticast({
-            tokens: chunk,
-            notification: {
-              title: `${coachName} created a new practice ${title}`,
-              body: location,
-            },
-            data: { sessionId: event.params["sessionId"] },
-          });
-        }
-      } catch (e) {
-        logger.error("onSessionCreated: FCM send failed", {
-          sessionId: event.params["sessionId"],
-          error: e,
-        });
-      }
-    }
+    const coachName = await fetchUserName(coachId);
+    await sendFcmToUids(
+      recipients,
+      {
+        notification: {
+          title: `${coachName} created a new practice ${title}`,
+          body: location,
+        },
+        data: { sessionId: event.params["sessionId"] },
+      },
+      "onSessionCreated"
+    );
 
     await snap.ref.update({ notified: true });
   }
@@ -358,29 +470,20 @@ export const onAnnouncementCreated = onDocumentCreated(
     }
     const uids = docs.map((d) => d.id).filter((id) => id !== authorId);
 
-    const tokens = await fetchFcmTokens(uids);
-    if (tokens.length > 0) {
-      try {
-        for (const chunk of chunkArray(tokens, 500)) {
-          await admin.messaging().sendEachForMulticast({
-            tokens: chunk,
-            notification: {
-              title: `${authorName} posted: ${title}`,
-              body,
-            },
-            data: {
-              announcementId: event.params["announcementId"],
-              kind: "announcement",
-            },
-          });
-        }
-      } catch (e) {
-        logger.error("onAnnouncementCreated: FCM send failed", {
+    await sendFcmToUids(
+      uids,
+      {
+        notification: {
+          title: `${authorName} posted: ${title}`,
+          body,
+        },
+        data: {
           announcementId: event.params["announcementId"],
-          error: e,
-        });
-      }
-    }
+          kind: "announcement",
+        },
+      },
+      "onAnnouncementCreated"
+    );
 
     await snap.ref.update({ notified: true });
   }
@@ -411,51 +514,52 @@ export const cancelSession = onCall({ region: REGION }, async (request) => {
     throw new HttpsError("permission-denied", "Not your session");
   }
 
-  // Notify attendees before deleting
-  const attendeeIds: string[] = session["attendeeIds"] ?? [];
-  if (attendeeIds.length > 0) {
-    const tokens = await fetchFcmTokens(attendeeIds);
-    if (tokens.length > 0) {
-      const sessionTitle = session["title"] as string;
-      const coachName = await fetchUserName(session["coachId"] as string);
-      const startDate = (
-        session["startTime"] as admin.firestore.Timestamp
-      ).toDate();
-      const months = [
-        "Jan",
-        "Feb",
-        "Mar",
-        "Apr",
-        "May",
-        "Jun",
-        "Jul",
-        "Aug",
-        "Sep",
-        "Oct",
-        "Nov",
-        "Dec",
-      ];
-      const day = startDate.getDate().toString().padStart(2, "0");
-      const month = months[startDate.getMonth()];
-      const hh = startDate.getHours().toString().padStart(2, "0");
-      const mm = startDate.getMinutes().toString().padStart(2, "0");
-      const dateStr = `${day} ${month}  ${hh}:${mm}`;
+  // Notify everyone the session was advertised to (matching players + all
+  // staff), minus the canceller, before deleting.
+  const [players, staff] = await Promise.all([
+    matchSessionPlayers(session),
+    fetchStaffUids(),
+  ]);
+  const recipients = [...new Set([...players, ...staff])].filter(
+    (id) => id !== uid
+  );
+  if (recipients.length > 0) {
+    const sessionTitle = session["title"] as string;
+    const coachName = await fetchUserName(session["coachId"] as string);
+    const startDate = (
+      session["startTime"] as admin.firestore.Timestamp
+    ).toDate();
+    const months = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+    const day = startDate.getDate().toString().padStart(2, "0");
+    const month = months[startDate.getMonth()];
+    const hh = startDate.getHours().toString().padStart(2, "0");
+    const mm = startDate.getMinutes().toString().padStart(2, "0");
+    const dateStr = `${day} ${month}  ${hh}:${mm}`;
 
-      try {
-        for (const chunk of chunkArray(tokens, 500)) {
-          await admin.messaging().sendEachForMulticast({
-            tokens: chunk,
-            notification: {
-              title: sessionTitle,
-              body: `${coachName} cancelled practice ${sessionTitle} · ${dateStr}`,
-            },
-            data: { sessionId },
-          });
-        }
-      } catch (e) {
-        logger.error("cancelSession: FCM send failed", { sessionId, error: e });
-      }
-    }
+    await sendFcmToUids(
+      recipients,
+      {
+        notification: {
+          title: sessionTitle,
+          body: `${coachName} cancelled practice ${sessionTitle} · ${dateStr}`,
+        },
+        data: { sessionId },
+      },
+      "cancelSession"
+    );
   }
 
   await sessionRef.delete();
@@ -638,23 +742,17 @@ async function notifyPromoted(
   sessionId: string,
   sessionTitle: string
 ): Promise<void> {
-  if (uids.length === 0) return;
-  const tokens = await fetchFcmTokens(uids);
-  if (tokens.length === 0) return;
-  try {
-    for (const chunk of chunkArray(tokens, 500)) {
-      await admin.messaging().sendEachForMulticast({
-        tokens: chunk,
-        notification: {
-          title: sessionTitle,
-          body: "A spot opened — you're in!",
-        },
-        data: { sessionId, kind: "waitlist_promoted" },
-      });
-    }
-  } catch (e) {
-    logger.error("notifyPromoted: FCM send failed", { sessionId, error: e });
-  }
+  await sendFcmToUids(
+    uids,
+    {
+      notification: {
+        title: sessionTitle,
+        body: "A spot opened — you're in!",
+      },
+      data: { sessionId, kind: "waitlist_promoted" },
+    },
+    "notifyPromoted"
+  );
 }
 
 // ---------------------------------------------------------------------------
