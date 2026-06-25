@@ -57,6 +57,21 @@ class AuthRemoteDataSource {
         SetOptions(merge: true),
       );
 
+  // TEMP DIAGNOSTIC — remove once iOS FCM token registration is verified.
+  // Records where the FCM token path got to on this device so it can be read
+  // straight from the Firestore console at users/{uid}/private/fcm_debug
+  // (release builds strip the [FCM] debugPrints, so this is the only on-device
+  // signal). The private subcollection allows the owner to read/write even
+  // while unverified.
+  Future<void> writeFcmDebug(String uid, Map<String, dynamic> data) =>
+      db.collection('users').doc(uid).collection('private').doc('fcm_debug').set(
+        {
+          ...data,
+          'updatedAt': FieldValue.serverTimestamp(),
+        },
+        SetOptions(merge: true),
+      );
+
   /// Returns whether the backend accepted the coach key and promoted the
   /// caller. Throws on network/function errors.
   Future<bool> validateCoachKey(String key) async {

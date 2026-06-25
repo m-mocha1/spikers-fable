@@ -183,6 +183,11 @@ class AuthRepositoryImpl implements AuthRepository {
     final messaging = _messaging;
     if (messaging == null) return;
 
+    // TEMP DIAGNOSTIC — see _writeFcmDebug. Accumulates the outcome of each
+    // step so a failure is visible in the Firestore console even on release
+    // builds (which strip the [FCM] debugPrints). Remove once iOS is verified.
+    final diag = <String, dynamic>{'platform': defaultTargetPlatform.name};
+
     // Attach the refresh listener FIRST, before the getToken() attempt below.
     // On iOS the first getToken() can throw `apns-token-not-set`; if the
     // listener were attached after it (as it once was), that throw would skip
@@ -204,27 +209,45 @@ class AuthRepositoryImpl implements AuthRepository {
       // so getToken() doesn't throw. Android returns immediately and is
       // unaffected.
       if (defaultTargetPlatform == TargetPlatform.iOS) {
-        await messaging.requestPermission(alert: true, badge: true, sound: true);
-        await _awaitApnsToken(messaging);
+        final settings = await messaging.requestPermission(
+            alert: true, badge: true, sound: true);
+        diag['authorizationStatus'] = settings.authorizationStatus.name;
+
+        // Poll for the APNs token (up to ~5s) so the getToken() below doesn't
+        // throw `apns-token-not-set`. Record whether it ever arrived.
+        String? apns;
+        var polls = 0;
+        for (; polls < 10; polls++) {
+          apns = await messaging.getAPNSToken();
+          if (apns != null) break;
+          await Future<void>.delayed(const Duration(milliseconds: 500));
+        }
+        diag['apnsToken'] = apns == null ? 'NULL' : 'len ${apns.length}';
+        diag['apnsPolls'] = polls;
       }
       final token = await messaging.getToken();
+      diag['getToken'] = token == null ? 'NULL' : 'len ${token.length}';
       debugPrint(
         '[FCM] getToken for $uid -> ${token == null ? 'NULL' : '${token.substring(0, 12)}… (len ${token.length})'}',
       );
       if (token != null) await _writeToken(uid, token);
     } catch (e) {
+      diag['error'] = e.toString();
       debugPrint('[FCM] token update failed — $e');
+    } finally {
+      await _writeFcmDebug(uid, diag);
     }
   }
 
-  /// Polls for the iOS APNs token (up to ~5s) so the subsequent getToken()
-  /// call doesn't throw `apns-token-not-set`. Returns once available or after
-  /// the timeout — getToken() then surfaces any remaining error to the caller.
-  Future<void> _awaitApnsToken(FirebaseMessaging messaging) async {
-    for (var i = 0; i < 10; i++) {
-      final apns = await messaging.getAPNSToken();
-      if (apns != null) return;
-      await Future<void>.delayed(const Duration(milliseconds: 500));
+  // TEMP DIAGNOSTIC — writes the FCM token-path outcome to
+  // users/{uid}/private/fcm_debug so it can be inspected from the Firestore
+  // console. Remove once iOS token registration is confirmed working.
+  Future<void> _writeFcmDebug(String uid, Map<String, dynamic> diag) async {
+    try {
+      await _remote.writeFcmDebug(uid, diag);
+      debugPrint('[FCM] debug WRITTEN to users/$uid/private/fcm_debug -> $diag');
+    } catch (e) {
+      debugPrint('[FCM] debug write FAILED — $e');
     }
   }
 
