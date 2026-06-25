@@ -227,6 +227,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get unknownError => 'Something went wrong. Please try again.';
 
   @override
+  String get cameraPermissionTitle => 'Camera access needed';
+
+  @override
+  String get cameraPermissionMessage =>
+      'Allow camera access in Settings to take a profile photo.';
+
+  @override
+  String get photoPermissionTitle => 'Photo access needed';
+
+  @override
+  String get photoPermissionMessage =>
+      'Allow photo access in Settings to choose a profile photo.';
+
+  @override
+  String get permissionDenied =>
+      'Permission denied. You can enable it anytime in Settings.';
+
+  @override
+  String get openSettings => 'Open Settings';
+
+  @override
   String get loading => 'Loading...';
 
   @override
@@ -384,35 +405,35 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noCoaches => 'No coaches found';
 
   @override
-  String get paid => 'Paid';
+  String get paid => 'Active';
 
   @override
-  String get unpaid => 'Unpaid';
+  String get unpaid => 'Inactive';
 
   @override
   String get lifetime => 'LIFETIME';
 
   @override
-  String get lifetimeMember => 'This player has lifetime membership.';
+  String get lifetimeMember => 'This member has lifetime membership.';
 
   @override
-  String get payment => 'Payment';
+  String get payment => 'Membership';
 
   @override
-  String get paymentRequired => 'Sessions locked';
+  String get paymentRequired => 'Membership inactive';
 
   @override
   String get paymentRequiredDesc =>
-      'Pay your dues to unlock sessions. Contact your coach.';
+      'Your club membership isn\'t active. Contact your coach to renew.';
 
   @override
   String confirmMarkPaid(String name) {
-    return 'Mark $name as paid?';
+    return 'Activate membership for $name?';
   }
 
   @override
   String confirmMarkUnpaid(String name) {
-    return 'Mark $name as unpaid?';
+    return 'Deactivate membership for $name?';
   }
 
   @override
@@ -428,6 +449,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get accountDeleted => 'Account deleted';
+
+  @override
+  String get deleteMyAccountTitle => 'Delete my account';
+
+  @override
+  String get deleteMyAccountConfirm =>
+      'Permanently delete your account? This removes your login and all your data and cannot be undone.';
+
+  @override
+  String get deleteMyAccountError =>
+      'Couldn\'t delete your account. Please try again.';
 
   @override
   String get remove => 'Remove';
@@ -625,10 +657,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noSessionsHistory => 'No past sessions yet';
 
   @override
-  String get paymentHistory => 'Payment History';
+  String get paymentHistory => 'Membership History';
 
   @override
-  String get noPaymentHistory => 'No payment records yet';
+  String get noPaymentHistory => 'No membership records yet';
 
   @override
   String paymentChangedBy(String name) {

@@ -76,6 +76,12 @@
   "userDisabled": "This account has been disabled. Contact support.",
   "networkError": "No internet connection. Check your network.",
   "unknownError": "Something went wrong. Please try again.",
+  "cameraPermissionTitle": "Camera access needed",
+  "cameraPermissionMessage": "Allow camera access in Settings to take a profile photo.",
+  "photoPermissionTitle": "Photo access needed",
+  "photoPermissionMessage": "Allow photo access in Settings to choose a profile photo.",
+  "permissionDenied": "Permission denied. You can enable it anytime in Settings.",
+  "openSettings": "Open Settings",
   "loading": "Loading...",
   "retry": "Retry",
   "myAccount": "My Account",
@@ -133,20 +139,20 @@
   "noPlayersMatch": "No players match your search",
   "searchPlayers": "Search players",
   "noCoaches": "No coaches found",
-  "paid": "Paid",
-  "unpaid": "Unpaid",
+  "paid": "Active",
+  "unpaid": "Inactive",
   "lifetime": "LIFETIME",
-  "lifetimeMember": "This player has lifetime membership.",
-  "payment": "Payment",
-  "paymentRequired": "Sessions locked",
-  "paymentRequiredDesc": "Pay your dues to unlock sessions. Contact your coach.",
-  "confirmMarkPaid": "Mark {name} as paid?",
+  "lifetimeMember": "This member has lifetime membership.",
+  "payment": "Membership",
+  "paymentRequired": "Membership inactive",
+  "paymentRequiredDesc": "Your club membership isn't active. Contact your coach to renew.",
+  "confirmMarkPaid": "Activate membership for {name}?",
   "@confirmMarkPaid": {
     "placeholders": {
       "name": { "type": "String" }
     }
   },
-  "confirmMarkUnpaid": "Mark {name} as unpaid?",
+  "confirmMarkUnpaid": "Deactivate membership for {name}?",
   "@confirmMarkUnpaid": {
     "placeholders": {
       "name": { "type": "String" }
@@ -161,6 +167,9 @@
     }
   },
   "accountDeleted": "Account deleted",
+  "deleteMyAccountTitle": "Delete my account",
+  "deleteMyAccountConfirm": "Permanently delete your account? This removes your login and all your data and cannot be undone.",
+  "deleteMyAccountError": "Couldn't delete your account. Please try again.",
   "remove": "Remove",
   "removePlayer": "Remove player",
   "confirmRemovePlayer": "Remove {name} from this session?",
@@ -272,8 +281,8 @@
   "delete": "Delete",
   "sessionsHistory": "Sessions History",
   "noSessionsHistory": "No past sessions yet",
-  "paymentHistory": "Payment History",
-  "noPaymentHistory": "No payment records yet",
+  "paymentHistory": "Membership History",
+  "noPaymentHistory": "No membership records yet",
   "paymentChangedBy": "by {name}",
   "@paymentChangedBy": {
     "placeholders": {

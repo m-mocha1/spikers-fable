@@ -64,4 +64,10 @@ class AuthRemoteDataSource {
         await functions.httpsCallable('validateCoachKey').call({'key': key});
     return (result.data?['valid'] ?? false) as bool;
   }
+
+  /// Permanently deletes the caller's own account (Auth + Firestore + photo +
+  /// session memberships) via the deleteMyAccount callable. Authorization is
+  /// enforced server-side (authenticated + email-verified). Throws on failure.
+  Future<void> deleteMyAccount() =>
+      functions.httpsCallable('deleteMyAccount').call();
 }

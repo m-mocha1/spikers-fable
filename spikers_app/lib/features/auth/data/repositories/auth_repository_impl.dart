@@ -196,10 +196,15 @@ class AuthRepositoryImpl implements AuthRepository {
 
     try {
       // iOS: getToken() throws `apns-token-not-set` if the APNs token hasn't
-      // been registered yet. Method swizzling registers it shortly after
-      // launch / permission grant, so wait for it before requesting the FCM
-      // token (Android returns null here and is unaffected).
+      // been registered yet. Registration only happens once
+      // requestPermission() has run, and that call otherwise lives in
+      // FcmService.init() — mounted by the home shell AFTER this runs on
+      // sign-in/startup. Calling it here (idempotent) guarantees iOS has
+      // registered for remote notifications before we poll for the APNs token,
+      // so getToken() doesn't throw. Android returns immediately and is
+      // unaffected.
       if (defaultTargetPlatform == TargetPlatform.iOS) {
+        await messaging.requestPermission(alert: true, badge: true, sound: true);
         await _awaitApnsToken(messaging);
       }
       final token = await messaging.getToken();
@@ -321,6 +326,19 @@ class AuthRepositoryImpl implements AuthRepository {
     await _credentials.clear();
     await _remote.signOut();
     _emit(null);
+  }
+
+  @override
+  Future<void> deleteOwnAccount() async {
+    try {
+      await _remote.deleteMyAccount();
+    } catch (_) {
+      // The account was not deleted — keep the user signed in so they can
+      // retry, and surface a failure to presentation.
+      throw const AuthException('delete-failed');
+    }
+    // Backend deletion succeeded; tear down the local session.
+    await signOut();
   }
 
   @override

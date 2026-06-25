@@ -8,7 +8,9 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/providers/locale_provider.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/utils/app_snackbar.dart';
+import '../../../../core/utils/media_permissions.dart';
 import '../../../../l10n/app_localizations.dart';
+import 'package:spikers_app/core/widgets/confirm_dialog.dart';
 import 'package:spikers_app/core/widgets/edit_body_metrics_dialog.dart';
 import 'package:spikers_app/core/widgets/profile_info.dart';
 import 'package:spikers_app/core/widgets/set_profile_basics_dialog.dart';
@@ -23,6 +25,30 @@ class ProfileTab extends ConsumerStatefulWidget {
 
 class _ProfileTabState extends ConsumerState<ProfileTab> {
   bool _uploading = false;
+  bool _deleting = false;
+
+  /// Confirms, then permanently deletes the user's own account and returns to
+  /// login. Keeps the user signed in (with a snackbar) if the backend fails.
+  Future<void> _deleteAccount(AppLocalizations l) async {
+    if (_deleting) return;
+    final confirmed = await showDeleteConfirm(
+      context,
+      title: l.deleteMyAccountTitle,
+      message: l.deleteMyAccountConfirm,
+      confirmLabel: l.delete,
+      cancelLabel: l.cancel,
+    );
+    if (!confirmed || !mounted) return;
+
+    setState(() => _deleting = true);
+    try {
+      await ref.read(authRepositoryProvider).deleteOwnAccount();
+      appRouter.go(Routes.login);
+    } catch (_) {
+      if (mounted) setState(() => _deleting = false);
+      showAppSnackbar(l.deleteMyAccountError);
+    }
+  }
 
   void _showAvatarPicker(AppLocalizations l) {
     showModalBottomSheet(
@@ -71,6 +97,13 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
   }
 
   Future<void> _pickAndUpload(ImageSource source, AppLocalizations l) async {
+    final bool granted;
+    if (source == ImageSource.camera) {
+      granted = await ensureCameraPermission(context, l);
+    } else {
+      granted = await ensurePhotoPermission(context, l);
+    }
+    if (!granted || !mounted) return;
     final file = await ImagePicker().pickImage(
       source: source,
       maxWidth: 512,
@@ -151,6 +184,20 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
                     borderRadius: BorderRadius.circular(12)),
               ),
             ),
+          ),
+          const SizedBox(height: 8),
+          TextButton(
+            onPressed: _deleting ? null : () => _deleteAccount(l),
+            child: _deleting
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2, color: AppColors.errorRed),
+                  )
+                : Text(l.deleteMyAccountTitle,
+                    style:
+                        const TextStyle(color: AppColors.grey, fontSize: 13)),
           ),
         ],
       ),

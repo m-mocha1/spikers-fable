@@ -52,6 +52,10 @@ abstract class AuthRepository {
   /// Clears stored credentials and signs out of Firebase.
   Future<void> signOut();
 
+  /// Permanently deletes the caller's own account and all associated data via
+  /// the backend, then signs out locally. Throws [AuthException] on failure.
+  Future<void> deleteOwnAccount();
+
   Future<void> sendVerificationEmail();
 
   /// Reloads the Firebase user and, when verified, forces an ID-token

@@ -524,6 +524,42 @@ abstract class AppLocalizations {
   /// **'Something went wrong. Please try again.'**
   String get unknownError;
 
+  /// No description provided for @cameraPermissionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera access needed'**
+  String get cameraPermissionTitle;
+
+  /// No description provided for @cameraPermissionMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow camera access in Settings to take a profile photo.'**
+  String get cameraPermissionMessage;
+
+  /// No description provided for @photoPermissionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo access needed'**
+  String get photoPermissionTitle;
+
+  /// No description provided for @photoPermissionMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow photo access in Settings to choose a profile photo.'**
+  String get photoPermissionMessage;
+
+  /// No description provided for @permissionDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Permission denied. You can enable it anytime in Settings.'**
+  String get permissionDenied;
+
+  /// No description provided for @openSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Settings'**
+  String get openSettings;
+
   /// No description provided for @loading.
   ///
   /// In en, this message translates to:
@@ -833,13 +869,13 @@ abstract class AppLocalizations {
   /// No description provided for @paid.
   ///
   /// In en, this message translates to:
-  /// **'Paid'**
+  /// **'Active'**
   String get paid;
 
   /// No description provided for @unpaid.
   ///
   /// In en, this message translates to:
-  /// **'Unpaid'**
+  /// **'Inactive'**
   String get unpaid;
 
   /// No description provided for @lifetime.
@@ -851,37 +887,37 @@ abstract class AppLocalizations {
   /// No description provided for @lifetimeMember.
   ///
   /// In en, this message translates to:
-  /// **'This player has lifetime membership.'**
+  /// **'This member has lifetime membership.'**
   String get lifetimeMember;
 
   /// No description provided for @payment.
   ///
   /// In en, this message translates to:
-  /// **'Payment'**
+  /// **'Membership'**
   String get payment;
 
   /// No description provided for @paymentRequired.
   ///
   /// In en, this message translates to:
-  /// **'Sessions locked'**
+  /// **'Membership inactive'**
   String get paymentRequired;
 
   /// No description provided for @paymentRequiredDesc.
   ///
   /// In en, this message translates to:
-  /// **'Pay your dues to unlock sessions. Contact your coach.'**
+  /// **'Your club membership isn\'t active. Contact your coach to renew.'**
   String get paymentRequiredDesc;
 
   /// No description provided for @confirmMarkPaid.
   ///
   /// In en, this message translates to:
-  /// **'Mark {name} as paid?'**
+  /// **'Activate membership for {name}?'**
   String confirmMarkPaid(String name);
 
   /// No description provided for @confirmMarkUnpaid.
   ///
   /// In en, this message translates to:
-  /// **'Mark {name} as unpaid?'**
+  /// **'Deactivate membership for {name}?'**
   String confirmMarkUnpaid(String name);
 
   /// No description provided for @delete.
@@ -907,6 +943,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Account deleted'**
   String get accountDeleted;
+
+  /// No description provided for @deleteMyAccountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete my account'**
+  String get deleteMyAccountTitle;
+
+  /// No description provided for @deleteMyAccountConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Permanently delete your account? This removes your login and all your data and cannot be undone.'**
+  String get deleteMyAccountConfirm;
+
+  /// No description provided for @deleteMyAccountError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t delete your account. Please try again.'**
+  String get deleteMyAccountError;
 
   /// No description provided for @remove.
   ///
@@ -1265,13 +1319,13 @@ abstract class AppLocalizations {
   /// No description provided for @paymentHistory.
   ///
   /// In en, this message translates to:
-  /// **'Payment History'**
+  /// **'Membership History'**
   String get paymentHistory;
 
   /// No description provided for @noPaymentHistory.
   ///
   /// In en, this message translates to:
-  /// **'No payment records yet'**
+  /// **'No membership records yet'**
   String get noPaymentHistory;
 
   /// No description provided for @paymentChangedBy.

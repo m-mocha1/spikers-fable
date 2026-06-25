@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/utils/app_snackbar.dart';
+import '../../../../core/utils/media_permissions.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'package:spikers_app/core/widgets/branded_button.dart';
@@ -108,7 +109,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               title: Text(l.pickFromGallery),
               onTap: () {
                 Navigator.of(context).pop();
-                _pickPhoto(ImageSource.gallery);
+                _pickPhoto(ImageSource.gallery, l);
               },
             ),
             ListTile(
@@ -117,7 +118,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               title: Text(l.takePhoto),
               onTap: () {
                 Navigator.of(context).pop();
-                _pickPhoto(ImageSource.camera);
+                _pickPhoto(ImageSource.camera, l);
               },
             ),
             const SizedBox(height: 8),
@@ -127,7 +128,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     );
   }
 
-  Future<void> _pickPhoto(ImageSource source) async {
+  Future<void> _pickPhoto(ImageSource source, AppLocalizations l) async {
+    final bool granted;
+    if (source == ImageSource.camera) {
+      granted = await ensureCameraPermission(context, l);
+    } else {
+      granted = await ensurePhotoPermission(context, l);
+    }
+    if (!granted || !mounted) return;
     final file = await ImagePicker().pickImage(
       source: source,
       maxWidth: 512,

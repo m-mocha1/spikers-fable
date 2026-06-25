@@ -225,6 +225,27 @@ class AppLocalizationsAr extends AppLocalizations {
   String get unknownError => 'حدث خطأ ما. حاول مجدداً.';
 
   @override
+  String get cameraPermissionTitle => 'إذن الكاميرا مطلوب';
+
+  @override
+  String get cameraPermissionMessage =>
+      'اسمح بالوصول إلى الكاميرا من الإعدادات لالتقاط صورة الملف الشخصي.';
+
+  @override
+  String get photoPermissionTitle => 'إذن الصور مطلوب';
+
+  @override
+  String get photoPermissionMessage =>
+      'اسمح بالوصول إلى الصور من الإعدادات لاختيار صورة الملف الشخصي.';
+
+  @override
+  String get permissionDenied =>
+      'تم رفض الإذن. يمكنك تفعيله في أي وقت من الإعدادات.';
+
+  @override
+  String get openSettings => 'فتح الإعدادات';
+
+  @override
   String get loading => 'جاري التحميل...';
 
   @override
@@ -381,34 +402,35 @@ class AppLocalizationsAr extends AppLocalizations {
   String get noCoaches => 'لا يوجد مدربون';
 
   @override
-  String get paid => 'مدفوع';
+  String get paid => 'نشط';
 
   @override
-  String get unpaid => 'غير مدفوع';
+  String get unpaid => 'غير نشط';
 
   @override
   String get lifetime => 'عضوية دائمة';
 
   @override
-  String get lifetimeMember => 'هذا اللاعب يملك عضوية دائمة.';
+  String get lifetimeMember => 'هذا العضو يملك عضوية دائمة.';
 
   @override
-  String get payment => 'الدفع';
+  String get payment => 'العضوية';
 
   @override
-  String get paymentRequired => 'الجلسات مقفلة';
+  String get paymentRequired => 'العضوية غير نشطة';
 
   @override
-  String get paymentRequiredDesc => 'ادفع رسومك لفتح الجلسات. تواصل مع المدرب.';
+  String get paymentRequiredDesc =>
+      'عضويتك في النادي غير نشطة. تواصل مع المدرب للتجديد.';
 
   @override
   String confirmMarkPaid(String name) {
-    return 'وضع علامة على $name كمدفوع؟';
+    return 'تفعيل عضوية $name؟';
   }
 
   @override
   String confirmMarkUnpaid(String name) {
-    return 'وضع علامة على $name كغير مدفوع؟';
+    return 'إلغاء تفعيل عضوية $name؟';
   }
 
   @override
@@ -424,6 +446,16 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get accountDeleted => 'تم حذف الحساب';
+
+  @override
+  String get deleteMyAccountTitle => 'حذف حسابي';
+
+  @override
+  String get deleteMyAccountConfirm =>
+      'حذف حسابك نهائياً؟ سيؤدي ذلك إلى إزالة تسجيل دخولك وجميع بياناتك ولا يمكن التراجع عن ذلك.';
+
+  @override
+  String get deleteMyAccountError => 'تعذّر حذف حسابك. يرجى المحاولة مرة أخرى.';
 
   @override
   String get remove => 'إزالة';
@@ -621,10 +653,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get noSessionsHistory => 'لا توجد جلسات سابقة';
 
   @override
-  String get paymentHistory => 'سجل الدفعات';
+  String get paymentHistory => 'سجل العضوية';
 
   @override
-  String get noPaymentHistory => 'لا توجد سجلات دفع بعد';
+  String get noPaymentHistory => 'لا توجد سجلات عضوية بعد';
 
   @override
   String paymentChangedBy(String name) {

@@ -55,16 +55,25 @@ async function isStaffUid(uid: string): Promise<boolean> {
   }
 }
 
-// Asserts the caller is an authenticated, email-verified staff member (coach or
-// admin) and returns their uid. Throws an HttpsError otherwise.
-async function requireStaff(
+// Asserts the caller is authenticated and email-verified, returning their uid.
+// Throws an HttpsError otherwise. The baseline gate for self-service actions.
+function requireVerified(
   request: { auth?: { uid?: string; token?: { email_verified?: boolean } } }
-): Promise<string> {
+): string {
   const uid = request.auth?.uid;
   if (!uid) throw new HttpsError("unauthenticated", "Not authenticated");
   if (request.auth?.token?.email_verified !== true) {
     throw new HttpsError("permission-denied", "Email not verified");
   }
+  return uid;
+}
+
+// Asserts the caller is an authenticated, email-verified staff member (coach or
+// admin) and returns their uid. Throws an HttpsError otherwise.
+async function requireStaff(
+  request: { auth?: { uid?: string; token?: { email_verified?: boolean } } }
+): Promise<string> {
+  const uid = requireVerified(request);
   if (!(await isStaffUid(uid))) {
     throw new HttpsError("permission-denied", "Coaches only");
   }
@@ -633,21 +642,13 @@ async function removeUserFromAllSessions(userId: string): Promise<void> {
   }
 }
 
-// ---------------------------------------------------------------------------
-// adminDeleteUser — admin-only permanent deletion of a user account
-// (players and coaches are both /users docs). Removes the user from any
-// sessions, the profile photo, the Firestore user doc + subcollections
-// (mirrorUserPublic then drops the public mirror), and the Firebase Auth login.
-// ---------------------------------------------------------------------------
-export const adminDeleteUser = onCall({ region: REGION }, async (request) => {
-  const callerUid = await requireStaff(request);
-
-  const userId = request.data["userId"] as string | undefined;
-  if (!userId) throw new HttpsError("invalid-argument", "userId required");
-  if (userId === callerUid) {
-    throw new HttpsError("permission-denied", "Cannot delete yourself");
-  }
-
+// Permanently erases every trace of a user account: session memberships (with
+// waitlist promotion), profile photo, the Firestore user doc + subcollections
+// (payments, templates, private/fcm — and the mirrorUserPublic trigger then
+// drops users_public/{userId}), and the Firebase Auth login. Storage and Auth
+// deletes are best-effort so the rest still completes. Shared by the staff-gated
+// adminDeleteUser and the self-service deleteMyAccount callables.
+async function purgeUserAccount(userId: string): Promise<void> {
   // Drop the user from any sessions they're in (with waitlist promotion).
   await removeUserFromAllSessions(userId);
 
@@ -658,7 +659,7 @@ export const adminDeleteUser = onCall({ region: REGION }, async (request) => {
     .file(`profilePhotos/${userId}.jpg`)
     .delete()
     .catch((e) => {
-      logger.warn("adminDeleteUser: profile photo delete failed", {
+      logger.warn("purgeUserAccount: profile photo delete failed", {
         userId,
         error: e,
       });
@@ -674,11 +675,42 @@ export const adminDeleteUser = onCall({ region: REGION }, async (request) => {
     .auth()
     .deleteUser(userId)
     .catch((e) => {
-      logger.warn("adminDeleteUser: deleteUser failed", { userId, error: e });
+      logger.warn("purgeUserAccount: deleteUser failed", { userId, error: e });
       return undefined;
     });
+}
+
+// ---------------------------------------------------------------------------
+// adminDeleteUser — admin-only permanent deletion of a user account
+// (players and coaches are both /users docs).
+// ---------------------------------------------------------------------------
+export const adminDeleteUser = onCall({ region: REGION }, async (request) => {
+  const callerUid = await requireStaff(request);
+
+  const userId = request.data["userId"] as string | undefined;
+  if (!userId) throw new HttpsError("invalid-argument", "userId required");
+  if (userId === callerUid) {
+    throw new HttpsError("permission-denied", "Cannot delete yourself");
+  }
+
+  await purgeUserAccount(userId);
 
   logger.info("adminDeleteUser: deleted", { userId, by: callerUid });
+  return { success: true };
+});
+
+// ---------------------------------------------------------------------------
+// deleteMyAccount — self-service permanent deletion of the caller's own
+// account. Required for App Store / Google Play data-deletion compliance.
+// Any authenticated, email-verified user (player or staff) may delete
+// themselves; there is no self-deletion guard here because that is the point.
+// ---------------------------------------------------------------------------
+export const deleteMyAccount = onCall({ region: REGION }, async (request) => {
+  const uid = requireVerified(request);
+
+  await purgeUserAccount(uid);
+
+  logger.info("deleteMyAccount: self-deleted", { uid });
   return { success: true };
 });
 

@@ -76,6 +76,12 @@
   "userDisabled": "تم تعطيل هذا الحساب. تواصل مع الدعم.",
   "networkError": "لا يوجد اتصال بالإنترنت. تحقق من الشبكة.",
   "unknownError": "حدث خطأ ما. حاول مجدداً.",
+  "cameraPermissionTitle": "إذن الكاميرا مطلوب",
+  "cameraPermissionMessage": "اسمح بالوصول إلى الكاميرا من الإعدادات لالتقاط صورة الملف الشخصي.",
+  "photoPermissionTitle": "إذن الصور مطلوب",
+  "photoPermissionMessage": "اسمح بالوصول إلى الصور من الإعدادات لاختيار صورة الملف الشخصي.",
+  "permissionDenied": "تم رفض الإذن. يمكنك تفعيله في أي وقت من الإعدادات.",
+  "openSettings": "فتح الإعدادات",
   "loading": "جاري التحميل...",
   "retry": "إعادة المحاولة",
   "myAccount": "حسابي",
@@ -133,20 +139,20 @@
   "noPlayersMatch": "لا يوجد لاعبون مطابقون لبحثك",
   "searchPlayers": "ابحث عن لاعبين",
   "noCoaches": "لا يوجد مدربون",
-  "paid": "مدفوع",
-  "unpaid": "غير مدفوع",
+  "paid": "نشط",
+  "unpaid": "غير نشط",
   "lifetime": "عضوية دائمة",
-  "lifetimeMember": "هذا اللاعب يملك عضوية دائمة.",
-  "payment": "الدفع",
-  "paymentRequired": "الجلسات مقفلة",
-  "paymentRequiredDesc": "ادفع رسومك لفتح الجلسات. تواصل مع المدرب.",
-  "confirmMarkPaid": "وضع علامة على {name} كمدفوع؟",
+  "lifetimeMember": "هذا العضو يملك عضوية دائمة.",
+  "payment": "العضوية",
+  "paymentRequired": "العضوية غير نشطة",
+  "paymentRequiredDesc": "عضويتك في النادي غير نشطة. تواصل مع المدرب للتجديد.",
+  "confirmMarkPaid": "تفعيل عضوية {name}؟",
   "@confirmMarkPaid": {
     "placeholders": {
       "name": { "type": "String" }
     }
   },
-  "confirmMarkUnpaid": "وضع علامة على {name} كغير مدفوع؟",
+  "confirmMarkUnpaid": "إلغاء تفعيل عضوية {name}؟",
   "@confirmMarkUnpaid": {
     "placeholders": {
       "name": { "type": "String" }
@@ -161,6 +167,9 @@
     }
   },
   "accountDeleted": "تم حذف الحساب",
+  "deleteMyAccountTitle": "حذف حسابي",
+  "deleteMyAccountConfirm": "حذف حسابك نهائياً؟ سيؤدي ذلك إلى إزالة تسجيل دخولك وجميع بياناتك ولا يمكن التراجع عن ذلك.",
+  "deleteMyAccountError": "تعذّر حذف حسابك. يرجى المحاولة مرة أخرى.",
   "remove": "إزالة",
   "removePlayer": "إزالة لاعب",
   "confirmRemovePlayer": "إزالة {name} من هذه الجلسة؟",
@@ -251,8 +260,8 @@
   "delete": "حذف",
   "sessionsHistory": "سجل الجلسات",
   "noSessionsHistory": "لا توجد جلسات سابقة",
-  "paymentHistory": "سجل الدفعات",
-  "noPaymentHistory": "لا توجد سجلات دفع بعد",
+  "paymentHistory": "سجل العضوية",
+  "noPaymentHistory": "لا توجد سجلات عضوية بعد",
   "paymentChangedBy": "بواسطة {name}",
   "@paymentChangedBy": {
     "placeholders": {

@@ -138,6 +138,54 @@ void main() {
     });
   });
 
+  group('deleteOwnAccount', () {
+    // A repo restored into a signed-in session, so credentials/user state is
+    // realistic before the deletion call.
+    Future<AuthRepositoryImpl> signedInRepo() async {
+      mockAuth =
+          MockFirebaseAuth(mockUser: MockUser(uid: 'u1', email: 'a@b.c'));
+      when(() => remote.auth).thenReturn(mockAuth);
+      credentials.stored = const StoredCredentials('a@b.c', 'secret');
+      when(() => remote.signIn(any(), any())).thenAnswer((_) async {
+        await mockAuth.signInWithEmailAndPassword(
+            email: 'a@b.c', password: 'secret');
+      });
+      when(() => remote.signOut()).thenAnswer((_) async {});
+      await seedUserDoc('u1');
+      final repo = makeRepo();
+      await repo.init();
+      await repo.ready;
+      await repo.watchCurrentUser().first;
+      return repo;
+    }
+
+    test('deletes via remote then signs out', () async {
+      when(() => remote.deleteMyAccount()).thenAnswer((_) async {});
+      final repo = await signedInRepo();
+
+      await repo.deleteOwnAccount();
+
+      verify(() => remote.deleteMyAccount()).called(1);
+      verify(() => remote.signOut()).called(1);
+      expect(credentials.stored, isNull);
+      expect(repo.currentUserNow, isNull);
+    });
+
+    test('rethrows AuthException and stays signed in when the backend fails',
+        () async {
+      when(() => remote.deleteMyAccount()).thenThrow(Exception('boom'));
+      final repo = await signedInRepo();
+
+      await expectLater(
+        repo.deleteOwnAccount(),
+        throwsA(isA<AuthException>()
+            .having((e) => e.code, 'code', 'delete-failed')),
+      );
+      verifyNever(() => remote.signOut());
+      expect(credentials.stored, isNotNull);
+    });
+  });
+
   group('updateProfileBasics', () {
     Future<AuthRepositoryImpl> signedInRepo() async {
       mockAuth =
