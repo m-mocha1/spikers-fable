@@ -42,20 +42,22 @@ async function fetchUserName(uid: string): Promise<string> {
   }
 }
 
-// Reads users/{uid}.role and returns true if the caller is an admin.
-async function isAdminUid(uid: string): Promise<boolean> {
+// Reads users/{uid}.role and returns true if the caller is staff (coach or
+// admin). Coaches have full parity with admins.
+async function isStaffUid(uid: string): Promise<boolean> {
   if (!uid) return false;
   try {
     const doc = await db.collection("users").doc(uid).get();
-    return doc.data()?.["role"] === "admin";
+    const role = doc.data()?.["role"];
+    return role === "admin" || role === "coach";
   } catch {
     return false;
   }
 }
 
-// Asserts the caller is an authenticated, email-verified admin and returns
-// their uid. Throws an HttpsError otherwise.
-async function requireAdmin(
+// Asserts the caller is an authenticated, email-verified staff member (coach or
+// admin) and returns their uid. Throws an HttpsError otherwise.
+async function requireStaff(
   request: { auth?: { uid?: string; token?: { email_verified?: boolean } } }
 ): Promise<string> {
   const uid = request.auth?.uid;
@@ -63,8 +65,8 @@ async function requireAdmin(
   if (request.auth?.token?.email_verified !== true) {
     throw new HttpsError("permission-denied", "Email not verified");
   }
-  if (!(await isAdminUid(uid))) {
-    throw new HttpsError("permission-denied", "Admins only");
+  if (!(await isStaffUid(uid))) {
+    throw new HttpsError("permission-denied", "Coaches only");
   }
   return uid;
 }
@@ -404,15 +406,16 @@ export const onSessionCreated = onDocumentCreated(
       return;
     }
 
-    // Matching players + all staff (coaches/admins), minus the creator.
+    // Matching players + all staff (coaches/admins) + the creator. Everyone
+    // is notified, including the coach who created the session.
     const [players, staff] = await Promise.all([
       matchSessionPlayers(session),
       fetchStaffUids(),
     ]);
     const coachId = session["coachId"] as string;
-    const recipients = [...new Set([...players, ...staff])].filter(
-      (id) => id !== coachId
-    );
+    const recipients = [
+      ...new Set([...players, ...staff, coachId].filter(Boolean)),
+    ];
 
     const coachName = await fetchUserName(coachId);
     await sendFcmToUids(
@@ -432,7 +435,7 @@ export const onSessionCreated = onDocumentCreated(
 );
 
 // ---------------------------------------------------------------------------
-// onAnnouncementCreated — sends FCM to every verified user (except the
+// onAnnouncementCreated — sends FCM to every verified user (including the
 // author) when a coach posts an announcement. Mirrors onSessionCreated.
 // ---------------------------------------------------------------------------
 export const onAnnouncementCreated = onDocumentCreated(
@@ -468,7 +471,12 @@ export const onAnnouncementCreated = onDocumentCreated(
         .get();
       docs = snap.docs;
     }
-    const uids = docs.map((d) => d.id).filter((id) => id !== authorId);
+    // Include the author so the coach who posts also gets the notification.
+    // For a gender-targeted announcement the author may not be in `docs`, so
+    // add them explicitly (deduped).
+    const uids = [
+      ...new Set([...docs.map((d) => d.id), authorId].filter(Boolean)),
+    ];
 
     await sendFcmToUids(
       uids,
@@ -510,7 +518,7 @@ export const cancelSession = onCall({ region: REGION }, async (request) => {
     throw new HttpsError("not-found", "Session not found");
 
   const session = sessionDoc.data()!;
-  if (session["coachId"] !== uid && !(await isAdminUid(uid))) {
+  if (session["coachId"] !== uid && !(await isStaffUid(uid))) {
     throw new HttpsError("permission-denied", "Not your session");
   }
 
@@ -632,7 +640,7 @@ async function removeUserFromAllSessions(userId: string): Promise<void> {
 // (mirrorUserPublic then drops the public mirror), and the Firebase Auth login.
 // ---------------------------------------------------------------------------
 export const adminDeleteUser = onCall({ region: REGION }, async (request) => {
-  const callerUid = await requireAdmin(request);
+  const callerUid = await requireStaff(request);
 
   const userId = request.data["userId"] as string | undefined;
   if (!userId) throw new HttpsError("invalid-argument", "userId required");
@@ -907,7 +915,7 @@ export const removeAttendee = onCall({ region: REGION }, async (request) => {
     throw new HttpsError("invalid-argument", "sessionId and userId required");
   }
 
-  const callerIsAdmin = await isAdminUid(uid);
+  const callerIsStaff = await isStaffUid(uid);
   const sessionRef = db.collection("sessions").doc(sessionId);
   let promotedUid: string | null = null;
   let sessionTitle = "";
@@ -918,8 +926,8 @@ export const removeAttendee = onCall({ region: REGION }, async (request) => {
       throw new HttpsError("not-found", "Session not found");
 
     const session = sessionDoc.data()!;
-    // Only the owning coach or an admin may remove someone.
-    if (session["coachId"] !== uid && !callerIsAdmin) {
+    // The owning coach or any staff member (coach/admin) may remove someone.
+    if (session["coachId"] !== uid && !callerIsStaff) {
       throw new HttpsError("permission-denied", "Not allowed");
     }
 
@@ -1009,6 +1017,7 @@ export const updateSessionCapacity = onCall(
     }
 
     const sessionRef = db.collection("sessions").doc(sessionId);
+    const callerIsStaff = await isStaffUid(uid);
     let promotedUids: string[] = [];
     let sessionTitle = "";
 
@@ -1018,7 +1027,7 @@ export const updateSessionCapacity = onCall(
         throw new HttpsError("not-found", "Session not found");
 
       const session = sessionDoc.data()!;
-      if (session["coachId"] !== uid) {
+      if (session["coachId"] !== uid && !callerIsStaff) {
         throw new HttpsError("permission-denied", "Not your session");
       }
 
@@ -1103,6 +1112,7 @@ export const markAttended = onCall({ region: REGION }, async (request) => {
   const sessionRef = db.collection("sessions").doc(sessionId);
   const historyRef = db.collection("sessions_history").doc(sessionId);
   const userRef = db.collection("users").doc(userId);
+  const callerIsStaff = await isStaffUid(uid);
 
   await db.runTransaction(async (tx) => {
     const sessionDoc = await tx.get(sessionRef);
@@ -1120,7 +1130,7 @@ export const markAttended = onCall({ region: REGION }, async (request) => {
       data = historyDoc.data()!;
     }
 
-    if (data["coachId"] !== uid) {
+    if (data["coachId"] !== uid && !callerIsStaff) {
       throw new HttpsError("permission-denied", "Not your session");
     }
 

@@ -182,8 +182,8 @@ service cloud.firestore {
                     && (!('audience' in request.resource.data)
                         || request.resource.data.audience in ['all', 'male', 'female']);
 
-      allow delete: if isVerified() && isCoach()
-                    && resource.data.authorId == uid();
+      // Any coach/admin may delete any announcement (full staff parity).
+      allow delete: if isVerified() && isCoach();
     }
 
     match /config/{docId} {

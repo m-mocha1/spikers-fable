@@ -344,7 +344,6 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
     final me = ref.watch(currentUserProvider).value;
     final uid = me?.uid ?? '';
     final isCoach = me?.isCoach ?? false;
-    final isAdmin = me?.isAdmin ?? false;
     final isOwner = session.coachId == uid;
     final isJoined = session.isJoinedBy(uid);
     final isWaitlisted = session.isWaitlistedBy(uid);
@@ -364,9 +363,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
                 extra: {'id': session.id, 'title': session.title},
               ),
             ),
-          if (((isCoach && isOwner) || isAdmin) &&
-              !session.isOngoing &&
-              !_isArchived)
+          if (isCoach && !session.isOngoing && !_isArchived)
             TextButton(
               onPressed: _isCancelling ? null : () => _confirmCancel(l),
               child: _isCancelling
@@ -397,14 +394,13 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
               l: l,
               userMap: _userMap,
               isCoach: isCoach,
-              isOwner: isOwner,
-              canManage: (isCoach && isOwner) || isAdmin,
+              canManage: isCoach,
               onToggleAttended: _markAttended,
               onRemove: _removeAttendee,
               onEditCapacity: () => _editCapacity(l),
             ),
             const SizedBox(height: 30),
-            if (!isCoach)
+            if (!isOwner)
               _JoinButton(
                 session: session,
                 isJoined: isJoined,
@@ -598,7 +594,6 @@ class _AttendeesSection extends StatelessWidget {
   final AppLocalizations l;
   final Map<String, PublicProfile> userMap;
   final bool isCoach;
-  final bool isOwner;
   final bool canManage;
   final void Function(String uid, bool attended) onToggleAttended;
   final void Function(String uid, String name) onRemove;
@@ -608,7 +603,6 @@ class _AttendeesSection extends StatelessWidget {
     required this.l,
     required this.userMap,
     required this.isCoach,
-    required this.isOwner,
     required this.canManage,
     required this.onToggleAttended,
     required this.onRemove,
@@ -626,7 +620,7 @@ class _AttendeesSection extends StatelessWidget {
             ? Colors.orange
             : AppColors.success;
     final attendedCount = session.attendedIds.length;
-    final canEditCapacity = isOwner && !session.isExpired;
+    final canEditCapacity = isCoach && !session.isExpired;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -707,8 +701,9 @@ class _AttendeesSection extends StatelessWidget {
                 photoUrl: a.photoUrl,
                 attendanceCount: a.attendanceCount,
                 isAttended: isAttended,
-                canMark: isCoach && isOwner,
+                canMark: isCoach,
                 canRemove: canManage,
+                canViewProfile: isCoach,
                 onToggle: onToggleAttended,
                 onRemove: onRemove,
               );
@@ -751,6 +746,7 @@ class _AttendeesSection extends StatelessWidget {
                   gender: u.gender,
                   photoUrl: u.photoUrl,
                   canRemove: canManage,
+                  canViewProfile: isCoach,
                   onRemove: onRemove,
                 );
               }),
@@ -771,6 +767,7 @@ class _AttendeeItem extends StatelessWidget {
   final bool isAttended;
   final bool canMark;
   final bool canRemove;
+  final bool canViewProfile;
   final void Function(String uid, bool attended) onToggle;
   final void Function(String uid, String name) onRemove;
 
@@ -784,6 +781,7 @@ class _AttendeeItem extends StatelessWidget {
     required this.isAttended,
     required this.canMark,
     required this.canRemove,
+    required this.canViewProfile,
     required this.onToggle,
     required this.onRemove,
   });
@@ -819,34 +817,51 @@ class _AttendeeItem extends StatelessWidget {
       ),
     );
 
+    final identity = Row(
+      children: [
+        avatar,
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(name,
+                  style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      color: canViewProfile ? AppColors.gold : null)),
+              const SizedBox(height: 2),
+              Row(
+                children: [
+                  const Icon(Icons.sports_volleyball,
+                      size: 11, color: AppColors.grey),
+                  const SizedBox(width: 3),
+                  Text(
+                    '$attendanceCount ${l.sessionsAttended}',
+                    style:
+                        const TextStyle(fontSize: 11, color: AppColors.grey),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 7),
       child: Row(
         children: [
-          avatar,
-          const SizedBox(width: 12),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(name,
-                    style: const TextStyle(
-                        fontSize: 15, fontWeight: FontWeight.w500)),
-                const SizedBox(height: 2),
-                Row(
-                  children: [
-                    const Icon(Icons.sports_volleyball,
-                        size: 11, color: AppColors.grey),
-                    const SizedBox(width: 3),
-                    Text(
-                      '$attendanceCount ${l.sessionsAttended}',
-                      style:
-                          const TextStyle(fontSize: 11, color: AppColors.grey),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+            child: canViewProfile
+                ? InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () =>
+                        context.push(Routes.playerProfile, extra: uid),
+                    child: identity,
+                  )
+                : identity,
           ),
           Icon(
             gender == 'male' ? Icons.male : Icons.female,
@@ -897,6 +912,7 @@ class _WaitlistItem extends StatelessWidget {
   final String gender;
   final String photoUrl;
   final bool canRemove;
+  final bool canViewProfile;
   final void Function(String uid, String name) onRemove;
   const _WaitlistItem({
     super.key,
@@ -906,6 +922,7 @@ class _WaitlistItem extends StatelessWidget {
     required this.gender,
     required this.photoUrl,
     required this.canRemove,
+    required this.canViewProfile,
     required this.onRemove,
   });
 
@@ -915,6 +932,32 @@ class _WaitlistItem extends StatelessWidget {
     final initials = name.trim().isEmpty
         ? '?'
         : name.trim().split(' ').map((w) => w[0]).take(2).join().toUpperCase();
+    final identity = Row(
+      children: [
+        CircleAvatar(
+          radius: 16,
+          backgroundColor: AppColors.gold.withValues(alpha: 0.15),
+          backgroundImage: photoUrl.isNotEmpty
+              ? CachedNetworkImageProvider(photoUrl)
+              : null,
+          child: photoUrl.isEmpty
+              ? Text(initials,
+                  style: const TextStyle(
+                      color: AppColors.gold,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 11))
+              : null,
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(name,
+              style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: canViewProfile ? AppColors.gold : null)),
+        ),
+      ],
+    );
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
@@ -927,25 +970,15 @@ class _WaitlistItem extends StatelessWidget {
                     fontSize: 12,
                     fontWeight: FontWeight.w600)),
           ),
-          CircleAvatar(
-            radius: 16,
-            backgroundColor: AppColors.gold.withValues(alpha: 0.15),
-            backgroundImage: photoUrl.isNotEmpty
-                ? CachedNetworkImageProvider(photoUrl)
-                : null,
-            child: photoUrl.isEmpty
-                ? Text(initials,
-                    style: const TextStyle(
-                        color: AppColors.gold,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 11))
-                : null,
-          ),
-          const SizedBox(width: 10),
           Expanded(
-            child: Text(name,
-                style: const TextStyle(
-                    fontSize: 14, fontWeight: FontWeight.w500)),
+            child: canViewProfile
+                ? InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () =>
+                        context.push(Routes.playerProfile, extra: uid),
+                    child: identity,
+                  )
+                : identity,
           ),
           Icon(
             gender == 'male' ? Icons.male : Icons.female,

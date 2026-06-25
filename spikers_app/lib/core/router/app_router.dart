@@ -14,6 +14,7 @@ import '../../features/auth/presentation/screens/verify_email_screen.dart';
 import '../../features/coaches/presentation/screens/coaches_list_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/leaderboard/presentation/screens/leaderboard_screen.dart';
+import '../../features/payments/presentation/screens/payment_history_screen.dart';
 import '../../features/players/presentation/screens/player_profile_screen.dart';
 import '../../features/sessions/domain/entities/recurring_session_model.dart';
 import '../../features/sessions/domain/entities/session_model.dart';
@@ -45,6 +46,7 @@ abstract class Routes {
   static const recurringSessions = '/recurring-sessions';
   static const createRecurring   = '/create-recurring';
   static const coachesList       = '/coaches-list';
+  static const paymentHistory    = '/payment-history';
 }
 
 /// Replaces the GetX CoachOnlyMiddleware: signed-out users land on login,
@@ -142,5 +144,12 @@ final appRouter = GoRouter(
     GoRoute(
         path: Routes.coachesList,
         builder: (_, _) => const CoachesListScreen()),
+    // No _coachOnly redirect: owners may view their own history and coaches
+    // any player's — the /payments read rule enforces the real boundary.
+    GoRoute(
+      path: Routes.paymentHistory,
+      builder: (_, state) => PaymentHistoryScreen(
+          userId: state.uri.queryParameters['uid'] ?? ''),
+    ),
   ],
 );

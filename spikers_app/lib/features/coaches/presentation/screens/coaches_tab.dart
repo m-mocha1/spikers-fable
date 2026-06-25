@@ -63,7 +63,9 @@ class _CoachCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context)!;
-    final isAdmin = ref.watch(isAdminProvider);
+    final isCoach = ref.watch(isCoachProvider);
+    final myUid = ref.watch(currentUserProvider).value?.uid;
+    final canDelete = isCoach && coach.uid != myUid;
     final initials = coach.name.trim().isEmpty
         ? '?'
         : coach.name
@@ -107,7 +109,7 @@ class _CoachCard extends ConsumerWidget {
                   style: const TextStyle(
                       fontWeight: FontWeight.w600, fontSize: 19)),
             ),
-            if (isAdmin)
+            if (canDelete)
               PopupMenuButton<String>(
                 icon: const Icon(Icons.more_vert, color: AppColors.grey),
                 color: AppColors.navyLight,

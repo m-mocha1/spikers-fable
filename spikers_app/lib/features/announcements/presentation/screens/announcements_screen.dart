@@ -64,6 +64,8 @@ class _AnnouncementsScreenState extends ConsumerState<AnnouncementsScreen> {
               announcement: announcements[i],
               isAuthor:
                   myUid != null && announcements[i].authorId == myUid,
+              canDelete: isCoach ||
+                  (myUid != null && announcements[i].authorId == myUid),
             ),
           );
         },
@@ -75,9 +77,11 @@ class _AnnouncementsScreenState extends ConsumerState<AnnouncementsScreen> {
 class _AnnouncementCard extends ConsumerWidget {
   final AnnouncementModel announcement;
   final bool isAuthor;
+  final bool canDelete;
   const _AnnouncementCard({
     required this.announcement,
     required this.isAuthor,
+    required this.canDelete,
   });
 
   /// Human label for a non-'all' audience, e.g. "Male" / "Female".
@@ -154,7 +158,7 @@ class _AnnouncementCard extends ConsumerWidget {
                     style: const TextStyle(
                         fontWeight: FontWeight.w700, fontSize: 16)),
               ),
-              if (isAuthor) ...[
+              if (isAuthor)
                 _CardIconButton(
                   icon: Icons.edit_outlined,
                   tooltip: l.editAnnouncement,
@@ -164,12 +168,12 @@ class _AnnouncementCard extends ConsumerWidget {
                     await markAnnouncementsRead(ref);
                   },
                 ),
+              if (canDelete)
                 _CardIconButton(
                   icon: Icons.delete_outline,
                   tooltip: l.delete,
                   onTap: () => _confirmDelete(context, ref),
                 ),
-              ],
             ],
           ),
           const SizedBox(height: 6),

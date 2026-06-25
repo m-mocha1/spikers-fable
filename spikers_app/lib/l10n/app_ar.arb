@@ -251,6 +251,14 @@
   "delete": "حذف",
   "sessionsHistory": "سجل الجلسات",
   "noSessionsHistory": "لا توجد جلسات سابقة",
+  "paymentHistory": "سجل الدفعات",
+  "noPaymentHistory": "لا توجد سجلات دفع بعد",
+  "paymentChangedBy": "بواسطة {name}",
+  "@paymentChangedBy": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
   "historyAttendanceSummary": "{attended} حضروا · {joined}/{max} انضموا",
   "@historyAttendanceSummary": {
     "placeholders": {

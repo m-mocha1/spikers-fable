@@ -621,6 +621,17 @@ class AppLocalizationsAr extends AppLocalizations {
   String get noSessionsHistory => 'لا توجد جلسات سابقة';
 
   @override
+  String get paymentHistory => 'سجل الدفعات';
+
+  @override
+  String get noPaymentHistory => 'لا توجد سجلات دفع بعد';
+
+  @override
+  String paymentChangedBy(String name) {
+    return 'بواسطة $name';
+  }
+
+  @override
   String historyAttendanceSummary(int attended, int joined, int max) {
     return '$attended حضروا · $joined/$max انضموا';
   }

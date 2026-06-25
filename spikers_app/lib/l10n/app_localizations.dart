@@ -1262,6 +1262,24 @@ abstract class AppLocalizations {
   /// **'No past sessions yet'**
   String get noSessionsHistory;
 
+  /// No description provided for @paymentHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment History'**
+  String get paymentHistory;
+
+  /// No description provided for @noPaymentHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'No payment records yet'**
+  String get noPaymentHistory;
+
+  /// No description provided for @paymentChangedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'by {name}'**
+  String paymentChangedBy(String name);
+
   /// No description provided for @historyAttendanceSummary.
   ///
   /// In en, this message translates to:

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/router/app_router.dart';
 import '../../../../core/utils/app_snackbar.dart';
 import '../../../../core/widgets/confirm_dialog.dart';
 import '../../../../core/widgets/state_views.dart';
@@ -78,14 +79,14 @@ class PlayerProfileScreen extends ConsumerWidget {
           );
         }
 
-        final isAdmin = ref.watch(isAdminProvider);
+        final isCoach = ref.watch(isCoachProvider);
 
         return Scaffold(
           appBar: AppBar(
             title:
                 Text(user.name, maxLines: 1, overflow: TextOverflow.ellipsis),
             actions: [
-              if (isAdmin)
+              if (isCoach)
                 IconButton(
                   tooltip: l.delete,
                   icon: const Icon(Icons.delete_outline,
@@ -114,6 +115,26 @@ class PlayerProfileScreen extends ConsumerWidget {
                 if (!user.isCoach && !user.lifetimeMember) ...[
                   const SizedBox(height: 24),
                   _PaymentActionButton(user: user, l: l),
+                ],
+                if (!user.isCoach) ...[
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () => context.push(
+                          '${Routes.paymentHistory}?uid=${user.uid}'),
+                      icon: const Icon(Icons.receipt_long_outlined,
+                          color: AppColors.gold),
+                      label: Text(l.paymentHistory,
+                          style: const TextStyle(color: AppColors.gold)),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: AppColors.gold),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                      ),
+                    ),
+                  ),
                 ],
                 const SizedBox(height: 16),
               ],

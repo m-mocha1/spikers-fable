@@ -625,6 +625,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noSessionsHistory => 'No past sessions yet';
 
   @override
+  String get paymentHistory => 'Payment History';
+
+  @override
+  String get noPaymentHistory => 'No payment records yet';
+
+  @override
+  String paymentChangedBy(String name) {
+    return 'by $name';
+  }
+
+  @override
   String historyAttendanceSummary(int attended, int joined, int max) {
     return '$attended attended · $joined/$max joined';
   }

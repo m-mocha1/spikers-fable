@@ -272,6 +272,14 @@
   "delete": "Delete",
   "sessionsHistory": "Sessions History",
   "noSessionsHistory": "No past sessions yet",
+  "paymentHistory": "Payment History",
+  "noPaymentHistory": "No payment records yet",
+  "paymentChangedBy": "by {name}",
+  "@paymentChangedBy": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
   "historyAttendanceSummary": "{attended} attended · {joined}/{max} joined",
   "@historyAttendanceSummary": {
     "placeholders": {

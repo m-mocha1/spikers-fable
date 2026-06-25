@@ -1,10 +1,12 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/providers/locale_provider.dart';
+import '../../../../core/router/app_router.dart';
 import '../../../../core/utils/app_snackbar.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'package:spikers_app/core/widgets/edit_body_metrics_dialog.dart';
@@ -131,6 +133,8 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
             ),
           ],
           const SizedBox(height: 24),
+          _PaymentHistoryRow(l: l, userId: user.uid),
+          const SizedBox(height: 16),
           _LanguageToggle(l: l),
           const SizedBox(height: 16),
           SizedBox(
@@ -271,6 +275,40 @@ class _Avatar extends StatelessWidget {
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+/// Opens the signed-in user's own payment history log.
+class _PaymentHistoryRow extends StatelessWidget {
+  final AppLocalizations l;
+  final String userId;
+  const _PaymentHistoryRow({required this.l, required this.userId});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () => context.push('${Routes.paymentHistory}?uid=$userId'),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: AppColors.navyLight,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.receipt_long_outlined, color: AppColors.gold),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(l.paymentHistory,
+                  style: const TextStyle(fontWeight: FontWeight.w600)),
+            ),
+            const Icon(Icons.arrow_forward_ios,
+                size: 16, color: AppColors.grey),
+          ],
+        ),
       ),
     );
   }
