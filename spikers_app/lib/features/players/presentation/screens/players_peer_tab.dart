@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/widgets/animations.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/player_summary.dart';
@@ -28,7 +29,10 @@ class PlayersPeerTab extends ConsumerWidget {
         return ListView.builder(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
           itemCount: peers.length,
-          itemBuilder: (_, i) => _PeerCard(peer: peers[i], l: l),
+          itemBuilder: (_, i) => AppStaggeredItem(
+            index: i,
+            child: _PeerCard(peer: peers[i], l: l),
+          ),
         );
       },
     );

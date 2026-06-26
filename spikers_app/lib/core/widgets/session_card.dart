@@ -6,6 +6,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/router/app_router.dart';
 import '../../l10n/app_localizations.dart';
 import 'package:spikers_app/features/sessions/domain/entities/session_model.dart';
+import 'animations.dart';
 
 class SessionCard extends StatelessWidget {
   final SessionModel session;
@@ -17,7 +18,7 @@ class SessionCard extends StatelessWidget {
     final designAsset = AppAssets
         .cardDesigns[session.designIndex % AppAssets.cardDesigns.length];
 
-    return GestureDetector(
+    return Pressable(
       onTap: () => context.push(Routes.sessionDetail, extra: session),
       child: Container(
         margin: const EdgeInsets.only(bottom: 20),
@@ -47,7 +48,7 @@ class SessionCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 10),
                   if (session.isOngoing)
-                    _Badge(l.live.toUpperCase(), AppColors.success),
+                    Pulse(child: _Badge(l.live.toUpperCase(), AppColors.success)),
                   if (session.isFull && !session.isOngoing)
                     _Badge(l.full.toUpperCase(), AppColors.errorRed),
                 ],

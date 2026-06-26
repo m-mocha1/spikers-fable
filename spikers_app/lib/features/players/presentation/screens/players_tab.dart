@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/utils/age_calculator.dart';
+import '../../../../core/widgets/animations.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/player_summary.dart';
@@ -130,16 +131,19 @@ class _PlayersTabState extends ConsumerState<PlayersTab> {
                   : ListView.builder(
                       padding: const EdgeInsets.fromLTRB(16, 4, 16, 100),
                       itemCount: filtered.length,
-                      itemBuilder: (_, i) => _PlayerCard(
-                        player: filtered[i],
-                        l: l,
-                        onTapBadge: () => confirmTogglePayment(
-                          context,
-                          ref,
-                          uid: filtered[i].uid,
-                          name: filtered[i].name,
-                          paidUntil: filtered[i].paidUntil,
-                          isLifetime: filtered[i].lifetimeMember,
+                      itemBuilder: (_, i) => AppStaggeredItem(
+                        index: i,
+                        child: _PlayerCard(
+                          player: filtered[i],
+                          l: l,
+                          onTapBadge: () => confirmTogglePayment(
+                            context,
+                            ref,
+                            uid: filtered[i].uid,
+                            name: filtered[i].name,
+                            paidUntil: filtered[i].paidUntil,
+                            isLifetime: filtered[i].lifetimeMember,
+                          ),
                         ),
                       ),
                     ),

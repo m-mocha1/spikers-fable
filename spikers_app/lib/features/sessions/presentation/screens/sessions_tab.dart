@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/widgets/animations.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'package:spikers_app/core/widgets/session_card.dart';
@@ -62,7 +63,10 @@ class SessionsTab extends ConsumerWidget {
           child: ListView.builder(
             padding: const EdgeInsetsDirectional.fromSTEB(16, 16, 16, 100),
             itemCount: sessions.length,
-            itemBuilder: (_, i) => SessionCard(session: sessions[i]),
+            itemBuilder: (_, i) => AppStaggeredItem(
+              index: i,
+              child: SessionCard(session: sessions[i]),
+            ),
           ),
         );
       },

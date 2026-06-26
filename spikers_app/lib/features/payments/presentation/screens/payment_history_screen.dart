@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/widgets/animations.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/payment_record.dart';
@@ -36,7 +37,10 @@ class PaymentHistoryScreen extends ConsumerWidget {
           return ListView.builder(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
             itemCount: records.length,
-            itemBuilder: (_, i) => _PaymentRecordCard(record: records[i]),
+            itemBuilder: (_, i) => AppStaggeredItem(
+              index: i,
+              child: _PaymentRecordCard(record: records[i]),
+            ),
           );
         },
       ),

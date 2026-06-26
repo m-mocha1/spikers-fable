@@ -2,14 +2,17 @@ import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_motion.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/utils/app_snackbar.dart';
+import '../../../../core/widgets/animations.dart';
 import '../../../../core/widgets/confirm_dialog.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -410,7 +413,10 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
                 onLeave: () => _leave(l),
                 l: l,
               ),
-          ],
+          ]
+              .animate(interval: AppMotion.stagger)
+              .fadeIn(duration: AppMotion.normal, curve: AppMotion.enter)
+              .slideY(begin: 0.1, end: 0, curve: AppMotion.enter),
         ),
       ),
     );
@@ -669,11 +675,16 @@ class _AttendeesSection extends StatelessWidget {
 
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
-            child: LinearProgressIndicator(
-              value: ratio.clamp(0.0, 1.0),
-              minHeight: 8,
-              backgroundColor: AppColors.navyBlue,
-              color: barColor,
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0, end: ratio.clamp(0.0, 1.0)),
+              duration: AppMotion.slow,
+              curve: AppMotion.enter,
+              builder: (_, value, _) => LinearProgressIndicator(
+                value: value,
+                minHeight: 8,
+                backgroundColor: AppColors.navyBlue,
+                color: barColor,
+              ),
             ),
           ),
           if (session.isFull)
@@ -1288,13 +1299,16 @@ class _ChatBadgeIconState extends ConsumerState<_ChatBadgeIcon> {
             Positioned(
               top: -2,
               right: -2,
-              child: Container(
-                width: 10,
-                height: 10,
-                decoration: BoxDecoration(
-                  color: AppColors.gold,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.navyBlue, width: 1.5),
+              child: Pulse(
+                maxScale: 1.35,
+                child: Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(
+                    color: AppColors.gold,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.navyBlue, width: 1.5),
+                  ),
                 ),
               ),
             ),

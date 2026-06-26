@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/constants/app_motion.dart';
 import '../../../../core/utils/app_snackbar.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'package:spikers_app/core/widgets/branded_button.dart';
@@ -138,7 +140,10 @@ class _CreateAnnouncementScreenState
                   isLoading: _isSubmitting,
                   onPressed: _isSubmitting ? null : _submit,
                 ),
-              ],
+              ]
+                  .animate(interval: AppMotion.stagger)
+                  .fadeIn(duration: AppMotion.normal, curve: AppMotion.enter)
+                  .slideY(begin: 0.15, end: 0, curve: AppMotion.enter),
             ),
           ),
         ),

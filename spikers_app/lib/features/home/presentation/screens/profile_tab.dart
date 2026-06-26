@@ -1,10 +1,12 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_motion.dart';
 import '../../../../core/providers/locale_provider.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/utils/app_snackbar.dart';
@@ -199,7 +201,10 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
                     style:
                         const TextStyle(color: AppColors.grey, fontSize: 13)),
           ),
-        ],
+        ]
+            .animate(interval: AppMotion.stagger)
+            .fadeIn(duration: AppMotion.normal, curve: AppMotion.enter)
+            .slideY(begin: 0.12, end: 0, curve: AppMotion.enter),
       ),
     );
   }

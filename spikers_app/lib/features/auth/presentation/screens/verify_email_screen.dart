@@ -9,6 +9,7 @@ import '../../../../core/router/app_router.dart';
 import '../../../../core/utils/app_snackbar.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../l10n/app_localizations.dart';
+import 'package:spikers_app/core/widgets/animations.dart';
 import 'package:spikers_app/core/widgets/branded_button.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../providers/auth_providers.dart';
@@ -133,8 +134,10 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const Icon(Icons.mark_email_unread_outlined,
-                          color: AppColors.gold, size: 64),
+                      const Floating(
+                        child: Icon(Icons.mark_email_unread_outlined,
+                            color: AppColors.gold, size: 64),
+                      ),
                       const SizedBox(height: 20),
                       Text(
                         l.verifyEmailTitle,

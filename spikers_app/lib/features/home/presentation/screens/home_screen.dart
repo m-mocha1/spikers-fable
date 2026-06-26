@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_motion.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'package:spikers_app/core/widgets/floating_nav_bar.dart';
@@ -140,6 +142,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               onPressed: () => _showSessionOptions(context, l),
               child: const Icon(Icons.add),
             )
+              .animate()
+              .scale(
+                duration: AppMotion.normal,
+                curve: Curves.easeOutBack,
+                begin: const Offset(0, 0),
+                end: const Offset(1, 1),
+              )
           : null,
       bottomNavigationBar: FloatingNavBar(
         currentIndex: _index >= 3 ? 0 : _index,

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/utils/app_snackbar.dart';
+import '../../../../core/widgets/animations.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
@@ -60,12 +61,15 @@ class _AnnouncementsScreenState extends ConsumerState<AnnouncementsScreen> {
           return ListView.builder(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
             itemCount: announcements.length,
-            itemBuilder: (_, i) => _AnnouncementCard(
-              announcement: announcements[i],
-              isAuthor:
-                  myUid != null && announcements[i].authorId == myUid,
-              canDelete: isCoach ||
-                  (myUid != null && announcements[i].authorId == myUid),
+            itemBuilder: (_, i) => AppStaggeredItem(
+              index: i,
+              child: _AnnouncementCard(
+                announcement: announcements[i],
+                isAuthor:
+                    myUid != null && announcements[i].authorId == myUid,
+                canDelete: isCoach ||
+                    (myUid != null && announcements[i].authorId == myUid),
+              ),
             ),
           );
         },
