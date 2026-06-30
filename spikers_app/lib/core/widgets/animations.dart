@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
@@ -9,9 +11,16 @@ import '../constants/app_motion.dart';
 /// entrance motion, list staggering, and press feedback look identical
 /// everywhere. Timing comes from [AppMotion].
 
-/// Fades + lifts a widget into place. Use for headers, single cards, and the
-/// children of a [Column] that should reveal on screen entry.
-class AppFadeIn extends StatelessWidget {
+/// Fades + lifts a widget into place, playing the entrance **once** when the
+/// widget first mounts.
+///
+/// Crucially it does NOT replay on rebuild: the owning [AnimationController] is
+/// already completed after the first play, so screens driven by live Firestore
+/// streams / `setState` (lists, profile, session detail) reveal smoothly the
+/// first time and then stay put as data updates — no more re-cascading on every
+/// emission. Use for headers, single cards, and the children of a [Column] that
+/// should reveal on screen entry.
+class AppFadeIn extends StatefulWidget {
   final Widget child;
   final Duration delay;
   final Duration duration;
@@ -29,17 +38,61 @@ class AppFadeIn extends StatelessWidget {
   });
 
   @override
+  State<AppFadeIn> createState() => _AppFadeInState();
+}
+
+class _AppFadeInState extends State<AppFadeIn>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller =
+      AnimationController(vsync: this, duration: widget.duration);
+  late final Animation<double> _curved =
+      CurvedAnimation(parent: _controller, curve: AppMotion.enter);
+  Timer? _startTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.delay == Duration.zero) {
+      _controller.forward();
+    } else {
+      _startTimer = Timer(widget.delay, () {
+        if (mounted) _controller.forward();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _startTimer?.cancel();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return child
-        .animate()
-        .fadeIn(delay: delay, duration: duration, curve: AppMotion.enter)
-        .slideY(begin: slide, end: 0, duration: duration, curve: AppMotion.enter);
+    return FadeTransition(
+      opacity: _curved,
+      child: SlideTransition(
+        position: Tween<Offset>(
+          begin: Offset(0, widget.slide),
+          end: Offset.zero,
+        ).animate(_curved),
+        child: widget.child,
+      ),
+    );
   }
 }
 
-/// Staggered entrance for the item at [index] in a list. Each successive row
-/// starts a little later (capped by [AppMotion.maxStaggerItems]) so the list
-/// cascades in rather than appearing all at once.
+/// Entrance for the item at [index] in a list. Plays a single quick fade-in the
+/// first time the row mounts (via the play-once [AppFadeIn]) — there is no
+/// per-index stagger delay, so rows appear instantly while scrolling and the
+/// list never re-cascades when its backing stream re-emits.
+///
+/// Pass a stable [key] at the call site (e.g. `ValueKey(model.id)`) so that
+/// after a data update only genuinely-new rows animate; existing rows keep their
+/// already-completed animation state and stay put.
+///
+/// [index] is retained for call-site compatibility; it no longer affects timing.
 class AppStaggeredItem extends StatelessWidget {
   final int index;
   final Widget child;
@@ -55,7 +108,6 @@ class AppStaggeredItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppFadeIn(
-      delay: AppMotion.staggerFor(index),
       slide: slide,
       child: child,
     );

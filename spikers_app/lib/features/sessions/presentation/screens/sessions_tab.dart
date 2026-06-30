@@ -64,6 +64,7 @@ class SessionsTab extends ConsumerWidget {
             padding: const EdgeInsetsDirectional.fromSTEB(16, 16, 16, 100),
             itemCount: sessions.length,
             itemBuilder: (_, i) => AppStaggeredItem(
+              key: ValueKey(sessions[i].id),
               index: i,
               child: SessionCard(session: sessions[i]),
             ),

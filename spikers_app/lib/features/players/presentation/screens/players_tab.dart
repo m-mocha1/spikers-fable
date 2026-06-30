@@ -132,6 +132,7 @@ class _PlayersTabState extends ConsumerState<PlayersTab> {
                       padding: const EdgeInsets.fromLTRB(16, 4, 16, 100),
                       itemCount: filtered.length,
                       itemBuilder: (_, i) => AppStaggeredItem(
+                        key: ValueKey(filtered[i].uid),
                         index: i,
                         child: _PlayerCard(
                           player: filtered[i],

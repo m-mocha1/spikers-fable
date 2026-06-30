@@ -23,11 +23,10 @@ class AppMotion {
   static const Duration pulse = Duration(milliseconds: 1100);
 
   // ── Stagger ────────────────────────────────────────────────────────────
-  /// Delay added per list item so rows cascade in instead of popping at once.
+  /// Per-child interval for `flutter_animate`'s `.animate(interval: ...)` so a
+  /// group of elements cascades in instead of popping at once. Used by static
+  /// screen bodies; live-stream lists use the play-once [AppFadeIn] instead.
   static const Duration stagger = Duration(milliseconds: 60);
-
-  /// Caps the cumulative stagger delay so long lists don't animate forever.
-  static const int maxStaggerItems = 12;
 
   // ── Curves ─────────────────────────────────────────────────────────────
   /// Default easing for entrances — gentle, slightly overshooting settle.
@@ -38,11 +37,4 @@ class AppMotion {
 
   /// Easing for looping ambient motion.
   static const Curve ambient = Curves.easeInOut;
-
-  /// Resolves the entrance delay for the item at [index] in a list, clamped
-  /// to [maxStaggerItems] so deep scroll positions don't accrue huge delays.
-  static Duration staggerFor(int index) {
-    final capped = index < maxStaggerItems ? index : maxStaggerItems;
-    return stagger * capped;
-  }
 }
