@@ -14,11 +14,11 @@
       },
       "oauth_client": [
         {
-          "client_id": "733768447663-61qi4hkaipvdrcceahjocbqrjnimq06f.apps.googleusercontent.com",
+          "client_id": "733768447663-k9767ca59b3f5coa8nmv93fj8pvl4ife.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.jerusalem.spikers",
-            "certificate_hash": "0c3722b47eb3bb192cf97c560aec678b5ffe48f0"
+            "certificate_hash": "3de20608ee5e85107fe3d4844b2b8a0a4383ad5b"
           }
         },
         {
