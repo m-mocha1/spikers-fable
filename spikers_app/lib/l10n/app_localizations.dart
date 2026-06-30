@@ -890,6 +890,12 @@ abstract class AppLocalizations {
   /// **'This member has lifetime membership.'**
   String get lifetimeMember;
 
+  /// No description provided for @injured.
+  ///
+  /// In en, this message translates to:
+  /// **'Injured'**
+  String get injured;
+
   /// No description provided for @payment.
   ///
   /// In en, this message translates to:

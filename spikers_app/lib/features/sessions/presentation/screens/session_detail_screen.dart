@@ -14,6 +14,7 @@ import '../../../../core/router/app_router.dart';
 import '../../../../core/utils/app_snackbar.dart';
 import '../../../../core/widgets/animations.dart';
 import '../../../../core/widgets/confirm_dialog.dart';
+import '../../../../core/widgets/injured_icon.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'package:spikers_app/features/sessions/domain/entities/session_model.dart';
@@ -403,16 +404,17 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
               onEditCapacity: () => _editCapacity(l),
             ),
             const SizedBox(height: 30),
-            if (!isOwner)
-              _JoinButton(
-                session: session,
-                isJoined: isJoined,
-                isWaitlisted: isWaitlisted,
-                isBusy: _isJoining,
-                onJoin: () => _join(l),
-                onLeave: () => _leave(l),
-                l: l,
-              ),
+            // Coaches/admins own sessions but may also play in them, so the
+            // Join button is shown to everyone — owners included.
+            _JoinButton(
+              session: session,
+              isJoined: isJoined,
+              isWaitlisted: isWaitlisted,
+              isBusy: _isJoining,
+              onJoin: () => _join(l),
+              onLeave: () => _leave(l),
+              l: l,
+            ),
           ]
               .animate(interval: AppMotion.stagger)
               .fadeIn(duration: AppMotion.normal, curve: AppMotion.enter)
@@ -711,6 +713,7 @@ class _AttendeesSection extends StatelessWidget {
                 gender: a.gender,
                 photoUrl: a.photoUrl,
                 attendanceCount: a.attendanceCount,
+                injured: a.injured,
                 isAttended: isAttended,
                 canMark: isCoach,
                 canRemove: canManage,
@@ -756,6 +759,7 @@ class _AttendeesSection extends StatelessWidget {
                   name: u.name,
                   gender: u.gender,
                   photoUrl: u.photoUrl,
+                  injured: u.injured,
                   canRemove: canManage,
                   canViewProfile: isCoach,
                   onRemove: onRemove,
@@ -775,6 +779,7 @@ class _AttendeeItem extends StatelessWidget {
   final String gender;
   final String photoUrl;
   final int attendanceCount;
+  final bool injured;
   final bool isAttended;
   final bool canMark;
   final bool canRemove;
@@ -789,6 +794,7 @@ class _AttendeeItem extends StatelessWidget {
     required this.gender,
     required this.photoUrl,
     required this.attendanceCount,
+    required this.injured,
     required this.isAttended,
     required this.canMark,
     required this.canRemove,
@@ -879,6 +885,10 @@ class _AttendeeItem extends StatelessWidget {
             size: 20,
             color: gender == 'male' ? AppColors.gold : Colors.pinkAccent,
           ),
+          if (injured) ...[
+            const SizedBox(width: 6),
+            const InjuredIcon(size: 20),
+          ],
           if (canMark) ...[
             const SizedBox(width: 6),
             IconButton(
@@ -922,6 +932,7 @@ class _WaitlistItem extends StatelessWidget {
   final String name;
   final String gender;
   final String photoUrl;
+  final bool injured;
   final bool canRemove;
   final bool canViewProfile;
   final void Function(String uid, String name) onRemove;
@@ -932,6 +943,7 @@ class _WaitlistItem extends StatelessWidget {
     required this.name,
     required this.gender,
     required this.photoUrl,
+    required this.injured,
     required this.canRemove,
     required this.canViewProfile,
     required this.onRemove,
@@ -996,6 +1008,10 @@ class _WaitlistItem extends StatelessWidget {
             size: 18,
             color: gender == 'male' ? AppColors.gold : Colors.pinkAccent,
           ),
+          if (injured) ...[
+            const SizedBox(width: 6),
+            const InjuredIcon(size: 18),
+          ],
           if (canRemove) ...[
             const SizedBox(width: 2),
             IconButton(

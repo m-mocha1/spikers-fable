@@ -143,6 +143,7 @@
   "unpaid": "غير نشط",
   "lifetime": "عضوية دائمة",
   "lifetimeMember": "هذا العضو يملك عضوية دائمة.",
+  "injured": "مصاب",
   "payment": "العضوية",
   "paymentRequired": "العضوية غير نشطة",
   "paymentRequiredDesc": "عضويتك في النادي غير نشطة. تواصل مع المدرب للتجديد.",

@@ -50,6 +50,7 @@ void main() {
       expect(parsed.weightKg, 78);
       expect(parsed.lastSeenAnnouncementsAt, created);
       expect(parsed.lifetimeMember, false);
+      expect(parsed.injured, false);
     });
 
     test('toMap writes verifiedAt explicitly as null when unverified',
@@ -80,6 +81,28 @@ void main() {
       expect(parsed.photoUrl, isNull);
       expect(parsed.paidUntil, isNull);
       expect(parsed.lifetimeMember, false);
+      expect(parsed.injured, false);
+    });
+
+    test('injured: defaults false, parses true; never written by toMap',
+        () async {
+      // Admin-set flag (Firebase console), so it must read back but stay out
+      // of the client write path — same contract as lifetimeMember.
+      final user = UserModel(
+        uid: 'u1',
+        name: 'Sami',
+        role: 'player',
+        createdAt: DateTime(2026),
+      );
+      expect(user.injured, false);
+      expect(user.toMap().containsKey('injured'), isFalse);
+
+      final parsed = UserModel.fromDoc(await writeAndRead({
+        'name': 'Sami',
+        'createdAt': Timestamp.fromDate(DateTime(2026)),
+        'injured': true,
+      }));
+      expect(parsed.injured, true);
     });
 
     test('gender/DOB are optional: omitted from toMap and age is null',

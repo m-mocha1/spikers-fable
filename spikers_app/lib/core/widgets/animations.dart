@@ -83,16 +83,16 @@ class _AppFadeInState extends State<AppFadeIn>
   }
 }
 
-/// Entrance for the item at [index] in a list. Plays a single quick fade-in the
-/// first time the row mounts (via the play-once [AppFadeIn]) — there is no
-/// per-index stagger delay, so rows appear instantly while scrolling and the
-/// list never re-cascades when its backing stream re-emits.
+/// Staggered entrance for the row at [index] in a list. The first rows cascade
+/// in one after another ([AppMotion.staggerFor]) with the same fade + slide-up
+/// used for the section reveals on the detail and profile screens, so lists and
+/// detail pages share one motion language.
 ///
-/// Pass a stable [key] at the call site (e.g. `ValueKey(model.id)`) so that
-/// after a data update only genuinely-new rows animate; existing rows keep their
+/// Because it builds on the play-once [AppFadeIn], the cascade runs **once** on
+/// first mount and never re-cascades when the backing stream re-emits. Pass a
+/// stable [key] at the call site (e.g. `ValueKey(model.id)`) so that after a
+/// data update only genuinely-new rows animate; existing rows keep their
 /// already-completed animation state and stay put.
-///
-/// [index] is retained for call-site compatibility; it no longer affects timing.
 class AppStaggeredItem extends StatelessWidget {
   final int index;
   final Widget child;
@@ -108,6 +108,7 @@ class AppStaggeredItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppFadeIn(
+      delay: AppMotion.staggerFor(index),
       slide: slide,
       child: child,
     );

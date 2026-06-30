@@ -26,6 +26,12 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _index = 0;
 
+  /// Bumped each time a tab is (re)selected so its entrance animation replays.
+  /// One counter per tab slot, passed to the animated tabs as `revealGeneration`
+  /// — the `IndexedStack` keeps tabs mounted, so without this they'd only ever
+  /// animate once (at app launch, before the user even switches to them).
+  final List<int> _reveal = [0, 0, 0];
+
   void _showSessionOptions(BuildContext context, AppLocalizations l) {
     showModalBottomSheet(
       context: context,
@@ -52,11 +58,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 backgroundColor: AppColors.gold,
                 child: Icon(Icons.add, color: AppColors.navyBlue),
               ),
-              title: Text(l.newSession,
-                  style: const TextStyle(fontWeight: FontWeight.w600)),
-              subtitle: Text(l.createSession,
-                  style:
-                      const TextStyle(color: AppColors.grey, fontSize: 12)),
+              title: Text(
+                l.newSession,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+              subtitle: Text(
+                l.createSession,
+                style: const TextStyle(color: AppColors.grey, fontSize: 12),
+              ),
               onTap: () {
                 Navigator.of(context).pop();
                 context.push(Routes.createSession);
@@ -67,11 +76,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 backgroundColor: AppColors.navyBlue,
                 child: Icon(Icons.flash_on_outlined, color: AppColors.gold),
               ),
-              title: Text(l.quickSession,
-                  style: const TextStyle(fontWeight: FontWeight.w600)),
-              subtitle: Text(l.selectTemplate,
-                  style:
-                      const TextStyle(color: AppColors.grey, fontSize: 12)),
+              title: Text(
+                l.quickSession,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+              subtitle: Text(
+                l.selectTemplate,
+                style: const TextStyle(color: AppColors.grey, fontSize: 12),
+              ),
               onTap: () {
                 Navigator.of(context).pop();
                 context.push(Routes.quickSession);
@@ -82,11 +94,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 backgroundColor: AppColors.navyBlue,
                 child: Icon(Icons.repeat, color: AppColors.gold),
               ),
-              title: Text(l.recurringSessions,
-                  style: const TextStyle(fontWeight: FontWeight.w600)),
-              subtitle: Text(l.recurringSessionsDesc,
-                  style:
-                      const TextStyle(color: AppColors.grey, fontSize: 12)),
+              title: Text(
+                l.recurringSessions,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+              subtitle: Text(
+                l.recurringSessionsDesc,
+                style: const TextStyle(color: AppColors.grey, fontSize: 12),
+              ),
               onTap: () {
                 Navigator.of(context).pop();
                 context.push(Routes.recurringSessions);
@@ -107,8 +122,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     ref.watch(notificationsServiceProvider);
 
     final tabs = isCoach
-        ? const [SessionsTab(), PlayersTab(), ProfileTab()]
-        : const [SessionsTab(), PlayersPeerTab(), ProfileTab()];
+        ? [
+            SessionsTab(revealGeneration: _reveal[0]),
+            const PlayersTab(),
+            ProfileTab(revealGeneration: _reveal[2]),
+          ]
+        : [
+            SessionsTab(revealGeneration: _reveal[0]),
+            const PlayersPeerTab(),
+            ProfileTab(revealGeneration: _reveal[2]),
+          ];
     final safeIndex = _index >= tabs.length ? 0 : _index;
 
     return Scaffold(
@@ -141,18 +164,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ? FloatingActionButton.small(
               onPressed: () => _showSessionOptions(context, l),
               child: const Icon(Icons.add),
+            ).animate().scale(
+              duration: AppMotion.normal,
+              curve: Curves.easeOutBack,
+              begin: const Offset(0, 0),
+              end: const Offset(1, 1),
             )
-              .animate()
-              .scale(
-                duration: AppMotion.normal,
-                curve: Curves.easeOutBack,
-                begin: const Offset(0, 0),
-                end: const Offset(1, 1),
-              )
           : null,
       bottomNavigationBar: FloatingNavBar(
         currentIndex: _index >= 3 ? 0 : _index,
-        onTap: (i) => setState(() => _index = i),
+        onTap: (i) => setState(() {
+          if (i != _index) _reveal[i]++;
+          _index = i;
+        }),
         items: [
           FloatingNavItem(
             icon: Icons.sports_volleyball_outlined,

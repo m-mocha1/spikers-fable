@@ -143,6 +143,7 @@
   "unpaid": "Inactive",
   "lifetime": "LIFETIME",
   "lifetimeMember": "This member has lifetime membership.",
+  "injured": "Injured",
   "payment": "Membership",
   "paymentRequired": "Membership inactive",
   "paymentRequiredDesc": "Your club membership isn't active. Contact your coach to renew.",

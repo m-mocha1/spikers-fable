@@ -12,6 +12,7 @@ class PlayerSummary {
   final int attendanceCount;
   final DateTime? paidUntil;
   final bool lifetimeMember;
+  final bool injured;
 
   const PlayerSummary({
     required this.uid,
@@ -22,6 +23,7 @@ class PlayerSummary {
     required this.attendanceCount,
     required this.paidUntil,
     required this.lifetimeMember,
+    required this.injured,
   });
 
   bool get isPaid =>
@@ -42,6 +44,7 @@ class PlayerSummary {
       attendanceCount: ((d['attendanceCount'] ?? 0) as num).toInt(),
       paidUntil: (d['paidUntil'] as Timestamp?)?.toDate(),
       lifetimeMember: (d['lifetimeMember'] ?? false) as bool,
+      injured: (d['injured'] ?? false) as bool,
     );
   }
 }
@@ -52,12 +55,14 @@ class PeerSummary {
   final String name;
   final String photoUrl;
   final int attendanceCount;
+  final bool injured;
 
   const PeerSummary({
     required this.uid,
     required this.name,
     required this.photoUrl,
     required this.attendanceCount,
+    required this.injured,
   });
 
   factory PeerSummary.fromDoc(
@@ -68,6 +73,7 @@ class PeerSummary {
       name: (d['name'] ?? '') as String,
       photoUrl: (d['photoUrl'] ?? '') as String,
       attendanceCount: ((d['attendanceCount'] ?? 0) as num).toInt(),
+      injured: (d['injured'] ?? false) as bool,
     );
   }
 }

@@ -23,10 +23,20 @@ class AppMotion {
   static const Duration pulse = Duration(milliseconds: 1100);
 
   // ── Stagger ────────────────────────────────────────────────────────────
-  /// Per-child interval for `flutter_animate`'s `.animate(interval: ...)` so a
-  /// group of elements cascades in instead of popping at once. Used by static
-  /// screen bodies; live-stream lists use the play-once [AppFadeIn] instead.
+  /// Per-item interval for entrance cascades — used both by `flutter_animate`'s
+  /// `.animate(interval: ...)` on static screen bodies (session detail, profile)
+  /// and by [staggerFor] for live-stream list rows, so both reveal identically.
   static const Duration stagger = Duration(milliseconds: 60);
+
+  /// Number of leading list rows that cascade in. Rows past this appear with no
+  /// delay, so scrolling a long list never exposes a row still waiting its turn.
+  static const int staggerLeadCount = 10;
+
+  /// Entrance delay for the list row at [index]: the first [staggerLeadCount]
+  /// rows cascade one after another; deeper rows get zero delay so they never
+  /// lag behind a fast scroll.
+  static Duration staggerFor(int index) =>
+      index < staggerLeadCount ? stagger * index : Duration.zero;
 
   // ── Curves ─────────────────────────────────────────────────────────────
   /// Default easing for entrances — gentle, slightly overshooting settle.

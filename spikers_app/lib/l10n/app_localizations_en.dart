@@ -417,6 +417,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lifetimeMember => 'This member has lifetime membership.';
 
   @override
+  String get injured => 'Injured';
+
+  @override
   String get payment => 'Membership';
 
   @override

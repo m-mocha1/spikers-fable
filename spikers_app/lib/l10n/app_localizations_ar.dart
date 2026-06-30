@@ -414,6 +414,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get lifetimeMember => 'هذا العضو يملك عضوية دائمة.';
 
   @override
+  String get injured => 'مصاب';
+
+  @override
   String get payment => 'العضوية';
 
   @override
