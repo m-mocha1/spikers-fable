@@ -5,14 +5,17 @@ import '../../l10n/app_localizations.dart';
 import '../constants/app_colors.dart';
 import 'app_snackbar.dart';
 
-/// Camera/photo-library permission gates used before launching the image picker.
+/// Camera permission gate used before launching the image picker's camera path.
 ///
-/// Each `ensure*` helper requests the OS permission first and only returns true
-/// when access is granted (or, for photos, "limited"). On a plain denial it
-/// shows a snackbar; when the permission is permanently denied it shows a
-/// dialog that can deep-link to the app's system settings. This is what lets the
-/// app comply with Apple's requirement to ask before touching the camera/gallery
-/// and to fail gracefully instead of silently when denied.
+/// Requests the OS permission first and only returns true when access is
+/// granted. On a plain denial it shows a snackbar; when the permission is
+/// permanently denied it shows a dialog that can deep-link to the app's system
+/// settings. This is what lets the app comply with the platform requirement to
+/// ask before touching the camera and to fail gracefully instead of silently
+/// when denied.
+///
+/// Gallery selection intentionally has no equivalent gate: it goes through the
+/// Android Photo Picker / iOS PHPicker, which require no media permission.
 
 /// Returns true only if camera access is available.
 Future<bool> ensureCameraPermission(
@@ -23,18 +26,6 @@ Future<bool> ensureCameraPermission(
       permission: Permission.camera,
       title: l.cameraPermissionTitle,
       message: l.cameraPermissionMessage,
-    );
-
-/// Returns true only if photo-library access is available. "Limited" access
-/// (iOS Limited Photos) is treated as success so those users aren't blocked.
-Future<bool> ensurePhotoPermission(
-        BuildContext context, AppLocalizations l) =>
-    _ensure(
-      context,
-      l,
-      permission: Permission.photos,
-      title: l.photoPermissionTitle,
-      message: l.photoPermissionMessage,
     );
 
 Future<bool> _ensure(

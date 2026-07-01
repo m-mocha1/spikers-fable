@@ -108,13 +108,12 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
   }
 
   Future<void> _pickAndUpload(ImageSource source, AppLocalizations l) async {
-    final bool granted;
+    // Camera capture needs a runtime permission; gallery goes through the
+    // Android Photo Picker / iOS PHPicker, which require none.
     if (source == ImageSource.camera) {
-      granted = await ensureCameraPermission(context, l);
-    } else {
-      granted = await ensurePhotoPermission(context, l);
+      final granted = await ensureCameraPermission(context, l);
+      if (!granted || !mounted) return;
     }
-    if (!granted || !mounted) return;
     final file = await ImagePicker().pickImage(
       source: source,
       maxWidth: 512,

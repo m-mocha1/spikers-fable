@@ -234,13 +234,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Allow camera access in Settings to take a profile photo.';
 
   @override
-  String get photoPermissionTitle => 'Photo access needed';
-
-  @override
-  String get photoPermissionMessage =>
-      'Allow photo access in Settings to choose a profile photo.';
-
-  @override
   String get permissionDenied =>
       'Permission denied. You can enable it anytime in Settings.';
 

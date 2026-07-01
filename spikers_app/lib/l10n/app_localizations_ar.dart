@@ -232,13 +232,6 @@ class AppLocalizationsAr extends AppLocalizations {
       'اسمح بالوصول إلى الكاميرا من الإعدادات لالتقاط صورة الملف الشخصي.';
 
   @override
-  String get photoPermissionTitle => 'إذن الصور مطلوب';
-
-  @override
-  String get photoPermissionMessage =>
-      'اسمح بالوصول إلى الصور من الإعدادات لاختيار صورة الملف الشخصي.';
-
-  @override
   String get permissionDenied =>
       'تم رفض الإذن. يمكنك تفعيله في أي وقت من الإعدادات.';
 

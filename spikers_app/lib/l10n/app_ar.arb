@@ -78,8 +78,6 @@
   "unknownError": "حدث خطأ ما. حاول مجدداً.",
   "cameraPermissionTitle": "إذن الكاميرا مطلوب",
   "cameraPermissionMessage": "اسمح بالوصول إلى الكاميرا من الإعدادات لالتقاط صورة الملف الشخصي.",
-  "photoPermissionTitle": "إذن الصور مطلوب",
-  "photoPermissionMessage": "اسمح بالوصول إلى الصور من الإعدادات لاختيار صورة الملف الشخصي.",
   "permissionDenied": "تم رفض الإذن. يمكنك تفعيله في أي وقت من الإعدادات.",
   "openSettings": "فتح الإعدادات",
   "loading": "جاري التحميل...",

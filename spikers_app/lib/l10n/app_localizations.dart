@@ -536,18 +536,6 @@ abstract class AppLocalizations {
   /// **'Allow camera access in Settings to take a profile photo.'**
   String get cameraPermissionMessage;
 
-  /// No description provided for @photoPermissionTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Photo access needed'**
-  String get photoPermissionTitle;
-
-  /// No description provided for @photoPermissionMessage.
-  ///
-  /// In en, this message translates to:
-  /// **'Allow photo access in Settings to choose a profile photo.'**
-  String get photoPermissionMessage;
-
   /// No description provided for @permissionDenied.
   ///
   /// In en, this message translates to:
