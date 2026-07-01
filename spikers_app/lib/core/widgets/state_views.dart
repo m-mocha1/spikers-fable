@@ -3,6 +3,7 @@ import 'package:shimmer/shimmer.dart';
 
 import '../constants/app_colors.dart';
 import '../../l10n/app_localizations.dart';
+import 'animations.dart';
 
 /// Shared async-state widgets (per CLAUDE.md: LoadingView / ErrorView /
 /// EmptyStateView). Every list/detail screen renders these instead of
@@ -37,12 +38,13 @@ class ErrorView extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     return Center(
-      child: Padding(
+      child: AppFadeIn(
+        child: Padding(
         padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 64, color: AppColors.grey),
+            Floating(child: Icon(icon, size: 64, color: AppColors.grey)),
             const SizedBox(height: 16),
             Text(
               message ?? l.errorOccurred,
@@ -64,6 +66,7 @@ class ErrorView extends StatelessWidget {
               ),
             ],
           ],
+        ),
         ),
       ),
     );
@@ -90,12 +93,13 @@ class EmptyStateView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Padding(
+      child: AppFadeIn(
+        child: Padding(
         padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 64, color: AppColors.grey),
+            Floating(child: Icon(icon, size: 64, color: AppColors.grey)),
             const SizedBox(height: 16),
             Text(
               title,
@@ -118,6 +122,7 @@ class EmptyStateView extends StatelessWidget {
               action!,
             ],
           ],
+        ),
         ),
       ),
     );

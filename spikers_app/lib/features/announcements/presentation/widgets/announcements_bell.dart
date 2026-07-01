@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../../core/widgets/animations.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../providers/announcements_providers.dart';
 
@@ -27,12 +28,15 @@ class AnnouncementsBell extends ConsumerWidget {
             Positioned(
               right: -1,
               top: -1,
-              child: Container(
-                width: 9,
-                height: 9,
-                decoration: const BoxDecoration(
-                  color: AppColors.errorRed,
-                  shape: BoxShape.circle,
+              child: Pulse(
+                maxScale: 1.4,
+                child: Container(
+                  width: 9,
+                  height: 9,
+                  decoration: const BoxDecoration(
+                    color: AppColors.errorRed,
+                    shape: BoxShape.circle,
+                  ),
                 ),
               ),
             ),

@@ -18,12 +18,13 @@ void main() {
   });
 
   Future<void> seedPlayer(String uid, String name,
-      {String gender = 'male', bool lifetime = false}) async {
+      {String gender = 'male', bool lifetime = false, bool injured = false}) async {
     await db.collection('users').doc(uid).set({
       'role': 'player',
       'name': name,
       'gender': gender,
       'lifetimeMember': lifetime,
+      'injured': injured,
     });
   }
 
@@ -38,6 +39,19 @@ void main() {
 
       final players = await repo.watchPlayers().first;
       expect(players.map((p) => p.name), ['Aya', 'Bilal']);
+    });
+
+    test('parses injured flag, defaulting to false when absent', () async {
+      await seedPlayer('hurt', 'Hurt', injured: true);
+      await db.collection('users').doc('ok').set({
+        'role': 'player',
+        'name': 'Ok',
+        'gender': 'male',
+      });
+
+      final byUid = {for (final p in await repo.watchPlayers().first) p.uid: p};
+      expect(byUid['hurt']!.injured, isTrue);
+      expect(byUid['ok']!.injured, isFalse);
     });
   });
 
@@ -54,6 +68,21 @@ void main() {
           await repo.watchPeers(myUid: 'me', myGender: 'male').first;
       expect(peers.length, 1);
       expect(peers.single.uid, 'p1');
+    });
+
+    test('parses injured flag from the public mirror', () async {
+      await db.collection('users_public').doc('me').set(
+          {'role': 'player', 'name': 'Me', 'gender': 'male'});
+      await db.collection('users_public').doc('p1').set({
+        'role': 'player',
+        'name': 'Peer',
+        'gender': 'male',
+        'injured': true,
+      });
+
+      final peers =
+          await repo.watchPeers(myUid: 'me', myGender: 'male').first;
+      expect(peers.single.injured, isTrue);
     });
   });
 

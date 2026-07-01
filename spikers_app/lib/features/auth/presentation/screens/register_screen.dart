@@ -12,6 +12,7 @@ import '../../../../core/utils/app_snackbar.dart';
 import '../../../../core/utils/media_permissions.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../l10n/app_localizations.dart';
+import 'package:spikers_app/core/widgets/animations.dart';
 import 'package:spikers_app/core/widgets/branded_button.dart';
 import 'package:spikers_app/core/widgets/branded_text_field.dart';
 import '../../domain/repositories/auth_repository.dart';
@@ -129,13 +130,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   Future<void> _pickPhoto(ImageSource source, AppLocalizations l) async {
-    final bool granted;
+    // Camera capture needs a runtime permission; gallery goes through the
+    // Android Photo Picker / iOS PHPicker, which require none.
     if (source == ImageSource.camera) {
-      granted = await ensureCameraPermission(context, l);
-    } else {
-      granted = await ensurePhotoPermission(context, l);
+      final granted = await ensureCameraPermission(context, l);
+      if (!granted || !mounted) return;
     }
-    if (!granted || !mounted) return;
     final file = await ImagePicker().pickImage(
       source: source,
       maxWidth: 512,
@@ -193,7 +193,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       appBar: AppBar(title: Text(l.register)),
       body: SingleChildScrollView(
         padding: const EdgeInsetsDirectional.fromSTEB(24, 24, 24, 40),
-        child: Form(
+        child: AppFadeIn(
+          child: Form(
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -423,6 +424,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               ),
             ],
           ),
+        ),
         ),
       ),
     );

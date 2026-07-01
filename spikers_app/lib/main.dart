@@ -5,6 +5,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker_android/image_picker_android.dart';
+import 'package:image_picker_platform_interface/image_picker_platform_interface.dart';
 
 import 'core/constants/app_colors.dart';
 import 'core/providers/locale_provider.dart';
@@ -30,6 +32,12 @@ Future<void> main() async {
     webProvider: ReCaptchaV3Provider('6LfUyvUsAAAAABb7HEdQnNne18CUEiPOCqCOSjCR'),
   );
   FirebaseMessaging.onBackgroundMessage(_bgMessageHandler);
+  // Use the Android Photo Picker for gallery selection so the app needs no
+  // READ_MEDIA_IMAGES permission (Google Play policy). No-op on other platforms.
+  final imagePickerImpl = ImagePickerPlatform.instance;
+  if (imagePickerImpl is ImagePickerAndroid) {
+    imagePickerImpl.useAndroidPhotoPicker = true;
+  }
   // Kick off session restore early so splash's `ready` await is short.
   AuthRepositoryImpl.instance;
   runApp(const ProviderScope(child: SpikersApp()));

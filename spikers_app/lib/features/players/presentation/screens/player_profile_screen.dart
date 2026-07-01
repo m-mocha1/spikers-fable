@@ -1,12 +1,15 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_motion.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/utils/app_snackbar.dart';
 import '../../../../core/widgets/confirm_dialog.dart';
+import '../../../../core/widgets/injured_icon.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'package:spikers_app/features/auth/domain/entities/user_model.dart';
@@ -103,9 +106,21 @@ class PlayerProfileScreen extends ConsumerWidget {
                 const SizedBox(height: 16),
                 _ReadOnlyAvatar(name: user.name, photoUrl: user.photoUrl),
                 const SizedBox(height: 16),
-                Text(user.name,
-                    style: const TextStyle(
-                        fontSize: 22, fontWeight: FontWeight.w700)),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Flexible(
+                      child: Text(user.name,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                              fontSize: 22, fontWeight: FontWeight.w700)),
+                    ),
+                    if (user.injured) ...[
+                      const SizedBox(width: 8),
+                      const InjuredIcon(size: 22),
+                    ],
+                  ],
+                ),
                 const SizedBox(height: 12),
                 ProfileRoleBadge(isCoach: user.isCoach, l: l),
                 const SizedBox(height: 24),
@@ -137,7 +152,10 @@ class PlayerProfileScreen extends ConsumerWidget {
                   ),
                 ],
                 const SizedBox(height: 16),
-              ],
+              ]
+                  .animate(interval: AppMotion.stagger)
+                  .fadeIn(duration: AppMotion.normal, curve: AppMotion.enter)
+                  .slideY(begin: 0.12, end: 0, curve: AppMotion.enter),
             ),
           ),
         );

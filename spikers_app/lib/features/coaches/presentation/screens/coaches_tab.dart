@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/app_snackbar.dart';
+import '../../../../core/widgets/animations.dart';
 import '../../../../core/widgets/confirm_dialog.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -31,7 +32,10 @@ class CoachesTab extends ConsumerWidget {
         return ListView.builder(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
           itemCount: coaches.length,
-          itemBuilder: (_, i) => _CoachCard(coach: coaches[i]),
+          itemBuilder: (_, i) => AppStaggeredItem(
+            index: i,
+            child: _CoachCard(coach: coaches[i]),
+          ),
         );
       },
     );

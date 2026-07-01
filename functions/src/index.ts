@@ -1293,7 +1293,7 @@ export const createRecurringSessions = onSchedule(
   }
 );
 
-const PUBLIC_KEYS = ["name", "photoUrl", "role", "gender", "attendanceCount"];
+const PUBLIC_KEYS = ["name", "photoUrl", "role", "gender", "attendanceCount", "injured"];
 
 export const mirrorUserPublic = onDocumentWritten(
   { document: "users/{uid}", region: REGION },
@@ -1328,6 +1328,7 @@ export const mirrorUserPublic = onDocumentWritten(
           role: after["role"] ?? "player",
           gender: after["gender"] ?? "male",
           attendanceCount: after["attendanceCount"] ?? 0,
+          injured: after["injured"] ?? false,
         },
         { merge: false }
       );

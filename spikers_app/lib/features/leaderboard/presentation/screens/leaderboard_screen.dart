@@ -2,7 +2,11 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:flutter_animate/flutter_animate.dart';
+
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_motion.dart';
+import '../../../../core/widgets/animations.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/leaderboard_entry.dart';
@@ -71,8 +75,10 @@ class LeaderboardScreen extends ConsumerWidget {
                   child: ListView.builder(
                     padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
                     itemCount: entries.length,
-                    itemBuilder: (_, i) =>
-                        _LeaderboardTile(rank: i + 1, entry: entries[i]),
+                    itemBuilder: (_, i) => AppStaggeredItem(
+                      index: i,
+                      child: _LeaderboardTile(rank: i + 1, entry: entries[i]),
+                    ),
                   ),
                 );
               },
@@ -119,7 +125,12 @@ class _LeaderboardTile extends StatelessWidget {
             child: Center(
               child: rank == 1
                   ? const Icon(Icons.emoji_events,
-                      color: AppColors.gold, size: 24)
+                          color: AppColors.gold, size: 24)
+                      .animate(onPlay: (c) => c.repeat())
+                      .shimmer(
+                          duration: const Duration(milliseconds: 2000),
+                          color: AppColors.white,
+                          delay: const Duration(milliseconds: 1200))
                   : Text(
                       '#$rank',
                       style: TextStyle(
@@ -159,12 +170,17 @@ class _LeaderboardTile extends StatelessWidget {
                   : AppColors.navyBlue,
               borderRadius: BorderRadius.circular(20),
             ),
-            child: Text(
-              '${entry.count}',
-              style: TextStyle(
-                color: isTop3 ? AppColors.gold : AppColors.white,
-                fontWeight: FontWeight.w700,
-                fontSize: 14,
+            child: TweenAnimationBuilder<int>(
+              tween: IntTween(begin: 0, end: entry.count),
+              duration: AppMotion.slow,
+              curve: AppMotion.enter,
+              builder: (_, value, _) => Text(
+                '$value',
+                style: TextStyle(
+                  color: isTop3 ? AppColors.gold : AppColors.white,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                ),
               ),
             ),
           ),

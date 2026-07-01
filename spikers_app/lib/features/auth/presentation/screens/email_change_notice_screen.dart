@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../l10n/app_localizations.dart';
+import 'package:spikers_app/core/widgets/animations.dart';
 import 'package:spikers_app/core/widgets/branded_button.dart';
 import '../providers/auth_providers.dart';
 
@@ -27,8 +28,10 @@ class EmailChangeNoticeScreen extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const Icon(Icons.mark_email_read_outlined,
-                          color: AppColors.gold, size: 64),
+                      const Floating(
+                        child: Icon(Icons.mark_email_read_outlined,
+                            color: AppColors.gold, size: 64),
+                      ),
                       const SizedBox(height: 20),
                       Text(
                         l.emailChangeNoticeTitle,

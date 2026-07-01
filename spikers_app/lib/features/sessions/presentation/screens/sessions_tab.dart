@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/widgets/animations.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'package:spikers_app/core/widgets/session_card.dart';
@@ -10,63 +11,72 @@ import '../../../auth/presentation/providers/auth_providers.dart';
 import '../providers/sessions_providers.dart';
 
 class SessionsTab extends ConsumerWidget {
-  const SessionsTab({super.key});
+  const SessionsTab({super.key, this.revealGeneration = 0});
+
+  /// Bumped by the home shell each time this tab becomes visible; re-mounts the
+  /// list below so the staggered entrance replays on every visit.
+  final int revealGeneration;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final sessionsAsync = ref.watch(upcomingSessionsProvider);
 
     final l = AppLocalizations.of(context)!;
-    return sessionsAsync.when(
-      loading: () =>
-          const ListShimmer(itemHeight: 140, itemCount: 5),
-      error: (e, _) => ErrorView(
-          onRetry: () => ref.invalidate(upcomingSessionsProvider)),
-      data: (sessions) {
-        if (sessions.isEmpty) {
-          final user = ref.watch(currentUserProvider).value;
-          if (user != null && !user.isCoach && !user.hasCompleteProfile) {
-            return EmptyStateView(
-              icon: Icons.badge_outlined,
-              title: l.completeProfileForSessions,
-              subtitle: l.completeProfileForSessionsDesc,
-              action: ElevatedButton.icon(
-                onPressed: () => showSetProfileBasicsDialog(context, user),
-                icon: const Icon(Icons.edit_outlined),
-                label: Text(l.completeProfile),
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size(200, 48),
+    return KeyedSubtree(
+      key: ValueKey(revealGeneration),
+      child: sessionsAsync.when(
+        loading: () => const ListShimmer(itemHeight: 140, itemCount: 5),
+        error: (e, _) =>
+            ErrorView(onRetry: () => ref.invalidate(upcomingSessionsProvider)),
+        data: (sessions) {
+          if (sessions.isEmpty) {
+            final user = ref.watch(currentUserProvider).value;
+            if (user != null && !user.isCoach && !user.hasCompleteProfile) {
+              return EmptyStateView(
+                icon: Icons.badge_outlined,
+                title: l.completeProfileForSessions,
+                subtitle: l.completeProfileForSessionsDesc,
+                action: ElevatedButton.icon(
+                  onPressed: () => showSetProfileBasicsDialog(context, user),
+                  icon: const Icon(Icons.edit_outlined),
+                  label: Text(l.completeProfile),
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size(200, 48),
+                  ),
                 ),
-              ),
-            );
-          }
-          if (user != null && !user.isCoach && !user.isPaid) {
+              );
+            }
+            if (user != null && !user.isCoach && !user.isPaid) {
+              return EmptyStateView(
+                icon: Icons.lock_outline,
+                title: l.paymentRequired,
+                subtitle: l.paymentRequiredDesc,
+              );
+            }
             return EmptyStateView(
-              icon: Icons.lock_outline,
-              title: l.paymentRequired,
-              subtitle: l.paymentRequiredDesc,
+              icon: Icons.sports_volleyball_outlined,
+              title: l.noSessions,
+              subtitle: l.noSessionsDesc,
             );
           }
-          return EmptyStateView(
-            icon: Icons.sports_volleyball_outlined,
-            title: l.noSessions,
-            subtitle: l.noSessionsDesc,
+          return RefreshIndicator(
+            color: AppColors.gold,
+            onRefresh: () async {
+              ref.invalidate(upcomingSessionsProvider);
+              await ref.read(upcomingSessionsProvider.future);
+            },
+            child: ListView.builder(
+              padding: const EdgeInsetsDirectional.fromSTEB(16, 16, 16, 100),
+              itemCount: sessions.length,
+              itemBuilder: (_, i) => AppStaggeredItem(
+                key: ValueKey(sessions[i].id),
+                index: i,
+                child: SessionCard(session: sessions[i]),
+              ),
+            ),
           );
-        }
-        return RefreshIndicator(
-          color: AppColors.gold,
-          onRefresh: () async {
-            ref.invalidate(upcomingSessionsProvider);
-            await ref.read(upcomingSessionsProvider.future);
-          },
-          child: ListView.builder(
-            padding: const EdgeInsetsDirectional.fromSTEB(16, 16, 16, 100),
-            itemCount: sessions.length,
-            itemBuilder: (_, i) => SessionCard(session: sessions[i]),
-          ),
-        );
-      },
+        },
+      ),
     );
   }
-
 }

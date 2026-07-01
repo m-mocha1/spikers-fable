@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/widgets/injured_icon.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/player_summary.dart';
@@ -18,12 +19,10 @@ class PlayersPeerTab extends ConsumerWidget {
 
     return peersAsync.when(
       loading: () => const ListShimmer(),
-      error: (e, _) =>
-          ErrorView(onRetry: () => ref.invalidate(peersProvider)),
+      error: (e, _) => ErrorView(onRetry: () => ref.invalidate(peersProvider)),
       data: (peers) {
         if (peers.isEmpty) {
-          return EmptyStateView(
-              icon: Icons.group_outlined, title: l.noPlayers);
+          return EmptyStateView(icon: Icons.group_outlined, title: l.noPlayers);
         }
         return ListView.builder(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
@@ -45,12 +44,12 @@ class _PeerCard extends StatelessWidget {
     final initials = peer.name.trim().isEmpty
         ? '?'
         : peer.name
-            .trim()
-            .split(' ')
-            .map((w) => w[0])
-            .take(2)
-            .join()
-            .toUpperCase();
+              .trim()
+              .split(' ')
+              .map((w) => w[0])
+              .take(2)
+              .join()
+              .toUpperCase();
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -68,9 +67,13 @@ class _PeerCard extends StatelessWidget {
                 ? CachedNetworkImageProvider(peer.photoUrl)
                 : null,
             child: peer.photoUrl.isEmpty
-                ? Text(initials,
+                ? Text(
+                    initials,
                     style: const TextStyle(
-                        color: AppColors.gold, fontWeight: FontWeight.w700))
+                      color: AppColors.gold,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  )
                 : null,
           ),
           const SizedBox(width: 12),
@@ -78,20 +81,41 @@ class _PeerCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(peer.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w600, fontSize: 15)),
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        peer.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ),
+                    if (peer.injured) ...[
+                      const SizedBox(width: 6),
+                      const InjuredIcon(),
+                    ],
+                  ],
+                ),
                 const SizedBox(height: 3),
                 Row(
                   children: [
-                    const Icon(Icons.sports_volleyball,
-                        size: 11, color: AppColors.grey),
+                    const Icon(
+                      Icons.sports_volleyball,
+                      size: 11,
+                      color: AppColors.grey,
+                    ),
                     const SizedBox(width: 4),
-                    Text('${peer.attendanceCount} ${l.sessionsAttended}',
-                        style: const TextStyle(
-                            color: AppColors.grey, fontSize: 12)),
+                    Text(
+                      '${peer.attendanceCount} ${l.sessionsAttended}',
+                      style: const TextStyle(
+                        color: AppColors.grey,
+                        fontSize: 12,
+                      ),
+                    ),
                   ],
                 ),
               ],

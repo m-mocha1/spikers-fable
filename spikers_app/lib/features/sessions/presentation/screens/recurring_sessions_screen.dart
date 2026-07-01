@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/utils/app_snackbar.dart';
+import '../../../../core/widgets/animations.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'package:spikers_app/features/sessions/domain/entities/recurring_session_model.dart';
@@ -40,10 +41,13 @@ class RecurringSessionsScreen extends ConsumerWidget {
           return ListView.builder(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
             itemCount: items.length,
-            itemBuilder: (_, i) => _RecurringCard(
-              model: items[i],
-              dayLabels: dayLabels,
-              l: l,
+            itemBuilder: (_, i) => AppStaggeredItem(
+              index: i,
+              child: _RecurringCard(
+                model: items[i],
+                dayLabels: dayLabels,
+                l: l,
+              ),
             ),
           );
         },

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_motion.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/utils/app_snackbar.dart';
 import '../../../../core/utils/validators.dart';
@@ -118,7 +120,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ),
                       ],
                     ),
-                  ],
+                  ]
+                      .animate(interval: AppMotion.stagger)
+                      .fadeIn(duration: AppMotion.normal, curve: AppMotion.enter)
+                      .slideY(begin: 0.18, end: 0, curve: AppMotion.enter),
                 ),
               ),
             ),
@@ -139,7 +144,15 @@ class _Header extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          Image.asset(AppAssets.splashBg, fit: BoxFit.cover),
+          Image.asset(AppAssets.splashBg, fit: BoxFit.cover)
+              .animate()
+              .fadeIn(duration: AppMotion.slow)
+              .scale(
+                begin: const Offset(1.08, 1.08),
+                end: const Offset(1.0, 1.0),
+                duration: const Duration(milliseconds: 1600),
+                curve: Curves.easeOut,
+              ),
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(

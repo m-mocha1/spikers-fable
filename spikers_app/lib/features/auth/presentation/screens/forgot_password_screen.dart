@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_motion.dart';
 import '../../../../core/utils/app_snackbar.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -87,7 +89,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 onPressed: _submit,
                 isLoading: _loading,
               ),
-            ],
+            ]
+                .animate(interval: AppMotion.stagger)
+                .fadeIn(duration: AppMotion.normal, curve: AppMotion.enter)
+                .slideY(begin: 0.18, end: 0, curve: AppMotion.enter),
           ),
         ),
       ),

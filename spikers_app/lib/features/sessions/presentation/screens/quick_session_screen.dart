@@ -5,6 +5,7 @@ import 'package:omni_datetime_picker/omni_datetime_picker.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/app_snackbar.dart';
+import '../../../../core/widgets/animations.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'package:spikers_app/features/sessions/domain/entities/session_model.dart';
@@ -136,15 +137,18 @@ class _QuickSessionScreenState extends ConsumerState<QuickSessionScreen> {
                   padding:
                       const EdgeInsetsDirectional.fromSTEB(16, 16, 16, 8),
                   itemCount: templates.length,
-                  itemBuilder: (_, i) => _TemplateCard(
-                    template: templates[i],
-                    selected: _selected?.id == templates[i].id,
-                    onTap: () => setState(() => _selected = templates[i]),
-                    onDelete: uid == null
-                        ? () {}
-                        : () => ref
-                            .read(templatesRepositoryProvider)
-                            .delete(uid, templates[i].id),
+                  itemBuilder: (_, i) => AppStaggeredItem(
+                    index: i,
+                    child: _TemplateCard(
+                      template: templates[i],
+                      selected: _selected?.id == templates[i].id,
+                      onTap: () => setState(() => _selected = templates[i]),
+                      onDelete: uid == null
+                          ? () {}
+                          : () => ref
+                              .read(templatesRepositoryProvider)
+                              .delete(uid, templates[i].id),
+                    ),
                   ),
                 ),
               ),

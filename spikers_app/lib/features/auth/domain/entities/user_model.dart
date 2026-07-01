@@ -18,6 +18,10 @@ class UserModel {
   final int? weightKg;
   final DateTime? lastSeenAnnouncementsAt;
   final bool lifetimeMember;
+  // Admin-set availability flag (set directly in the Firebase console, like
+  // lifetimeMember). Read but never written by the client — intentionally
+  // absent from toMap() and the rules update whitelist.
+  final bool injured;
 
   const UserModel({
     required this.uid,
@@ -34,6 +38,7 @@ class UserModel {
     this.weightKg,
     this.lastSeenAnnouncementsAt,
     this.lifetimeMember = false,
+    this.injured = false,
   });
 
   /// Age in years, or null when no date of birth has been provided.
@@ -81,6 +86,7 @@ class UserModel {
       lastSeenAnnouncementsAt:
           (d['lastSeenAnnouncementsAt'] as Timestamp?)?.toDate(),
       lifetimeMember: (d['lifetimeMember'] ?? false) as bool,
+      injured: (d['injured'] ?? false) as bool,
     );
   }
 

@@ -20,6 +20,7 @@ typedef PublicProfile = ({
   String photoUrl,
   String gender,
   int attendanceCount,
+  bool injured,
 });
 
 abstract class SessionsRepository {

@@ -2,7 +2,7 @@ name: spikers_app
 description: "Jerusalem Spikers Volleyball Club App"
 publish_to: 'none'
 
-version: 1.0.1+20
+version: 1.0.1+24
 # comment: "version: x.y.z+build_number" where:
 
 environment:
@@ -46,12 +46,18 @@ dependencies:
   google_fonts: ^6.2.1
 
   image_picker: ^1.1.2
+  # Android Photo Picker (no READ_MEDIA_IMAGES permission needed). Declared
+  # explicitly so main.dart can flip useAndroidPhotoPicker without tripping the
+  # depend_on_referenced_packages lint. Versions track image_picker's resolution.
+  image_picker_android: ^0.8.13+17
+  image_picker_platform_interface: ^2.11.1
 
   # UI utilities
   shimmer: ^3.0.0
   omni_datetime_picker: ^2.0.5
   cached_network_image: ^3.4.1
   permission_handler: ^12.0.3
+  flutter_animate: ^4.5.2
 
 dev_dependencies:
   flutter_test:

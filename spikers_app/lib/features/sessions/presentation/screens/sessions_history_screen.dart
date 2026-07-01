@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../../core/widgets/animations.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'package:spikers_app/features/sessions/domain/entities/session_model.dart';
@@ -50,7 +51,10 @@ class _SessionsHistoryScreenState
           return ListView.builder(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
             itemCount: sessions.length,
-            itemBuilder: (_, i) => _HistoryCard(session: sessions[i]),
+            itemBuilder: (_, i) => AppStaggeredItem(
+              index: i,
+              child: _HistoryCard(session: sessions[i]),
+            ),
           );
         },
       ),
@@ -123,7 +127,7 @@ class _HistoryCardState extends ConsumerState<_HistoryCard> {
     final fmt = DateFormat('MMM d, HH:mm');
     final session = widget.session;
 
-    return GestureDetector(
+    return Pressable(
       onTap: () => context.push(Routes.sessionDetail, extra: session),
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),

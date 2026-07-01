@@ -536,18 +536,6 @@ abstract class AppLocalizations {
   /// **'Allow camera access in Settings to take a profile photo.'**
   String get cameraPermissionMessage;
 
-  /// No description provided for @photoPermissionTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Photo access needed'**
-  String get photoPermissionTitle;
-
-  /// No description provided for @photoPermissionMessage.
-  ///
-  /// In en, this message translates to:
-  /// **'Allow photo access in Settings to choose a profile photo.'**
-  String get photoPermissionMessage;
-
   /// No description provided for @permissionDenied.
   ///
   /// In en, this message translates to:
@@ -889,6 +877,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This member has lifetime membership.'**
   String get lifetimeMember;
+
+  /// No description provided for @injured.
+  ///
+  /// In en, this message translates to:
+  /// **'Injured'**
+  String get injured;
 
   /// No description provided for @payment.
   ///

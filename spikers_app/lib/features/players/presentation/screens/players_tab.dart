@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/utils/age_calculator.dart';
+import '../../../../core/widgets/injured_icon.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/player_summary.dart';
@@ -59,25 +60,23 @@ class _PlayersTabState extends ConsumerState<PlayersTab> {
                   _Chip(
                     label: l.allGenders,
                     active: genderFilter == 'all',
-                    onTap: () => ref
-                        .read(_genderFilterProvider.notifier)
-                        .state = 'all',
+                    onTap: () =>
+                        ref.read(_genderFilterProvider.notifier).state = 'all',
                   ),
                   const SizedBox(width: 8),
                   _Chip(
                     icon: Icons.male,
                     active: genderFilter == 'male',
-                    onTap: () => ref
-                        .read(_genderFilterProvider.notifier)
-                        .state = 'male',
+                    onTap: () =>
+                        ref.read(_genderFilterProvider.notifier).state = 'male',
                   ),
                   const SizedBox(width: 8),
                   _Chip(
                     icon: Icons.female,
                     active: genderFilter == 'female',
-                    onTap: () => ref
-                        .read(_genderFilterProvider.notifier)
-                        .state = 'female',
+                    onTap: () =>
+                        ref.read(_genderFilterProvider.notifier).state =
+                            'female',
                   ),
                   const SizedBox(width: 8),
                   Expanded(
@@ -86,29 +85,43 @@ class _PlayersTabState extends ConsumerState<PlayersTab> {
                       onChanged: (v) => setState(() => _query = v),
                       textInputAction: TextInputAction.search,
                       style: const TextStyle(
-                          color: AppColors.white, fontSize: 14),
+                        color: AppColors.white,
+                        fontSize: 14,
+                      ),
                       decoration: InputDecoration(
                         isDense: true,
                         hintText: l.searchPlayers,
                         hintStyle: const TextStyle(
-                            color: AppColors.grey, fontSize: 13),
-                        prefixIcon: const Icon(Icons.search,
-                            color: AppColors.grey, size: 20),
+                          color: AppColors.grey,
+                          fontSize: 13,
+                        ),
+                        prefixIcon: const Icon(
+                          Icons.search,
+                          color: AppColors.grey,
+                          size: 20,
+                        ),
                         prefixIconConstraints: const BoxConstraints(
-                            minWidth: 36, minHeight: 36),
+                          minWidth: 36,
+                          minHeight: 36,
+                        ),
                         suffixIcon: _query.isEmpty
                             ? null
                             : IconButton(
                                 visualDensity: VisualDensity.compact,
-                                icon: const Icon(Icons.close,
-                                    color: AppColors.grey, size: 18),
+                                icon: const Icon(
+                                  Icons.close,
+                                  color: AppColors.grey,
+                                  size: 18,
+                                ),
                                 onPressed: () {
                                   _searchController.clear();
                                   setState(() => _query = '');
                                 },
                               ),
                         suffixIconConstraints: const BoxConstraints(
-                            minWidth: 36, minHeight: 36),
+                          minWidth: 36,
+                          minHeight: 36,
+                        ),
                         filled: true,
                         fillColor: AppColors.navyLight,
                         contentPadding: const EdgeInsets.symmetric(vertical: 8),
@@ -126,11 +139,13 @@ class _PlayersTabState extends ConsumerState<PlayersTab> {
               child: filtered.isEmpty
                   ? EmptyStateView(
                       icon: Icons.group_outlined,
-                      title: q.isEmpty ? l.noPlayers : l.noPlayersMatch)
+                      title: q.isEmpty ? l.noPlayers : l.noPlayersMatch,
+                    )
                   : ListView.builder(
                       padding: const EdgeInsets.fromLTRB(16, 4, 16, 100),
                       itemCount: filtered.length,
                       itemBuilder: (_, i) => _PlayerCard(
+                        key: ValueKey(filtered[i].uid),
                         player: filtered[i],
                         l: l,
                         onTapBadge: () => confirmTogglePayment(
@@ -156,6 +171,7 @@ class _PlayerCard extends StatelessWidget {
   final AppLocalizations l;
   final VoidCallback onTapBadge;
   const _PlayerCard({
+    super.key,
     required this.player,
     required this.l,
     required this.onTapBadge,
@@ -169,12 +185,12 @@ class _PlayerCard extends StatelessWidget {
     final initials = player.name.trim().isEmpty
         ? '?'
         : player.name
-            .trim()
-            .split(' ')
-            .map((w) => w[0])
-            .take(2)
-            .join()
-            .toUpperCase();
+              .trim()
+              .split(' ')
+              .map((w) => w[0])
+              .take(2)
+              .join()
+              .toUpperCase();
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -186,10 +202,7 @@ class _PlayerCard extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () => context.push(
-            Routes.playerProfile,
-            extra: player.uid,
-          ),
+          onTap: () => context.push(Routes.playerProfile, extra: player.uid),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             child: Row(
@@ -201,10 +214,13 @@ class _PlayerCard extends StatelessWidget {
                       ? CachedNetworkImageProvider(player.photoUrl)
                       : null,
                   child: player.photoUrl.isEmpty
-                      ? Text(initials,
+                      ? Text(
+                          initials,
                           style: const TextStyle(
-                              color: AppColors.gold,
-                              fontWeight: FontWeight.w700))
+                            color: AppColors.gold,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        )
                       : null,
                 ),
                 const SizedBox(width: 12),
@@ -215,39 +231,54 @@ class _PlayerCard extends StatelessWidget {
                       Row(
                         children: [
                           Flexible(
-                            child: Text(player.name,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 15)),
+                            child: Text(
+                              player.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 15,
+                              ),
+                            ),
                           ),
                           const SizedBox(width: 6),
                           Icon(
-                            player.gender == 'male'
-                                ? Icons.male
-                                : Icons.female,
+                            player.gender == 'male' ? Icons.male : Icons.female,
                             color: player.gender == 'male'
                                 ? AppColors.gold
                                 : Colors.pinkAccent,
                             size: 16,
                           ),
+                          if (player.injured) ...[
+                            const SizedBox(width: 6),
+                            const InjuredIcon(),
+                          ],
                         ],
                       ),
                       const SizedBox(height: 3),
                       Row(
                         children: [
-                          Text('$age ${l.years}',
-                              style: const TextStyle(
-                                  color: AppColors.grey, fontSize: 12)),
+                          Text(
+                            '$age ${l.years}',
+                            style: const TextStyle(
+                              color: AppColors.grey,
+                              fontSize: 12,
+                            ),
+                          ),
                           const SizedBox(width: 10),
-                          const Icon(Icons.sports_volleyball,
-                              size: 11, color: AppColors.grey),
+                          const Icon(
+                            Icons.sports_volleyball,
+                            size: 11,
+                            color: AppColors.grey,
+                          ),
                           const SizedBox(width: 3),
                           Text(
-                              '${player.attendanceCount} ${l.sessionsAttended}',
-                              style: const TextStyle(
-                                  color: AppColors.grey, fontSize: 12)),
+                            '${player.attendanceCount} ${l.sessionsAttended}',
+                            style: const TextStyle(
+                              color: AppColors.grey,
+                              fontSize: 12,
+                            ),
+                          ),
                         ],
                       ),
                     ],
@@ -322,10 +353,7 @@ class _PaidBadge extends StatelessWidget {
             if (showDays)
               Text(
                 l.daysLeft(daysLeft),
-                style: TextStyle(
-                  color: color,
-                  fontSize: 10,
-                ),
+                style: TextStyle(color: color, fontSize: 10),
               ),
           ],
         ),
@@ -339,9 +367,12 @@ class _Chip extends StatelessWidget {
   final IconData? icon;
   final bool active;
   final VoidCallback onTap;
-  const _Chip(
-      {this.label, this.icon, required this.active, required this.onTap})
-      : assert(label != null || icon != null);
+  const _Chip({
+    this.label,
+    this.icon,
+    required this.active,
+    required this.onTap,
+  }) : assert(label != null || icon != null);
 
   @override
   Widget build(BuildContext context) {
@@ -354,8 +385,7 @@ class _Chip extends StatelessWidget {
         decoration: BoxDecoration(
           color: active ? AppColors.gold : AppColors.navyLight,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-              color: active ? AppColors.gold : AppColors.grey),
+          border: Border.all(color: active ? AppColors.gold : AppColors.grey),
         ),
         child: icon != null
             ? Icon(icon, color: color, size: 18)

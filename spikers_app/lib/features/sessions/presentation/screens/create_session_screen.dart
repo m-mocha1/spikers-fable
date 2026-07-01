@@ -9,6 +9,7 @@ import '../../../../core/utils/validators.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'package:spikers_app/features/sessions/domain/entities/session_model.dart';
 import 'package:spikers_app/features/sessions/domain/entities/session_template_model.dart';
+import 'package:spikers_app/core/widgets/animations.dart';
 import 'package:spikers_app/core/widgets/branded_button.dart';
 import 'package:spikers_app/core/widgets/branded_text_field.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
@@ -151,7 +152,8 @@ class _CreateSessionScreenState extends ConsumerState<CreateSessionScreen> {
       appBar: AppBar(title: Text(l.createSession)),
       body: SingleChildScrollView(
         padding: const EdgeInsetsDirectional.fromSTEB(24, 24, 24, 40),
-        child: Form(
+        child: AppFadeIn(
+          child: Form(
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -301,6 +303,7 @@ class _CreateSessionScreenState extends ConsumerState<CreateSessionScreen> {
               ),
             ],
           ),
+        ),
         ),
       ),
     );

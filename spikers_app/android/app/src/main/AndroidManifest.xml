@@ -1,10 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
-    <!-- Profile-photo capture/selection (image_picker); requested at runtime. -->
+    <!-- Profile-photo capture via camera (image_picker); requested at runtime.
+         Gallery selection uses the Android Photo Picker, which needs no media
+         permission, so READ_MEDIA_IMAGES / READ_EXTERNAL_STORAGE are not declared. -->
     <uses-permission android:name="android.permission.CAMERA"/>
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32"/>
     <application
         android:label="Spikers"
         android:name="${applicationName}"

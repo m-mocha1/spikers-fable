@@ -87,6 +87,7 @@ class SessionsRemoteDataSource {
           photoUrl: (data['photoUrl'] ?? '') as String,
           gender: (data['gender'] ?? '') as String,
           attendanceCount: ((data['attendanceCount'] ?? 0) as num).toInt(),
+          injured: (data['injured'] ?? false) as bool,
         );
       }
     }
