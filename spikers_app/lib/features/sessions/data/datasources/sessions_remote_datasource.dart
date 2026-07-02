@@ -94,6 +94,34 @@ class SessionsRemoteDataSource {
     return profiles;
   }
 
+  /// Start times of sessions where [uid] was marked attended — archived
+  /// history plus any not-yet-archived live sessions. Newest-first, bounded by
+  /// [limit] so a long-standing member doesn't pull their entire history
+  /// (the streak computation only needs recent weeks; ~100 docs covers 30+
+  /// weeks even at 3 sessions/week).
+  ///
+  /// The history query (array-contains + orderBy) is backed by the composite
+  /// index on (attendedIds, startTime) in firestore.indexes.json.
+  Future<List<DateTime>> fetchAttendedTimes(String uid,
+      {int limit = 100}) async {
+    final results = await Future.wait([
+      _db
+          .collection('sessions_history')
+          .where('attendedIds', arrayContains: uid)
+          .orderBy('startTime', descending: true)
+          .limit(limit)
+          .get(),
+      // Live collection is small (upcoming + today's sessions), so a plain
+      // array-contains needs no ordering or composite index.
+      _db.collection('sessions').where('attendedIds', arrayContains: uid).get(),
+    ]);
+    return [
+      for (final snap in results)
+        for (final doc in snap.docs)
+          (doc.data()['startTime'] as Timestamp).toDate(),
+    ];
+  }
+
   Future<void> create(SessionModel session) async {
     final payload = session.toMap();
     payload['designIndex'] = _random.nextInt(AppAssets.cardDesigns.length);

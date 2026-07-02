@@ -43,6 +43,10 @@ abstract class SessionsRepository {
   /// Batched users_public lookup (whereIn chunking handled inside).
   Future<Map<String, PublicProfile>> fetchPublicProfiles(List<String> uids);
 
+  /// Start times of sessions where [uid] was marked attended (recent first,
+  /// bounded) — drives the weekly attendance streak on the profile.
+  Future<List<DateTime>> fetchAttendedTimes(String uid);
+
   /// Creates the session with a random card design.
   Future<void> create(SessionModel session);
 

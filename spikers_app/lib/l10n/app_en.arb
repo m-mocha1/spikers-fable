@@ -327,5 +327,65 @@
   "wed": "Wed",
   "thu": "Thu",
   "fri": "Fri",
-  "sat": "Sat"
+  "sat": "Sat",
+  "greetingMorning": "Good morning, {name}",
+  "@greetingMorning": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "greetingAfternoon": "Good afternoon, {name}",
+  "@greetingAfternoon": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "greetingEvening": "Good evening, {name}",
+  "@greetingEvening": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "welcomeBack": "Welcome back",
+  "nextUp": "Next up",
+  "sessionsThisWeek": "{count, plural, =0{No sessions this week} =1{1 session this week} other{{count} sessions this week}}",
+  "@sessionsThisWeek": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "upcomingSessionsCount": "{count, plural, =0{No upcoming sessions} =1{1 upcoming session} other{{count} upcoming sessions}}",
+  "@upcomingSessionsCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "findYourNextGame": "Find your next game",
+  "joinedSuccess": "You're in! See you on court",
+  "youLabel": "You",
+  "gamesPlayed": "Games played",
+  "tierRookie": "Rookie",
+  "tierRegular": "Regular",
+  "tierVeteran": "Veteran",
+  "tierLegend": "Legend",
+  "weekStreak": "{count, plural, =1{1-week streak} other{{count}-week streak}}",
+  "@weekStreak": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "milestoneUnlocked": "{count} games played — you're now a {tier}!",
+  "@milestoneUnlocked": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "tier": { "type": "String" }
+    }
+  },
+  "toNextTier": "{count} to {tier}",
+  "@toNextTier": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "tier": { "type": "String" }
+    }
+  }
 }

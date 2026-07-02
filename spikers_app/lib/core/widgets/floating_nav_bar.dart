@@ -27,7 +27,9 @@ class FloatingNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.navyBlue,
+      // Matches the bottom of AppGradients.scaffoldBg so the bar blends into
+      // the gradient instead of reading as a lighter navy band.
+      color: AppColors.navyDeep,
       child: SafeArea(
         top: false,
         child: Container(

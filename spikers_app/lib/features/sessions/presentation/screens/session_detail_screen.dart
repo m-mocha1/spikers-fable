@@ -2,18 +2,23 @@ import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../../core/constants/app_assets.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_gradients.dart';
 import '../../../../core/constants/app_motion.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/utils/app_snackbar.dart';
 import '../../../../core/widgets/animations.dart';
+import '../../../../core/widgets/celebration.dart';
 import '../../../../core/widgets/confirm_dialog.dart';
+import '../../../../core/widgets/gradient_background.dart';
 import '../../../../core/widgets/injured_icon.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -197,10 +202,16 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
     try {
       final result = await _repo.join(_session!.id);
       if (result == JoinResult.waitlisted) {
+        HapticFeedback.selectionClick();
         showAppSnackbar(l.waitlistedSnack);
+      } else if (result == JoinResult.joined) {
+        // The emotional payoff: a haptic thump, a celebratory burst, and a
+        // warm confirmation. 'already_*' stay silent (no state actually
+        // changed) — the live snapshot handles the UI.
+        HapticFeedback.mediumImpact();
+        if (mounted) showCelebration(context);
+        showAppSnackbar('${l.joinedSuccess} 🏐');
       }
-      // 'joined' and 'already_*' stay silent — the live snapshot will
-      // update the UI and a snackbar would be noise.
     } on SessionActionException catch (e) {
       showAppSnackbar(joinErrorMessage(l, e.code));
     } catch (_) {
@@ -216,6 +227,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
     setState(() => _isJoining = true);
     try {
       await _repo.leave(_session!.id);
+      HapticFeedback.selectionClick();
     } catch (_) {
       showAppSnackbar(l.unknownError);
     } finally {
@@ -228,6 +240,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
     final l = AppLocalizations.of(context)!;
     try {
       await _repo.markAttended(_session!.id, userId, attended);
+      HapticFeedback.lightImpact();
     } catch (_) {
       showAppSnackbar(l.unknownError);
     }
@@ -354,6 +367,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
     final canChat = isJoined || isWaitlisted || (isCoach && isOwner);
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title:
             Text(session.title, maxLines: 1, overflow: TextOverflow.ellipsis),
@@ -384,13 +398,18 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
             ),
         ],
       ),
-      body: SingleChildScrollView(
+      body: GradientBackground(
+        child: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // The countdown clock sits on the session art and IS the Hero
+            // landing pad — kept OUTSIDE the staggered fade below so the flight
+            // lands cleanly.
             _CountdownCard(session: session, l: l),
             const SizedBox(height: 20),
+            ...[
             _InfoSection(session: session, l: l, coachName: _coachName),
             const SizedBox(height: 20),
             _AttendeesSection(
@@ -416,15 +435,29 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
               l: l,
             ),
           ]
-              .animate(interval: AppMotion.stagger)
+              // Image first: let the hero banner land (heroSettle), then
+              // reveal each section with a fade + small upward drift.
+              .animate(
+                delay: AppMotion.heroSettle,
+                interval: AppMotion.stagger,
+              )
               .fadeIn(duration: AppMotion.normal, curve: AppMotion.enter)
-              .slideY(begin: 0.1, end: 0, curve: AppMotion.enter),
+              .moveY(
+                begin: AppMotion.revealShift,
+                end: 0,
+                curve: AppMotion.enter,
+              ),
+          ],
+        ),
         ),
       ),
     );
   }
 }
 
+/// The countdown "clock" laid over the session artwork. The art is the Hero
+/// landing pad (pure art, so the flight from [SessionCard] stays clean); the
+/// status label + timer overlay on top, centered.
 class _CountdownCard extends StatelessWidget {
   final SessionModel session;
   final AppLocalizations l;
@@ -432,44 +465,95 @@ class _CountdownCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final asset = AppAssets
+        .cardDesigns[session.designIndex % AppAssets.cardDesigns.length];
+    return SizedBox(
+      height: 150,
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
-      decoration: BoxDecoration(
-        color: AppColors.navyLight,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
-      ),
-      child: Column(
-        children: [
-          Text(
-            session.isExpired
-                ? l.sessionEnded.toUpperCase()
-                : session.isOngoing
-                    ? l.ongoing.toUpperCase()
-                    : l.upcoming.toUpperCase(),
-            style: TextStyle(
-              color: session.isExpired || session.isOngoing
-                  ? AppColors.success
-                  : AppColors.grey,
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 1.2,
-            ),
-          ),
-          const SizedBox(height: 8),
-          if (session.isExpired)
-            Text(
-              l.sessionEndedSubtitle,
-              style: const TextStyle(
-                color: AppColors.gold,
-                fontSize: 28,
-                fontWeight: FontWeight.w700,
+      // Clip the whole panel so the veil / frame follow the rounded image
+      // corners instead of squaring them off.
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Hero art landing pad — pure art + scrim, matching the card's Hero.
+            Hero(
+              tag: 'session_art_${session.id}',
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Image.asset(asset, fit: BoxFit.cover),
+                    const DecoratedBox(
+                      decoration:
+                          BoxDecoration(gradient: AppGradients.cardScrim),
+                    ),
+                  ],
+                ),
               ),
-            )
-          else
-            _CountdownTimer(session: session),
-        ],
+            ),
+            // Uniform veil so the centered timer stays legible over any design.
+            ColoredBox(color: Colors.black.withValues(alpha: 0.22)),
+            // Gold ring to keep the old clock card's framing.
+            IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  border:
+                      Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
+                ),
+              ),
+            ),
+            // Status label + timer, centered over the art — reveals with a
+            // fade + pop once the hero art has settled (heroSettle delay).
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    session.isExpired
+                        ? l.sessionEnded.toUpperCase()
+                        : session.isOngoing
+                            ? l.ongoing.toUpperCase()
+                            : l.upcoming.toUpperCase(),
+                    style: TextStyle(
+                      color: session.isExpired || session.isOngoing
+                          ? AppColors.success
+                          : AppColors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  if (session.isExpired)
+                    Text(
+                      l.sessionEndedSubtitle,
+                      style: const TextStyle(
+                        color: AppColors.gold,
+                        fontSize: 28,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    )
+                  else
+                    _CountdownTimer(session: session),
+                ],
+              )
+                  .animate(delay: AppMotion.heroSettle)
+                  .fadeIn(duration: AppMotion.normal, curve: AppMotion.enter)
+                  .scale(
+                    begin: const Offset(0.85, 0.85),
+                    end: const Offset(1, 1),
+                    alignment: Alignment.center,
+                    duration: AppMotion.normal,
+                    curve: Curves.easeOutBack,
+                  ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -43,6 +43,10 @@ class SessionsRepositoryImpl implements SessionsRepository {
       _remote.fetchPublicProfiles(uids);
 
   @override
+  Future<List<DateTime>> fetchAttendedTimes(String uid) =>
+      _remote.fetchAttendedTimes(uid);
+
+  @override
   Future<void> create(SessionModel session) => _remote.create(session);
 
   @override

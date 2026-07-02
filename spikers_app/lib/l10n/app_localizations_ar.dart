@@ -748,4 +748,97 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get sat => 'سبت';
+
+  @override
+  String greetingMorning(String name) {
+    return 'صباح الخير يا $name';
+  }
+
+  @override
+  String greetingAfternoon(String name) {
+    return 'نهارك سعيد يا $name';
+  }
+
+  @override
+  String greetingEvening(String name) {
+    return 'مساء الخير يا $name';
+  }
+
+  @override
+  String get welcomeBack => 'أهلاً بعودتك';
+
+  @override
+  String get nextUp => 'التالي';
+
+  @override
+  String sessionsThisWeek(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count جلسات هذا الأسبوع',
+      one: 'جلسة واحدة هذا الأسبوع',
+      zero: 'لا جلسات هذا الأسبوع',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String upcomingSessionsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count جلسات قادمة',
+      one: 'جلسة واحدة قادمة',
+      zero: 'لا جلسات قادمة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get findYourNextGame => 'ابحث عن مباراتك القادمة';
+
+  @override
+  String get joinedSuccess => 'تم تسجيلك! نراك في الملعب';
+
+  @override
+  String get youLabel => 'أنت';
+
+  @override
+  String get gamesPlayed => 'المباريات';
+
+  @override
+  String get tierRookie => 'مبتدئ';
+
+  @override
+  String get tierRegular => 'منتظم';
+
+  @override
+  String get tierVeteran => 'محترف';
+
+  @override
+  String get tierLegend => 'أسطورة';
+
+  @override
+  String weekStreak(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count أسبوع متواصل',
+      many: '$count أسبوعًا متواصلًا',
+      few: '$count أسابيع متواصلة',
+      two: 'أسبوعان متواصلان',
+      one: 'أسبوع متواصل',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String milestoneUnlocked(int count, String tier) {
+    return 'لعبت $count مباراة — أصبحت الآن $tier!';
+  }
+
+  @override
+  String toNextTier(int count, String tier) {
+    return 'بقي $count حتى $tier';
+  }
 }

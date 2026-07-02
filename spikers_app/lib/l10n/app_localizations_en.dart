@@ -752,4 +752,94 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sat => 'Sat';
+
+  @override
+  String greetingMorning(String name) {
+    return 'Good morning, $name';
+  }
+
+  @override
+  String greetingAfternoon(String name) {
+    return 'Good afternoon, $name';
+  }
+
+  @override
+  String greetingEvening(String name) {
+    return 'Good evening, $name';
+  }
+
+  @override
+  String get welcomeBack => 'Welcome back';
+
+  @override
+  String get nextUp => 'Next up';
+
+  @override
+  String sessionsThisWeek(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count sessions this week',
+      one: '1 session this week',
+      zero: 'No sessions this week',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String upcomingSessionsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count upcoming sessions',
+      one: '1 upcoming session',
+      zero: 'No upcoming sessions',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get findYourNextGame => 'Find your next game';
+
+  @override
+  String get joinedSuccess => 'You\'re in! See you on court';
+
+  @override
+  String get youLabel => 'You';
+
+  @override
+  String get gamesPlayed => 'Games played';
+
+  @override
+  String get tierRookie => 'Rookie';
+
+  @override
+  String get tierRegular => 'Regular';
+
+  @override
+  String get tierVeteran => 'Veteran';
+
+  @override
+  String get tierLegend => 'Legend';
+
+  @override
+  String weekStreak(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count-week streak',
+      one: '1-week streak',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String milestoneUnlocked(int count, String tier) {
+    return '$count games played — you\'re now a $tier!';
+  }
+
+  @override
+  String toNextTier(int count, String tier) {
+    return '$count to $tier';
+  }
 }

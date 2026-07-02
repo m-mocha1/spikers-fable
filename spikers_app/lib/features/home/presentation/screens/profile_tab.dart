@@ -1,12 +1,18 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_gradients.dart';
 import '../../../../core/constants/app_motion.dart';
+import '../../../../core/utils/attendance_tiers.dart';
+import '../../../../core/widgets/animations.dart';
+import '../../../../core/widgets/celebration.dart';
 import '../../../../core/widgets/injured_icon.dart';
 import '../../../../core/providers/locale_provider.dart';
 import '../../../../core/router/app_router.dart';
@@ -18,6 +24,7 @@ import 'package:spikers_app/core/widgets/edit_body_metrics_dialog.dart';
 import 'package:spikers_app/core/widgets/profile_info.dart';
 import 'package:spikers_app/core/widgets/set_profile_basics_dialog.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
+import '../providers/profile_providers.dart';
 
 class ProfileTab extends ConsumerStatefulWidget {
   const ProfileTab({super.key, this.revealGeneration = 0});
@@ -33,6 +40,26 @@ class ProfileTab extends ConsumerStatefulWidget {
 class _ProfileTabState extends ConsumerState<ProfileTab> {
   bool _uploading = false;
   bool _deleting = false;
+
+  /// Compares the freshly fetched attendance [count] with the last count this
+  /// device saw (SharedPreferences) and celebrates when a tier boundary was
+  /// crossed since. The stored value is updated every time so each milestone
+  /// fires exactly once per device; the first sighting only records a baseline
+  /// (no celebration on a fresh install).
+  Future<void> _checkMilestone(
+      String uid, int count, AppLocalizations l) async {
+    final prefs = await SharedPreferences.getInstance();
+    final key = 'last_seen_attendance_$uid';
+    final previous = prefs.getInt(key);
+    await prefs.setInt(key, count);
+    if (previous == null) return;
+
+    final tier = AttendanceTiers.crossedTier(previous, count);
+    if (tier == null || !mounted) return;
+    HapticFeedback.mediumImpact();
+    showCelebration(context);
+    showAppSnackbar('🎉 ${l.milestoneUnlocked(count, _tierLabel(l, tier))}');
+  }
 
   /// Confirms, then permanently deletes the user's own account and returns to
   /// login. Keeps the user signed in (with a snackbar) if the backend fails.
@@ -140,6 +167,13 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
 
     if (user == null) return const SizedBox.shrink();
 
+    // Milestone watch: fires when the games-played fetch lands (app open /
+    // profile revisit). The prefs baseline inside keeps it one-shot per tier.
+    ref.listen(myAttendanceCountProvider(user.uid), (_, next) {
+      final count = next.value;
+      if (count != null) _checkMilestone(user.uid, count, l);
+    });
+
     return KeyedSubtree(
       key: ValueKey(widget.revealGeneration),
       child: SingleChildScrollView(
@@ -185,6 +219,11 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
                     const SizedBox(height: 12),
                     ProfileRoleBadge(isCoach: user.isCoach, l: l),
                     const SizedBox(height: 24),
+                    _GamesPlayedCard(
+                      uid: user.uid,
+                      isCoach: user.isCoach,
+                      l: l,
+                    ),
                     ProfileStatsRow(
                       user: user,
                       l: l,
@@ -294,6 +333,197 @@ class _CompleteProfileCard extends StatelessWidget {
               const Icon(Icons.chevron_right, color: AppColors.gold),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Hero "games played" stat with a count-up and a milestone tier. Sourced from
+/// the current user's public attendance count; hidden while loading and for
+/// coaches who have no attendance recorded.
+class _GamesPlayedCard extends ConsumerWidget {
+  final String uid;
+  final bool isCoach;
+  final AppLocalizations l;
+  const _GamesPlayedCard({
+    required this.uid,
+    required this.isCoach,
+    required this.l,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final count = ref.watch(myAttendanceCountProvider(uid)).value;
+    if (count == null) return const SizedBox.shrink();
+    if (isCoach && count == 0) return const SizedBox.shrink();
+    // Streak only matters once there's something to streak; 1 week is noise.
+    final streak =
+        count > 0 ? (ref.watch(myStreakProvider(uid)).value ?? 0) : 0;
+
+    // Progress toward the next tier boundary; null at Legend (max tier).
+    final tier = AttendanceTiers.tierIndex(count);
+    final int? nextThreshold = tier < AttendanceTiers.thresholds.length
+        ? AttendanceTiers.thresholds[tier]
+        : null;
+    final prevThreshold = tier == 0 ? 0 : AttendanceTiers.thresholds[tier - 1];
+
+    return AppFadeIn(
+      slide: 0.06,
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 16),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.navyLight,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
+          ),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: AppGradients.goldCta,
+                    ),
+                    child: const Icon(Icons.sports_volleyball,
+                        color: AppColors.navyBlue, size: 22),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l.gamesPlayed,
+                          style: const TextStyle(
+                              color: AppColors.grey, fontSize: 13),
+                        ),
+                        const SizedBox(height: 2),
+                        TweenAnimationBuilder<int>(
+                          tween: IntTween(begin: 0, end: count),
+                          duration: AppMotion.slow,
+                          curve: AppMotion.enter,
+                          builder: (_, v, _) => Text(
+                            '$v',
+                            style: const TextStyle(
+                              color: AppColors.gold,
+                              fontSize: 30,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                        if (streak >= 2) ...[
+                          const SizedBox(height: 2),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.local_fire_department,
+                                size: 15,
+                                color: AppColors.goldAmber,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                l.weekStreak(streak),
+                                style: const TextStyle(
+                                  color: AppColors.goldAmber,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  _TierChip(label: _tierLabel(l, tier)),
+                ],
+              ),
+              // Progress toward the next tier — hidden at Legend (max tier).
+              if (nextThreshold != null) ...[
+                const SizedBox(height: 12),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: TweenAnimationBuilder<double>(
+                    tween: Tween(
+                      begin: 0,
+                      end: (count - prevThreshold) /
+                          (nextThreshold - prevThreshold),
+                    ),
+                    duration: AppMotion.slow,
+                    curve: AppMotion.enter,
+                    builder: (_, value, _) => LinearProgressIndicator(
+                      value: value,
+                      minHeight: 6,
+                      backgroundColor: AppColors.navyBlue,
+                      color: AppColors.gold,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    Text(
+                      '$count / $nextThreshold',
+                      style:
+                          const TextStyle(color: AppColors.grey, fontSize: 11),
+                    ),
+                    const Spacer(),
+                    Text(
+                      l.toNextTier(
+                          nextThreshold - count, _tierLabel(l, tier + 1)),
+                      style: const TextStyle(
+                        color: AppColors.grey,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+}
+
+/// Localized label for an [AttendanceTiers.tierIndex] value. Shared by the
+/// games-played card and the milestone celebration snackbar.
+String _tierLabel(AppLocalizations l, int tier) => switch (tier) {
+      3 => l.tierLegend,
+      2 => l.tierVeteran,
+      1 => l.tierRegular,
+      _ => l.tierRookie,
+    };
+
+class _TierChip extends StatelessWidget {
+  final String label;
+  const _TierChip({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.gold.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.gold),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: AppColors.gold,
+          fontWeight: FontWeight.w700,
+          fontSize: 12,
         ),
       ),
     );
