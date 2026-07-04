@@ -823,6 +823,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tierLegend => 'Legend';
 
   @override
+  String get tierChampion => 'Champion';
+
+  @override
   String weekStreak(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -841,5 +844,44 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String toNextTier(int count, String tier) {
     return '$count to $tier';
+  }
+
+  @override
+  String get endorse => 'Endorse';
+
+  @override
+  String get endorsed => 'Endorsed';
+
+  @override
+  String get endorsements => 'Endorsements';
+
+  @override
+  String endorsedPlayer(String name) {
+    return 'Endorsed $name';
+  }
+
+  @override
+  String endorseRemaining(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count endorsements left',
+      one: '1 endorsement left',
+      zero: 'No endorsements left this session',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get endorseFailed => 'Couldn\'t give endorsement';
+
+  @override
+  String endorsementLevelLabel(int level) {
+    return 'Level $level';
+  }
+
+  @override
+  String endorsementMilestoneUnlocked(int count, String label) {
+    return '$count endorsements — you reached $label!';
   }
 }

@@ -368,6 +368,7 @@
   "tierRegular": "Regular",
   "tierVeteran": "Veteran",
   "tierLegend": "Legend",
+  "tierChampion": "Champion",
   "weekStreak": "{count, plural, =1{1-week streak} other{{count}-week streak}}",
   "@weekStreak": {
     "placeholders": {
@@ -386,6 +387,35 @@
     "placeholders": {
       "count": { "type": "int" },
       "tier": { "type": "String" }
+    }
+  },
+  "endorse": "Endorse",
+  "endorsed": "Endorsed",
+  "endorsements": "Endorsements",
+  "endorsedPlayer": "Endorsed {name}",
+  "@endorsedPlayer": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "endorseRemaining": "{count, plural, =0{No endorsements left this session} =1{1 endorsement left} other{{count} endorsements left}}",
+  "@endorseRemaining": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "endorseFailed": "Couldn't give endorsement",
+  "endorsementLevelLabel": "Level {level}",
+  "@endorsementLevelLabel": {
+    "placeholders": {
+      "level": { "type": "int" }
+    }
+  },
+  "endorsementMilestoneUnlocked": "{count} endorsements — you reached {label}!",
+  "@endorsementMilestoneUnlocked": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "label": { "type": "String" }
     }
   }
 }

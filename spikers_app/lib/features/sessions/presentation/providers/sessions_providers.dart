@@ -75,6 +75,18 @@ final archivedSessionProvider =
   (ref, id) => ref.watch(sessionsRepositoryProvider).watchArchivedSession(id),
 );
 
+/// Target uids the signed-in user has already endorsed in [sessionId].
+/// Empty while signed out. Drives the endorse-button state on the session
+/// detail screen.
+final myEndorsementsProvider =
+    StreamProvider.autoDispose.family<Set<String>, String>((ref, sessionId) {
+  final uid = ref.watch(currentUserProvider).value?.uid;
+  if (uid == null) return Stream.value(const <String>{});
+  return ref
+      .watch(sessionsRepositoryProvider)
+      .watchMyEndorsements(sessionId, uid);
+});
+
 final sessionsHistoryProvider =
     StreamProvider.autoDispose<List<SessionModel>>(
   (ref) => ref.watch(sessionsRepositoryProvider).watchHistory(),

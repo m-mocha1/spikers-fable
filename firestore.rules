@@ -119,6 +119,19 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Endorsements — one doc per (session, endorser, endorsee). Written
+    // exclusively by the endorsePlayer callable (Admin SDK). Clients may read
+    // only their OWN outgoing endorsements (fromUid == uid) — enough to tell
+    // whether they've already endorsed someone. A user's received total is
+    // exposed via users_public.endorsementCount, so incoming docs stay private.
+    // NOTE: to check "already endorsed?", clients must QUERY
+    // (where fromUid == uid ...), never get() a possibly-missing doc — a get on
+    // a non-existent doc evaluates the rule against a null resource and denies.
+    match /endorsements/{endorsementId} {
+      allow read: if isVerified() && resource.data.fromUid == uid();
+      allow write: if false;
+    }
+
     match /sessions/{sessionId} {
       // Sessions and chat are gated behind email verification (the client also
       // routes unverified users to /verify-email; this is defense-in-depth).

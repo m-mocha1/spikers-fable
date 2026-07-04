@@ -43,6 +43,10 @@ class SessionsRepositoryImpl implements SessionsRepository {
       _remote.fetchPublicProfiles(uids);
 
   @override
+  Stream<PublicProfile?> watchPublicProfile(String uid) =>
+      _remote.watchPublicProfile(uid);
+
+  @override
   Future<List<DateTime>> fetchAttendedTimes(String uid) =>
       _remote.fetchAttendedTimes(uid);
 
@@ -89,6 +93,14 @@ class SessionsRepositoryImpl implements SessionsRepository {
   @override
   Future<void> removeAttendee(String sessionId, String userId) =>
       _wrap(() => _remote.removeAttendee(sessionId, userId));
+
+  @override
+  Future<void> endorse(String sessionId, String userId) =>
+      _wrap(() => _remote.endorse(sessionId, userId));
+
+  @override
+  Stream<Set<String>> watchMyEndorsements(String sessionId, String myUid) =>
+      _remote.watchMyEndorsements(sessionId, myUid);
 
   @override
   Future<void> archiveExpiredNow() => _remote.archiveExpiredNow();

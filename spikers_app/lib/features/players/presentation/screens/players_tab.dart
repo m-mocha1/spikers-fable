@@ -241,14 +241,6 @@ class _PlayerCard extends StatelessWidget {
                               ),
                             ),
                           ),
-                          const SizedBox(width: 6),
-                          Icon(
-                            player.gender == 'male' ? Icons.male : Icons.female,
-                            color: player.gender == 'male'
-                                ? AppColors.gold
-                                : Colors.pinkAccent,
-                            size: 16,
-                          ),
                           if (player.injured) ...[
                             const SizedBox(width: 6),
                             const InjuredIcon(),

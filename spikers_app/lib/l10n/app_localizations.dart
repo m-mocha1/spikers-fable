@@ -1586,6 +1586,12 @@ abstract class AppLocalizations {
   /// **'Legend'**
   String get tierLegend;
 
+  /// No description provided for @tierChampion.
+  ///
+  /// In en, this message translates to:
+  /// **'Champion'**
+  String get tierChampion;
+
   /// No description provided for @weekStreak.
   ///
   /// In en, this message translates to:
@@ -1603,6 +1609,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} to {tier}'**
   String toNextTier(int count, String tier);
+
+  /// No description provided for @endorse.
+  ///
+  /// In en, this message translates to:
+  /// **'Endorse'**
+  String get endorse;
+
+  /// No description provided for @endorsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Endorsed'**
+  String get endorsed;
+
+  /// No description provided for @endorsements.
+  ///
+  /// In en, this message translates to:
+  /// **'Endorsements'**
+  String get endorsements;
+
+  /// No description provided for @endorsedPlayer.
+  ///
+  /// In en, this message translates to:
+  /// **'Endorsed {name}'**
+  String endorsedPlayer(String name);
+
+  /// No description provided for @endorseRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No endorsements left this session} =1{1 endorsement left} other{{count} endorsements left}}'**
+  String endorseRemaining(int count);
+
+  /// No description provided for @endorseFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t give endorsement'**
+  String get endorseFailed;
+
+  /// No description provided for @endorsementLevelLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Level {level}'**
+  String endorsementLevelLabel(int level);
+
+  /// No description provided for @endorsementMilestoneUnlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} endorsements — you reached {label}!'**
+  String endorsementMilestoneUnlocked(int count, String label);
 }
 
 class _AppLocalizationsDelegate

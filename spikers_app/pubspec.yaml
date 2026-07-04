@@ -86,3 +86,5 @@ flutter:
   assets:
     - assets/images/
     - assets/images/cards/
+    - assets/images/endorsment_levels/
+    - assets/images/gamesPlayed_levels/

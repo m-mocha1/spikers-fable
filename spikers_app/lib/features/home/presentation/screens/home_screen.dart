@@ -142,7 +142,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       appBar: AppBar(
         title: Text(l.appName),
         actions: [
-          if (_index == 0 && isCoach)
+          // History is open to everyone: players view past sessions to give
+          // endorsements (only allowed once a session has ended).
+          if (_index == 0)
             IconButton(
               tooltip: l.sessionsHistory,
               icon: const Icon(Icons.history),

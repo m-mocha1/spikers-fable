@@ -1,10 +1,11 @@
 /// Attendance milestone tiers (pure — trivially unit-testable).
 ///
 /// Tier boundaries by lifetime games attended:
-///   0–4   → tier 0 (Rookie)
-///   5–19  → tier 1 (Regular)
-///   20–49 → tier 2 (Veteran)
-///   50+   → tier 3 (Legend)
+///   0–4    → tier 0 (Rookie)
+///   5–19   → tier 1 (Regular)
+///   20–49  → tier 2 (Veteran)
+///   50–99  → tier 3 (Legend)
+///   100+   → tier 4 (Champion)
 ///
 /// Presentation maps tier indices to localized labels; this file owns only the
 /// thresholds so the profile card and the milestone celebration can't drift
@@ -12,10 +13,10 @@
 class AttendanceTiers {
   AttendanceTiers._();
 
-  /// Games needed to *enter* tiers 1..3 (tier 0 starts at zero).
-  static const thresholds = [5, 20, 50];
+  /// Games needed to *enter* tiers 1..4 (tier 0 starts at zero).
+  static const thresholds = [5, 20, 50, 100];
 
-  /// Tier index (0..3) for a lifetime attendance [count].
+  /// Tier index (0..4) for a lifetime attendance [count].
   static int tierIndex(int count) {
     var tier = 0;
     for (final t in thresholds) {

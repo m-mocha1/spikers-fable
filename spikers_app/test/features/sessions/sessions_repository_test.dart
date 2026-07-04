@@ -3,11 +3,13 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:spikers_app/core/constants/app_assets.dart';
 import 'package:spikers_app/features/sessions/data/datasources/sessions_remote_datasource.dart';
 import 'package:spikers_app/features/sessions/data/repositories/session_chat_repository_impl.dart';
 import 'package:spikers_app/features/sessions/data/repositories/sessions_repository_impl.dart';
 import 'package:spikers_app/features/sessions/data/repositories/templates_repository_impl.dart';
 import 'package:spikers_app/features/sessions/domain/repositories/sessions_repository.dart';
+import 'package:spikers_app/features/sessions/domain/entities/session_model.dart';
 import 'package:spikers_app/features/sessions/domain/entities/session_template_model.dart';
 import 'package:spikers_app/features/auth/domain/entities/user_model.dart';
 
@@ -120,6 +122,48 @@ void main() {
     });
   });
 
+  group('create card design assignment', () {
+    SessionModel sessionAt(DateTime createdAt) => SessionModel(
+          id: '',
+          title: 'S',
+          location: 'hall',
+          gender: 'mixed',
+          minAge: 0,
+          maxAge: 99,
+          startTime: DateTime(2026, 6, 1, 18),
+          endTime: DateTime(2026, 6, 1, 20),
+          maxPlayers: 10,
+          coachId: 'c1',
+          attendeeIds: const [],
+          createdAt: createdAt,
+        );
+
+    test('never reuses the previous session\'s card twice in a row', () async {
+      // Create a run of sessions with strictly increasing createdAt so the
+      // "most recent session" lookup is deterministic, then verify no two
+      // consecutive cards match and every index is in range.
+      final base = DateTime(2026, 6, 1, 12);
+      for (var i = 0; i < 30; i++) {
+        await ds.create(sessionAt(base.add(Duration(minutes: i))));
+      }
+
+      final snap =
+          await db.collection('sessions').orderBy('createdAt').get();
+      final indices = snap.docs
+          .map((d) => (d.data()['designIndex'] as num).toInt())
+          .toList();
+
+      expect(indices, hasLength(30));
+      for (final idx in indices) {
+        expect(idx, inInclusiveRange(0, AppAssets.cardDesigns.length - 1));
+      }
+      for (var i = 1; i < indices.length; i++) {
+        expect(indices[i], isNot(indices[i - 1]),
+            reason: 'session $i repeated the previous card');
+      }
+    });
+  });
+
   group('fetchAttendedTimes', () {
     Future<void> seedHistory(String id, DateTime start,
         {List<String> attendedIds = const ['u1']}) async {
@@ -216,6 +260,82 @@ void main() {
         throwsA(isA<SessionActionException>()
             .having((e) => e.code, 'code', 'failed-precondition')),
       );
+    });
+  });
+
+  group('endorse', () {
+    test('calls the endorsePlayer callable on success', () async {
+      final callable = _MockCallable();
+      when(() => callable.call<dynamic>(any()))
+          .thenAnswer((_) async => _FakeResult({'success': true}));
+      when(() => fns.httpsCallable('endorsePlayer')).thenReturn(callable);
+
+      await repo.endorse('s1', 'u2');
+
+      verify(() => callable.call<dynamic>(any())).called(1);
+    });
+
+    test('wraps FirebaseFunctionsException into SessionActionException',
+        () async {
+      final callable = _MockCallable();
+      when(() => callable.call<dynamic>(any())).thenThrow(
+          FirebaseFunctionsException(
+              message: 'did not attend', code: 'failed-precondition'));
+      when(() => fns.httpsCallable('endorsePlayer')).thenReturn(callable);
+
+      await expectLater(
+        repo.endorse('s1', 'u2'),
+        throwsA(isA<SessionActionException>()
+            .having((e) => e.code, 'code', 'failed-precondition')),
+      );
+    });
+  });
+
+  group('watchMyEndorsements', () {
+    test('emits only this session\'s endorsees for the given fromUid',
+        () async {
+      await db
+          .collection('endorsements')
+          .doc('s1_me_u2')
+          .set({'sessionId': 's1', 'fromUid': 'me', 'toUid': 'u2'});
+      await db
+          .collection('endorsements')
+          .doc('s1_me_u3')
+          .set({'sessionId': 's1', 'fromUid': 'me', 'toUid': 'u3'});
+      // Different session — excluded by the client-side sessionId filter.
+      await db
+          .collection('endorsements')
+          .doc('s2_me_u4')
+          .set({'sessionId': 's2', 'fromUid': 'me', 'toUid': 'u4'});
+      // Another user's endorsement — excluded by the fromUid query.
+      await db
+          .collection('endorsements')
+          .doc('s1_other_u2')
+          .set({'sessionId': 's1', 'fromUid': 'other', 'toUid': 'u2'});
+
+      final endorsed = await repo.watchMyEndorsements('s1', 'me').first;
+      expect(endorsed, {'u2', 'u3'});
+    });
+  });
+
+  group('fetchPublicProfiles endorsementCount', () {
+    test('reads endorsementCount, defaulting to 0 when absent', () async {
+      await db.collection('users_public').doc('u2').set({
+        'name': 'Two',
+        'photoUrl': '',
+        'gender': 'male',
+        'attendanceCount': 5,
+        'injured': false,
+        'endorsementCount': 3,
+      });
+      await db.collection('users_public').doc('u3').set({
+        'name': 'Three',
+        'gender': 'male',
+      });
+
+      final map = await repo.fetchPublicProfiles(['u2', 'u3']);
+      expect(map['u2']!.endorsementCount, 3);
+      expect(map['u3']!.endorsementCount, 0);
     });
   });
 

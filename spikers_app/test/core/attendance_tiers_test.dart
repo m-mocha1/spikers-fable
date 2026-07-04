@@ -11,7 +11,9 @@ void main() {
       expect(AttendanceTiers.tierIndex(20), 2);
       expect(AttendanceTiers.tierIndex(49), 2);
       expect(AttendanceTiers.tierIndex(50), 3);
-      expect(AttendanceTiers.tierIndex(500), 3);
+      expect(AttendanceTiers.tierIndex(99), 3);
+      expect(AttendanceTiers.tierIndex(100), 4);
+      expect(AttendanceTiers.tierIndex(500), 4);
     });
   });
 
@@ -20,11 +22,12 @@ void main() {
       expect(AttendanceTiers.crossedTier(4, 5), 1);
       expect(AttendanceTiers.crossedTier(19, 20), 2);
       expect(AttendanceTiers.crossedTier(49, 50), 3);
+      expect(AttendanceTiers.crossedTier(99, 100), 4);
     });
 
     test('jumping several boundaries returns the highest new tier', () {
       expect(AttendanceTiers.crossedTier(3, 25), 2);
-      expect(AttendanceTiers.crossedTier(0, 100), 3);
+      expect(AttendanceTiers.crossedTier(0, 100), 4);
     });
 
     test('no boundary crossed → null', () {

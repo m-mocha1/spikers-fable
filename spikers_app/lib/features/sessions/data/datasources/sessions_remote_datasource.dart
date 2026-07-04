@@ -81,18 +81,33 @@ class SessionsRemoteDataSource {
           .where(FieldPath.documentId, whereIn: chunk)
           .get();
       for (final doc in snap.docs) {
-        final data = doc.data();
-        profiles[doc.id] = (
-          name: (data['name'] ?? '') as String,
-          photoUrl: (data['photoUrl'] ?? '') as String,
-          gender: (data['gender'] ?? '') as String,
-          attendanceCount: ((data['attendanceCount'] ?? 0) as num).toInt(),
-          injured: (data['injured'] ?? false) as bool,
-        );
+        profiles[doc.id] = _profileFromData(doc.data());
       }
     }
     return profiles;
   }
+
+  /// Live single-profile view of users_public/{uid}; null while the mirror doc
+  /// doesn't exist yet. Lets the owner's profile stats (games played,
+  /// endorsements) update the instant a coach marks attendance or an
+  /// endorsement lands, instead of only on a reload.
+  Stream<PublicProfile?> watchPublicProfile(String uid) => _db
+      .collection('users_public')
+      .doc(uid)
+      .snapshots()
+      .map((doc) {
+        final data = doc.data();
+        return data == null ? null : _profileFromData(data);
+      });
+
+  PublicProfile _profileFromData(Map<String, dynamic> data) => (
+        name: (data['name'] ?? '') as String,
+        photoUrl: (data['photoUrl'] ?? '') as String,
+        gender: (data['gender'] ?? '') as String,
+        attendanceCount: ((data['attendanceCount'] ?? 0) as num).toInt(),
+        injured: (data['injured'] ?? false) as bool,
+        endorsementCount: ((data['endorsementCount'] ?? 0) as num).toInt(),
+      );
 
   /// Start times of sessions where [uid] was marked attended — archived
   /// history plus any not-yet-archived live sessions. Newest-first, bounded by
@@ -123,9 +138,38 @@ class SessionsRemoteDataSource {
   }
 
   Future<void> create(SessionModel session) async {
+    final previous = await _mostRecentDesignIndex();
     final payload = session.toMap();
-    payload['designIndex'] = _random.nextInt(AppAssets.cardDesigns.length);
+    payload['designIndex'] = _pickDesignIndex(previous);
     await _db.collection('sessions').add(payload);
+  }
+
+  /// The card-design index of the most recently created session, normalized to
+  /// the current [AppAssets.cardDesigns] length. Returns null when there is no
+  /// prior session (or its value is missing/non-numeric).
+  Future<int?> _mostRecentDesignIndex() async {
+    final snap = await _db
+        .collection('sessions')
+        .orderBy('createdAt', descending: true)
+        .limit(1)
+        .get();
+    if (snap.docs.isEmpty) return null;
+    final raw = snap.docs.first.data()['designIndex'];
+    if (raw is! num) return null;
+    return raw.toInt() % AppAssets.cardDesigns.length;
+  }
+
+  /// Picks a random card-design index, avoiding [previous] so two consecutive
+  /// sessions don't share the same card. Falls back to a plain uniform draw when
+  /// there's no previous index or only one design to choose from.
+  int _pickDesignIndex(int? previous) {
+    final count = AppAssets.cardDesigns.length;
+    if (count <= 1 || previous == null || previous < 0 || previous >= count) {
+      return _random.nextInt(count);
+    }
+    // Draw from the (count - 1) other slots, then shift past the excluded one.
+    final draw = _random.nextInt(count - 1);
+    return draw < previous ? draw : draw + 1;
   }
 
   // --- callable functions -------------------------------------------------
@@ -162,6 +206,25 @@ class SessionsRemoteDataSource {
         'sessionId': sessionId,
         'userId': userId,
       });
+
+  Future<void> endorse(String sessionId, String userId) =>
+      _fns.httpsCallable('endorsePlayer').call({
+        'sessionId': sessionId,
+        'userId': userId,
+      });
+
+  /// The signed-in user's OWN outgoing endorsements (fromUid == [myUid]) is the
+  /// only query shape the security rules permit; sessionId is filtered
+  /// client-side to avoid needing a composite index. Emits the set of target
+  /// uids already endorsed in [sessionId].
+  Stream<Set<String>> watchMyEndorsements(String sessionId, String myUid) => _db
+      .collection('endorsements')
+      .where('fromUid', isEqualTo: myUid)
+      .snapshots()
+      .map((snap) => snap.docs
+          .where((d) => d.data()['sessionId'] == sessionId)
+          .map((d) => d.data()['toUid'] as String)
+          .toSet());
 
   Future<void> archiveExpiredNow() async {
     try {

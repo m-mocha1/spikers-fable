@@ -819,6 +819,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get tierLegend => 'أسطورة';
 
   @override
+  String get tierChampion => 'بطل';
+
+  @override
   String weekStreak(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -840,5 +843,47 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String toNextTier(int count, String tier) {
     return 'بقي $count حتى $tier';
+  }
+
+  @override
+  String get endorse => 'تأييد';
+
+  @override
+  String get endorsed => 'تم التأييد';
+
+  @override
+  String get endorsements => 'التأييدات';
+
+  @override
+  String endorsedPlayer(String name) {
+    return 'تم تأييد $name';
+  }
+
+  @override
+  String endorseRemaining(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'تبقى $count تأييد',
+      many: 'تبقى $count تأييدًا',
+      few: 'تبقى $count تأييدات',
+      two: 'تبقى تأييدان',
+      one: 'تبقى تأييد واحد',
+      zero: 'لم يتبقَّ تأييد لهذه الجلسة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get endorseFailed => 'تعذّر منح التأييد';
+
+  @override
+  String endorsementLevelLabel(int level) {
+    return 'المستوى $level';
+  }
+
+  @override
+  String endorsementMilestoneUnlocked(int count, String label) {
+    return '$count تأييد — وصلت إلى $label!';
   }
 }

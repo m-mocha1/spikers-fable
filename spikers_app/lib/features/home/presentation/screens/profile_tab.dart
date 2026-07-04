@@ -7,11 +7,11 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../../core/constants/app_assets.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/app_gradients.dart';
 import '../../../../core/constants/app_motion.dart';
 import '../../../../core/utils/attendance_tiers.dart';
-import '../../../../core/widgets/animations.dart';
+import '../../../../core/utils/endorsement_level.dart';
 import '../../../../core/widgets/celebration.dart';
 import '../../../../core/widgets/injured_icon.dart';
 import '../../../../core/providers/locale_provider.dart';
@@ -25,6 +25,7 @@ import 'package:spikers_app/core/widgets/profile_info.dart';
 import 'package:spikers_app/core/widgets/set_profile_basics_dialog.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../providers/profile_providers.dart';
+import '../widgets/profile_stat_cards.dart';
 
 class ProfileTab extends ConsumerStatefulWidget {
   const ProfileTab({super.key, this.revealGeneration = 0});
@@ -57,8 +58,29 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
     final tier = AttendanceTiers.crossedTier(previous, count);
     if (tier == null || !mounted) return;
     HapticFeedback.mediumImpact();
-    showCelebration(context);
-    showAppSnackbar('🎉 ${l.milestoneUnlocked(count, _tierLabel(l, tier))}');
+    showCelebration(context, badgeAsset: AppAssets.gamesPlayedBadges[tier]);
+    showAppSnackbar('🎉 ${l.milestoneUnlocked(count, tierLabel(l, tier))}');
+  }
+
+  /// Endorsement-level twin of [_checkMilestone]: celebrates when the lifetime
+  /// endorsement [count] climbs across a level boundary since this device last
+  /// saw it. Same one-shot-per-device baseline behaviour, keyed separately so
+  /// it can't collide with the games-played milestone.
+  Future<void> _checkEndorsementMilestone(
+      String uid, int count, AppLocalizations l) async {
+    final prefs = await SharedPreferences.getInstance();
+    final key = 'last_seen_endorsements_$uid';
+    final previous = prefs.getInt(key);
+    await prefs.setInt(key, count);
+    if (previous == null) return;
+
+    final level = crossedEndorsementLevel(previous, count);
+    if (level == null || !mounted) return;
+    HapticFeedback.mediumImpact();
+    showCelebration(context, badgeAsset: AppAssets.endorsementBadges[level - 1]);
+    showAppSnackbar(
+      '🎉 ${l.endorsementMilestoneUnlocked(count, l.endorsementLevelLabel(level))}',
+    );
   }
 
   /// Confirms, then permanently deletes the user's own account and returns to
@@ -173,6 +195,11 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
       final count = next.value;
       if (count != null) _checkMilestone(user.uid, count, l);
     });
+    // Same one-shot promotion burst for the endorsement level.
+    ref.listen(myEndorsementCountProvider(user.uid), (_, next) {
+      final count = next.value;
+      if (count != null) _checkEndorsementMilestone(user.uid, count, l);
+    });
 
     return KeyedSubtree(
       key: ValueKey(widget.revealGeneration),
@@ -219,7 +246,12 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
                     const SizedBox(height: 12),
                     ProfileRoleBadge(isCoach: user.isCoach, l: l),
                     const SizedBox(height: 24),
-                    _GamesPlayedCard(
+                    GamesPlayedCard(
+                      uid: user.uid,
+                      isCoach: user.isCoach,
+                      l: l,
+                    ),
+                    EndorsementsCard(
                       uid: user.uid,
                       isCoach: user.isCoach,
                       l: l,
@@ -339,197 +371,6 @@ class _CompleteProfileCard extends StatelessWidget {
   }
 }
 
-/// Hero "games played" stat with a count-up and a milestone tier. Sourced from
-/// the current user's public attendance count; hidden while loading and for
-/// coaches who have no attendance recorded.
-class _GamesPlayedCard extends ConsumerWidget {
-  final String uid;
-  final bool isCoach;
-  final AppLocalizations l;
-  const _GamesPlayedCard({
-    required this.uid,
-    required this.isCoach,
-    required this.l,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final count = ref.watch(myAttendanceCountProvider(uid)).value;
-    if (count == null) return const SizedBox.shrink();
-    if (isCoach && count == 0) return const SizedBox.shrink();
-    // Streak only matters once there's something to streak; 1 week is noise.
-    final streak =
-        count > 0 ? (ref.watch(myStreakProvider(uid)).value ?? 0) : 0;
-
-    // Progress toward the next tier boundary; null at Legend (max tier).
-    final tier = AttendanceTiers.tierIndex(count);
-    final int? nextThreshold = tier < AttendanceTiers.thresholds.length
-        ? AttendanceTiers.thresholds[tier]
-        : null;
-    final prevThreshold = tier == 0 ? 0 : AttendanceTiers.thresholds[tier - 1];
-
-    return AppFadeIn(
-      slide: 0.06,
-      child: Padding(
-        padding: const EdgeInsets.only(bottom: 16),
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: AppColors.navyLight,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
-          ),
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: AppGradients.goldCta,
-                    ),
-                    child: const Icon(Icons.sports_volleyball,
-                        color: AppColors.navyBlue, size: 22),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          l.gamesPlayed,
-                          style: const TextStyle(
-                              color: AppColors.grey, fontSize: 13),
-                        ),
-                        const SizedBox(height: 2),
-                        TweenAnimationBuilder<int>(
-                          tween: IntTween(begin: 0, end: count),
-                          duration: AppMotion.slow,
-                          curve: AppMotion.enter,
-                          builder: (_, v, _) => Text(
-                            '$v',
-                            style: const TextStyle(
-                              color: AppColors.gold,
-                              fontSize: 30,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ),
-                        if (streak >= 2) ...[
-                          const SizedBox(height: 2),
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.local_fire_department,
-                                size: 15,
-                                color: AppColors.goldAmber,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                l.weekStreak(streak),
-                                style: const TextStyle(
-                                  color: AppColors.goldAmber,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                  _TierChip(label: _tierLabel(l, tier)),
-                ],
-              ),
-              // Progress toward the next tier — hidden at Legend (max tier).
-              if (nextThreshold != null) ...[
-                const SizedBox(height: 12),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(6),
-                  child: TweenAnimationBuilder<double>(
-                    tween: Tween(
-                      begin: 0,
-                      end: (count - prevThreshold) /
-                          (nextThreshold - prevThreshold),
-                    ),
-                    duration: AppMotion.slow,
-                    curve: AppMotion.enter,
-                    builder: (_, value, _) => LinearProgressIndicator(
-                      value: value,
-                      minHeight: 6,
-                      backgroundColor: AppColors.navyBlue,
-                      color: AppColors.gold,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    Text(
-                      '$count / $nextThreshold',
-                      style:
-                          const TextStyle(color: AppColors.grey, fontSize: 11),
-                    ),
-                    const Spacer(),
-                    Text(
-                      l.toNextTier(
-                          nextThreshold - count, _tierLabel(l, tier + 1)),
-                      style: const TextStyle(
-                        color: AppColors.grey,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-}
-
-/// Localized label for an [AttendanceTiers.tierIndex] value. Shared by the
-/// games-played card and the milestone celebration snackbar.
-String _tierLabel(AppLocalizations l, int tier) => switch (tier) {
-      3 => l.tierLegend,
-      2 => l.tierVeteran,
-      1 => l.tierRegular,
-      _ => l.tierRookie,
-    };
-
-class _TierChip extends StatelessWidget {
-  final String label;
-  const _TierChip({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: AppColors.gold.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.gold),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          color: AppColors.gold,
-          fontWeight: FontWeight.w700,
-          fontSize: 12,
-        ),
-      ),
-    );
-  }
-}
-
 class _Avatar extends StatelessWidget {
   final String name;
   final String? photoUrl;
@@ -554,7 +395,7 @@ class _Avatar extends StatelessWidget {
         alignment: Alignment.center,
         children: [
           CircleAvatar(
-            radius: 64,
+            radius: 80,
             backgroundColor: AppColors.gold,
             backgroundImage: (photoUrl != null && photoUrl!.isNotEmpty)
                 ? CachedNetworkImageProvider(photoUrl!)
@@ -563,7 +404,7 @@ class _Avatar extends StatelessWidget {
                 ? Text(
                     initials,
                     style: const TextStyle(
-                      fontSize: 36,
+                      fontSize: 44,
                       fontWeight: FontWeight.w700,
                       color: AppColors.navyBlue,
                     ),
@@ -572,8 +413,8 @@ class _Avatar extends StatelessWidget {
           ),
           if (isUploading)
             Container(
-              width: 128,
-              height: 128,
+              width: 160,
+              height: 160,
               decoration: const BoxDecoration(
                 color: Colors.black45,
                 shape: BoxShape.circle,
