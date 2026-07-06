@@ -18,7 +18,7 @@ workflows:
         - app_store_credentials
 
     integrations:
-      app_store_connect: ASC_KEY
+      app_store_connect: spikers-fable
 
     scripts:
       - name: Flutter pub get
