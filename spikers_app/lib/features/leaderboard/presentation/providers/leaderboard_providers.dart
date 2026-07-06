@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/firebase/firebase_providers.dart';
+import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../data/datasources/leaderboard_remote_datasource.dart';
 import '../../data/repositories/leaderboard_repository_impl.dart';
 import '../../domain/entities/leaderboard_entry.dart';
@@ -16,12 +17,18 @@ final leaderboardRepositoryProvider = Provider<LeaderboardRepository>(
 /// is left, matching the old per-visit GetX binding.
 final leaderboardTabProvider = StateProvider.autoDispose<int>((ref) => 0);
 
+/// Boards are viewer-aware: players only see their own gender; coaches and
+/// admins see everyone. Empty while signed out.
 final allTimeLeaderboardProvider =
-    FutureProvider.autoDispose<List<LeaderboardEntry>>(
-  (ref) => ref.watch(leaderboardRepositoryProvider).fetchAllTime(),
-);
+    FutureProvider.autoDispose<List<LeaderboardEntry>>((ref) {
+  final viewer = ref.watch(currentUserProvider).value;
+  if (viewer == null) return Future.value(const []);
+  return ref.watch(leaderboardRepositoryProvider).fetchAllTime(viewer);
+});
 
 final monthlyLeaderboardProvider =
-    FutureProvider.autoDispose<List<LeaderboardEntry>>(
-  (ref) => ref.watch(leaderboardRepositoryProvider).fetchMonthly(),
-);
+    FutureProvider.autoDispose<List<LeaderboardEntry>>((ref) {
+  final viewer = ref.watch(currentUserProvider).value;
+  if (viewer == null) return Future.value(const []);
+  return ref.watch(leaderboardRepositoryProvider).fetchMonthly(viewer);
+});

@@ -22,6 +22,15 @@ class AppMotion {
   /// Looping ambient motion (pulsing live badge, shimmering highlight).
   static const Duration pulse = Duration(milliseconds: 1100);
 
+  /// Pause before content reveals beneath a landing hero image (session art
+  /// flying card ↔ detail). Lets the artwork settle first so the text feels
+  /// like it reveals itself rather than popping into existence.
+  static const Duration heroSettle = Duration(milliseconds: 300);
+
+  /// Vertical travel in *pixels* for hero-content reveals — a small upward
+  /// drift (spec: 8–16px), unlike the fraction-based slides used elsewhere.
+  static const double revealShift = 12;
+
   // ── Stagger ────────────────────────────────────────────────────────────
   /// Per-item interval for entrance cascades — used both by `flutter_animate`'s
   /// `.animate(interval: ...)` on static screen bodies (session detail, profile)

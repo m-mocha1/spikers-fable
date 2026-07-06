@@ -25,6 +25,7 @@ class LeaderboardRemoteDataSource {
         uid: doc.id,
         name: (data['name'] ?? '') as String,
         photoUrl: (data['photoUrl'] ?? '') as String,
+        gender: (data['gender'] ?? '') as String,
         count: count,
       ));
     }
@@ -79,6 +80,7 @@ class LeaderboardRemoteDataSource {
           uid: uid,
           name: (profiles[uid]?['name'] ?? '') as String,
           photoUrl: (profiles[uid]?['photoUrl'] ?? '') as String,
+          gender: (profiles[uid]?['gender'] ?? '') as String,
           count: counts[uid] ?? 0,
         ),
     ];

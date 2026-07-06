@@ -1,12 +1,18 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../../core/constants/app_assets.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_motion.dart';
+import '../../../../core/utils/attendance_tiers.dart';
+import '../../../../core/utils/endorsement_level.dart';
+import '../../../../core/widgets/celebration.dart';
 import '../../../../core/widgets/injured_icon.dart';
 import '../../../../core/providers/locale_provider.dart';
 import '../../../../core/router/app_router.dart';
@@ -18,6 +24,8 @@ import 'package:spikers_app/core/widgets/edit_body_metrics_dialog.dart';
 import 'package:spikers_app/core/widgets/profile_info.dart';
 import 'package:spikers_app/core/widgets/set_profile_basics_dialog.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
+import '../providers/profile_providers.dart';
+import '../widgets/profile_stat_cards.dart';
 
 class ProfileTab extends ConsumerStatefulWidget {
   const ProfileTab({super.key, this.revealGeneration = 0});
@@ -33,6 +41,47 @@ class ProfileTab extends ConsumerStatefulWidget {
 class _ProfileTabState extends ConsumerState<ProfileTab> {
   bool _uploading = false;
   bool _deleting = false;
+
+  /// Compares the freshly fetched attendance [count] with the last count this
+  /// device saw (SharedPreferences) and celebrates when a tier boundary was
+  /// crossed since. The stored value is updated every time so each milestone
+  /// fires exactly once per device; the first sighting only records a baseline
+  /// (no celebration on a fresh install).
+  Future<void> _checkMilestone(
+      String uid, int count, AppLocalizations l) async {
+    final prefs = await SharedPreferences.getInstance();
+    final key = 'last_seen_attendance_$uid';
+    final previous = prefs.getInt(key);
+    await prefs.setInt(key, count);
+    if (previous == null) return;
+
+    final tier = AttendanceTiers.crossedTier(previous, count);
+    if (tier == null || !mounted) return;
+    HapticFeedback.mediumImpact();
+    showCelebration(context, badgeAsset: AppAssets.gamesPlayedBadges[tier]);
+    showAppSnackbar('🎉 ${l.milestoneUnlocked(count, tierLabel(l, tier))}');
+  }
+
+  /// Endorsement-level twin of [_checkMilestone]: celebrates when the lifetime
+  /// endorsement [count] climbs across a level boundary since this device last
+  /// saw it. Same one-shot-per-device baseline behaviour, keyed separately so
+  /// it can't collide with the games-played milestone.
+  Future<void> _checkEndorsementMilestone(
+      String uid, int count, AppLocalizations l) async {
+    final prefs = await SharedPreferences.getInstance();
+    final key = 'last_seen_endorsements_$uid';
+    final previous = prefs.getInt(key);
+    await prefs.setInt(key, count);
+    if (previous == null) return;
+
+    final level = crossedEndorsementLevel(previous, count);
+    if (level == null || !mounted) return;
+    HapticFeedback.mediumImpact();
+    showCelebration(context, badgeAsset: AppAssets.endorsementBadges[level - 1]);
+    showAppSnackbar(
+      '🎉 ${l.endorsementMilestoneUnlocked(count, l.endorsementLevelLabel(level))}',
+    );
+  }
 
   /// Confirms, then permanently deletes the user's own account and returns to
   /// login. Keeps the user signed in (with a snackbar) if the backend fails.
@@ -140,6 +189,18 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
 
     if (user == null) return const SizedBox.shrink();
 
+    // Milestone watch: fires when the games-played fetch lands (app open /
+    // profile revisit). The prefs baseline inside keeps it one-shot per tier.
+    ref.listen(myAttendanceCountProvider(user.uid), (_, next) {
+      final count = next.value;
+      if (count != null) _checkMilestone(user.uid, count, l);
+    });
+    // Same one-shot promotion burst for the endorsement level.
+    ref.listen(myEndorsementCountProvider(user.uid), (_, next) {
+      final count = next.value;
+      if (count != null) _checkEndorsementMilestone(user.uid, count, l);
+    });
+
     return KeyedSubtree(
       key: ValueKey(widget.revealGeneration),
       child: SingleChildScrollView(
@@ -185,6 +246,16 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
                     const SizedBox(height: 12),
                     ProfileRoleBadge(isCoach: user.isCoach, l: l),
                     const SizedBox(height: 24),
+                    GamesPlayedCard(
+                      uid: user.uid,
+                      isCoach: user.isCoach,
+                      l: l,
+                    ),
+                    EndorsementsCard(
+                      uid: user.uid,
+                      isCoach: user.isCoach,
+                      l: l,
+                    ),
                     ProfileStatsRow(
                       user: user,
                       l: l,
@@ -324,7 +395,7 @@ class _Avatar extends StatelessWidget {
         alignment: Alignment.center,
         children: [
           CircleAvatar(
-            radius: 64,
+            radius: 80,
             backgroundColor: AppColors.gold,
             backgroundImage: (photoUrl != null && photoUrl!.isNotEmpty)
                 ? CachedNetworkImageProvider(photoUrl!)
@@ -333,7 +404,7 @@ class _Avatar extends StatelessWidget {
                 ? Text(
                     initials,
                     style: const TextStyle(
-                      fontSize: 36,
+                      fontSize: 44,
                       fontWeight: FontWeight.w700,
                       color: AppColors.navyBlue,
                     ),
@@ -342,8 +413,8 @@ class _Avatar extends StatelessWidget {
           ),
           if (isUploading)
             Container(
-              width: 128,
-              height: 128,
+              width: 160,
+              height: 160,
               decoration: const BoxDecoration(
                 color: Colors.black45,
                 shape: BoxShape.circle,

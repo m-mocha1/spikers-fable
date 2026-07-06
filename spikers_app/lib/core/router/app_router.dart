@@ -27,26 +27,26 @@ import '../../features/sessions/presentation/screens/session_detail_screen.dart'
 import '../../features/sessions/presentation/screens/sessions_history_screen.dart';
 
 abstract class Routes {
-  static const splash            = '/';
-  static const login             = '/login';
-  static const register          = '/register';
-  static const forgotPassword    = '/forgot-password';
-  static const verifyEmail       = '/verify-email';
+  static const splash = '/';
+  static const login = '/login';
+  static const register = '/register';
+  static const forgotPassword = '/forgot-password';
+  static const verifyEmail = '/verify-email';
   static const emailChangeNotice = '/email-change-notice';
-  static const home              = '/home';
-  static const sessionDetail     = '/session-detail';
-  static const createSession     = '/create-session';
-  static const quickSession      = '/quick-session';
-  static const sessionChat       = '/session-chat';
-  static const playerProfile     = '/player-profile';
-  static const announcements     = '/announcements';
+  static const home = '/home';
+  static const sessionDetail = '/session-detail';
+  static const createSession = '/create-session';
+  static const quickSession = '/quick-session';
+  static const sessionChat = '/session-chat';
+  static const playerProfile = '/player-profile';
+  static const announcements = '/announcements';
   static const createAnnouncement = '/create-announcement';
-  static const sessionsHistory   = '/sessions-history';
-  static const leaderboard       = '/leaderboard';
+  static const sessionsHistory = '/sessions-history';
+  static const leaderboard = '/leaderboard';
   static const recurringSessions = '/recurring-sessions';
-  static const createRecurring   = '/create-recurring';
-  static const coachesList       = '/coaches-list';
-  static const paymentHistory    = '/payment-history';
+  static const createRecurring = '/create-recurring';
+  static const coachesList = '/coaches-list';
+  static const paymentHistory = '/payment-history';
 }
 
 /// Replaces the GetX CoachOnlyMiddleware: signed-out users land on login,
@@ -66,11 +66,13 @@ final appRouter = GoRouter(
     GoRoute(path: Routes.login, builder: (_, _) => const LoginScreen()),
     GoRoute(path: Routes.register, builder: (_, _) => const RegisterScreen()),
     GoRoute(
-        path: Routes.forgotPassword,
-        builder: (_, _) => const ForgotPasswordScreen()),
+      path: Routes.forgotPassword,
+      builder: (_, _) => const ForgotPasswordScreen(),
+    ),
     GoRoute(
-        path: Routes.verifyEmail,
-        builder: (_, _) => const VerifyEmailScreen()),
+      path: Routes.verifyEmail,
+      builder: (_, _) => const VerifyEmailScreen(),
+    ),
     GoRoute(
       path: Routes.emailChangeNotice,
       builder: (_, state) =>
@@ -88,13 +90,15 @@ final appRouter = GoRouter(
       },
     ),
     GoRoute(
-        path: Routes.createSession,
-        redirect: _coachOnly,
-        builder: (_, _) => const CreateSessionScreen()),
+      path: Routes.createSession,
+      redirect: _coachOnly,
+      builder: (_, _) => const CreateSessionScreen(),
+    ),
     GoRoute(
-        path: Routes.quickSession,
-        redirect: _coachOnly,
-        builder: (_, _) => const QuickSessionScreen()),
+      path: Routes.quickSession,
+      redirect: _coachOnly,
+      builder: (_, _) => const QuickSessionScreen(),
+    ),
     GoRoute(
       path: Routes.sessionChat,
       builder: (_, state) {
@@ -105,51 +109,62 @@ final appRouter = GoRouter(
         );
       },
     ),
+    // No _coachOnly redirect: any signed-in user may open a player profile.
+    // PlayerProfileScreen itself branches by viewer role — non-coaches get the
+    // public view (games played + endorsements only), coaches get full access.
     GoRoute(
       path: Routes.playerProfile,
-      redirect: _coachOnly,
       builder: (_, state) =>
           PlayerProfileScreen(userId: state.extra as String?),
     ),
     GoRoute(
-        path: Routes.announcements,
-        builder: (_, _) => const AnnouncementsScreen()),
+      path: Routes.announcements,
+      builder: (_, _) => const AnnouncementsScreen(),
+    ),
     GoRoute(
       path: Routes.createAnnouncement,
       redirect: _coachOnly,
       builder: (_, state) => CreateAnnouncementScreen(
-          existing: state.extra is AnnouncementModel
-              ? state.extra as AnnouncementModel
-              : null),
+        existing: state.extra is AnnouncementModel
+            ? state.extra as AnnouncementModel
+            : null,
+      ),
+    ),
+    // No _coachOnly redirect: players reach session history to give
+    // endorsements (only allowed on ended sessions). Reads are verified-user
+    // gated by the Firestore rules on sessions_history.
+    GoRoute(
+      path: Routes.sessionsHistory,
+      builder: (_, _) => const SessionsHistoryScreen(),
     ),
     GoRoute(
-        path: Routes.sessionsHistory,
-        redirect: _coachOnly,
-        builder: (_, _) => const SessionsHistoryScreen()),
+      path: Routes.leaderboard,
+      builder: (_, _) => const LeaderboardScreen(),
+    ),
     GoRoute(
-        path: Routes.leaderboard,
-        builder: (_, _) => const LeaderboardScreen()),
-    GoRoute(
-        path: Routes.recurringSessions,
-        redirect: _coachOnly,
-        builder: (_, _) => const RecurringSessionsScreen()),
+      path: Routes.recurringSessions,
+      redirect: _coachOnly,
+      builder: (_, _) => const RecurringSessionsScreen(),
+    ),
     GoRoute(
       path: Routes.createRecurring,
       redirect: _coachOnly,
       builder: (_, state) => CreateRecurringSessionScreen(
-          editing: state.extra is RecurringSessionModel
-              ? state.extra as RecurringSessionModel
-              : null),
+        editing: state.extra is RecurringSessionModel
+            ? state.extra as RecurringSessionModel
+            : null,
+      ),
     ),
     GoRoute(
-        path: Routes.coachesList,
-        builder: (_, _) => const CoachesListScreen()),
+      path: Routes.coachesList,
+      builder: (_, _) => const CoachesListScreen(),
+    ),
     // No _coachOnly redirect: owners may view their own history and coaches
     // any player's — the /payments read rule enforces the real boundary.
     GoRoute(
       path: Routes.paymentHistory,
-      builder: (_, state) => PaymentHistoryScreen(
-          userId: state.uri.queryParameters['uid'] ?? ''),
+      builder: (_, state) =>
+          PaymentHistoryScreen(userId: state.uri.queryParameters['uid'] ?? ''),
     ),
   ],
 );

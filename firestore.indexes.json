@@ -32,6 +32,22 @@
         { "fieldPath": "role", "order": "ASCENDING" },
         { "fieldPath": "gender", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "sessions_history",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "attendedIds", "arrayConfig": "CONTAINS" },
+        { "fieldPath": "startTime", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "sessions_history",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "gender", "order": "ASCENDING" },
+        { "fieldPath": "endTime", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

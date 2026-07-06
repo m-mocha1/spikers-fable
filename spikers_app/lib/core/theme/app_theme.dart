@@ -21,6 +21,9 @@ class AppTheme {
       surface: AppColors.navyLight,
       error: AppColors.errorRed,
     ),
+    // NOTE: deliberately NOT overriding textTheme.display* — Material 3's
+    // time/date pickers render their large digits with displayLarge, so a
+    // global override breaks them. Hero text styles itself locally instead.
     textTheme: _cairo.apply(
       bodyColor: AppColors.white,
       displayColor: AppColors.white,

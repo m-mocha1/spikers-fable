@@ -362,6 +362,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sessionsAttended => 'sessions attended';
 
   @override
+  String get exportAttendance => 'Export attendance';
+
+  @override
+  String get sessionsAttendedTitle => 'Sessions Attended';
+
+  @override
+  String get registrationDate => 'Registration Date';
+
+  @override
+  String get lastSessionDate => 'Last Session Attended';
+
+  @override
   String get addPhoto => 'Add Photo';
 
   @override
@@ -752,4 +764,136 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sat => 'Sat';
+
+  @override
+  String greetingMorning(String name) {
+    return 'Good morning, $name';
+  }
+
+  @override
+  String greetingAfternoon(String name) {
+    return 'Good afternoon, $name';
+  }
+
+  @override
+  String greetingEvening(String name) {
+    return 'Good evening, $name';
+  }
+
+  @override
+  String get welcomeBack => 'Welcome back';
+
+  @override
+  String get nextUp => 'Next up';
+
+  @override
+  String sessionsThisWeek(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count sessions this week',
+      one: '1 session this week',
+      zero: 'No sessions this week',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String upcomingSessionsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count upcoming sessions',
+      one: '1 upcoming session',
+      zero: 'No upcoming sessions',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get findYourNextGame => 'Find your next game';
+
+  @override
+  String get joinedSuccess => 'You\'re in! See you on court';
+
+  @override
+  String get youLabel => 'You';
+
+  @override
+  String get gamesPlayed => 'Games played';
+
+  @override
+  String get tierRookie => 'Rookie';
+
+  @override
+  String get tierRegular => 'Regular';
+
+  @override
+  String get tierVeteran => 'Veteran';
+
+  @override
+  String get tierLegend => 'Legend';
+
+  @override
+  String get tierChampion => 'Champion';
+
+  @override
+  String weekStreak(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count-week streak',
+      one: '1-week streak',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String milestoneUnlocked(int count, String tier) {
+    return '$count games played — you\'re now a $tier!';
+  }
+
+  @override
+  String toNextTier(int count, String tier) {
+    return '$count to $tier';
+  }
+
+  @override
+  String get endorse => 'Endorse';
+
+  @override
+  String get endorsed => 'Endorsed';
+
+  @override
+  String get endorsements => 'Endorsements';
+
+  @override
+  String endorsedPlayer(String name) {
+    return 'Endorsed $name';
+  }
+
+  @override
+  String endorseRemaining(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count endorsements left',
+      one: '1 endorsement left',
+      zero: 'No endorsements left this session',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get endorseFailed => 'Couldn\'t give endorsement';
+
+  @override
+  String endorsementLevelLabel(int level) {
+    return 'Level $level';
+  }
+
+  @override
+  String endorsementMilestoneUnlocked(int count, String label) {
+    return '$count endorsements — you reached $label!';
+  }
 }

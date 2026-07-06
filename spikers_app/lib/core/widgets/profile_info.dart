@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_motion.dart';
 import '../../l10n/app_localizations.dart';
 import 'package:spikers_app/features/auth/domain/entities/user_model.dart';
 
@@ -137,17 +138,25 @@ class _StatCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Count numeric stats up from zero for a bit of life; leave placeholders
+    // like "—" static.
+    final numeric = int.tryParse(value);
+    const style = TextStyle(
+      color: AppColors.white,
+      fontSize: 26,
+      fontWeight: FontWeight.w800,
+    );
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          value,
-          style: const TextStyle(
-            color: AppColors.white,
-            fontSize: 22,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
+        numeric == null
+            ? Text(value, style: style)
+            : TweenAnimationBuilder<int>(
+                tween: IntTween(begin: 0, end: numeric),
+                duration: AppMotion.slow,
+                curve: AppMotion.enter,
+                builder: (_, v, _) => Text('$v', style: style),
+              ),
         const SizedBox(height: 2),
         Text(
           unit,

@@ -55,15 +55,46 @@ final sessionProvider = StreamProvider.autoDispose.family<SessionModel?, String>
   (ref, id) => ref.watch(sessionsRepositoryProvider).watchSession(id),
 );
 
+/// Public profiles for a card facepile, keyed by a comma-joined uid string —
+/// family params need value equality, which a `List<String>` doesn't have.
+/// Returns profiles in the same order as the incoming uids (attendee order).
+final facepileProfilesProvider = FutureProvider.autoDispose
+    .family<List<PublicProfile>, String>((ref, joinedUids) async {
+  final uids = joinedUids.split(',').where((u) => u.isNotEmpty).toList();
+  if (uids.isEmpty) return const [];
+  final map =
+      await ref.watch(sessionsRepositoryProvider).fetchPublicProfiles(uids);
+  return [
+    for (final uid in uids)
+      if (map[uid] != null) map[uid]!,
+  ];
+});
+
 final archivedSessionProvider =
     StreamProvider.autoDispose.family<SessionModel?, String>(
   (ref, id) => ref.watch(sessionsRepositoryProvider).watchArchivedSession(id),
 );
 
+/// Target uids the signed-in user has already endorsed in [sessionId].
+/// Empty while signed out. Drives the endorse-button state on the session
+/// detail screen.
+final myEndorsementsProvider =
+    StreamProvider.autoDispose.family<Set<String>, String>((ref, sessionId) {
+  final uid = ref.watch(currentUserProvider).value?.uid;
+  if (uid == null) return Stream.value(const <String>{});
+  return ref
+      .watch(sessionsRepositoryProvider)
+      .watchMyEndorsements(sessionId, uid);
+});
+
+/// Archived sessions visible to the signed-in user: players only see their
+/// own gender (or mixed); coaches/admins see all. Empty while signed out.
 final sessionsHistoryProvider =
-    StreamProvider.autoDispose<List<SessionModel>>(
-  (ref) => ref.watch(sessionsRepositoryProvider).watchHistory(),
-);
+    StreamProvider.autoDispose<List<SessionModel>>((ref) {
+  final viewer = ref.watch(currentUserProvider).value;
+  if (viewer == null) return Stream.value(const []);
+  return ref.watch(sessionsRepositoryProvider).watchHistory(viewer);
+});
 
 final templatesProvider =
     StreamProvider.autoDispose<List<SessionTemplate>>((ref) {

@@ -782,6 +782,30 @@ abstract class AppLocalizations {
   /// **'sessions attended'**
   String get sessionsAttended;
 
+  /// No description provided for @exportAttendance.
+  ///
+  /// In en, this message translates to:
+  /// **'Export attendance'**
+  String get exportAttendance;
+
+  /// No description provided for @sessionsAttendedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sessions Attended'**
+  String get sessionsAttendedTitle;
+
+  /// No description provided for @registrationDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Registration Date'**
+  String get registrationDate;
+
+  /// No description provided for @lastSessionDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Last Session Attended'**
+  String get lastSessionDate;
+
   /// No description provided for @addPhoto.
   ///
   /// In en, this message translates to:
@@ -1495,6 +1519,168 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sat'**
   String get sat;
+
+  /// No description provided for @greetingMorning.
+  ///
+  /// In en, this message translates to:
+  /// **'Good morning, {name}'**
+  String greetingMorning(String name);
+
+  /// No description provided for @greetingAfternoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Good afternoon, {name}'**
+  String greetingAfternoon(String name);
+
+  /// No description provided for @greetingEvening.
+  ///
+  /// In en, this message translates to:
+  /// **'Good evening, {name}'**
+  String greetingEvening(String name);
+
+  /// No description provided for @welcomeBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome back'**
+  String get welcomeBack;
+
+  /// No description provided for @nextUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Next up'**
+  String get nextUp;
+
+  /// No description provided for @sessionsThisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No sessions this week} =1{1 session this week} other{{count} sessions this week}}'**
+  String sessionsThisWeek(int count);
+
+  /// No description provided for @upcomingSessionsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No upcoming sessions} =1{1 upcoming session} other{{count} upcoming sessions}}'**
+  String upcomingSessionsCount(int count);
+
+  /// No description provided for @findYourNextGame.
+  ///
+  /// In en, this message translates to:
+  /// **'Find your next game'**
+  String get findYourNextGame;
+
+  /// No description provided for @joinedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re in! See you on court'**
+  String get joinedSuccess;
+
+  /// No description provided for @youLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get youLabel;
+
+  /// No description provided for @gamesPlayed.
+  ///
+  /// In en, this message translates to:
+  /// **'Games played'**
+  String get gamesPlayed;
+
+  /// No description provided for @tierRookie.
+  ///
+  /// In en, this message translates to:
+  /// **'Rookie'**
+  String get tierRookie;
+
+  /// No description provided for @tierRegular.
+  ///
+  /// In en, this message translates to:
+  /// **'Regular'**
+  String get tierRegular;
+
+  /// No description provided for @tierVeteran.
+  ///
+  /// In en, this message translates to:
+  /// **'Veteran'**
+  String get tierVeteran;
+
+  /// No description provided for @tierLegend.
+  ///
+  /// In en, this message translates to:
+  /// **'Legend'**
+  String get tierLegend;
+
+  /// No description provided for @tierChampion.
+  ///
+  /// In en, this message translates to:
+  /// **'Champion'**
+  String get tierChampion;
+
+  /// No description provided for @weekStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1-week streak} other{{count}-week streak}}'**
+  String weekStreak(int count);
+
+  /// No description provided for @milestoneUnlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} games played — you\'re now a {tier}!'**
+  String milestoneUnlocked(int count, String tier);
+
+  /// No description provided for @toNextTier.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} to {tier}'**
+  String toNextTier(int count, String tier);
+
+  /// No description provided for @endorse.
+  ///
+  /// In en, this message translates to:
+  /// **'Endorse'**
+  String get endorse;
+
+  /// No description provided for @endorsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Endorsed'**
+  String get endorsed;
+
+  /// No description provided for @endorsements.
+  ///
+  /// In en, this message translates to:
+  /// **'Endorsements'**
+  String get endorsements;
+
+  /// No description provided for @endorsedPlayer.
+  ///
+  /// In en, this message translates to:
+  /// **'Endorsed {name}'**
+  String endorsedPlayer(String name);
+
+  /// No description provided for @endorseRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No endorsements left this session} =1{1 endorsement left} other{{count} endorsements left}}'**
+  String endorseRemaining(int count);
+
+  /// No description provided for @endorseFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t give endorsement'**
+  String get endorseFailed;
+
+  /// No description provided for @endorsementLevelLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Level {level}'**
+  String endorsementLevelLabel(int level);
+
+  /// No description provided for @endorsementMilestoneUnlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} endorsements — you reached {label}!'**
+  String endorsementMilestoneUnlocked(int count, String label);
 }
 
 class _AppLocalizationsDelegate

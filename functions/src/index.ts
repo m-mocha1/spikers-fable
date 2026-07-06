@@ -13,6 +13,23 @@ const db = admin.firestore();
 
 const REGION = "europe-west1";
 
+// Number of session card designs. Keep in sync with the length of
+// AppAssets.cardDesigns in the Flutter app (lib/core/constants/app_assets.dart).
+const CARD_DESIGN_COUNT = 6;
+
+// Picks a random card-design index, avoiding `previous` so two consecutively
+// created sessions don't share the same card. Falls back to a plain uniform
+// draw when there's no previous index or only one design to choose from.
+function pickDesignIndex(previous: number | null): number {
+  const count = CARD_DESIGN_COUNT;
+  if (count <= 1 || previous === null || previous < 0 || previous >= count) {
+    return Math.floor(Math.random() * count);
+  }
+  // Draw from the (count - 1) other slots, then shift past the excluded one.
+  const draw = Math.floor(Math.random() * (count - 1));
+  return draw < previous ? draw : draw + 1;
+}
+
 function chunkArray<T>(arr: T[], size: number): T[][] {
   const chunks: T[][] = [];
   for (let i = 0; i < arr.length; i += size) {
@@ -1184,6 +1201,125 @@ export const markAttended = onCall({ region: REGION }, async (request) => {
 });
 
 // ---------------------------------------------------------------------------
+// endorsePlayer — records a single "endorsement" from the caller to a player
+// they trained with (Overwatch-style: you can only endorse people you were in
+// a session with). Idempotent: the endorsement doc id is deterministic
+// (`{sessionId}_{fromUid}_{toUid}`), so re-calling never double-counts.
+//
+// Authorization (the "you played together" gate):
+//   - A peer may endorse a target only if BOTH are in the session's
+//     attendedIds (they both actually showed up).
+//   - The session's coach — or any staff — may endorse any attendee.
+//   - No one may endorse themselves.
+// endorsementCount on the target's user doc is incremented in the same
+// transaction and mirrored to users_public by mirrorUserPublic. There is no
+// un-endorse and no decay: the count only ever grows.
+// ---------------------------------------------------------------------------
+export const endorsePlayer = onCall({ region: REGION }, async (request) => {
+  const uid = requireVerified(request);
+
+  const sessionId = request.data?.["sessionId"] as string | undefined;
+  const userId = request.data?.["userId"] as string | undefined;
+  if (!sessionId || !userId) {
+    throw new HttpsError("invalid-argument", "sessionId/userId required");
+  }
+  if (userId === uid) {
+    throw new HttpsError("failed-precondition", "Cannot endorse yourself");
+  }
+
+  const sessionRef = db.collection("sessions").doc(sessionId);
+  const historyRef = db.collection("sessions_history").doc(sessionId);
+  const targetRef = db.collection("users").doc(userId);
+  const endorsementRef = db
+    .collection("endorsements")
+    .doc(`${sessionId}_${uid}_${userId}`);
+  // All of THIS endorser's docs for THIS session share the id prefix
+  // `${sessionId}_${uid}_`. Neither Firestore auto-ids nor Auth uids contain
+  // '_', so a documentId range query counts them with no composite index.
+  const minePrefix = `${sessionId}_${uid}_`;
+  const mineQuery = db
+    .collection("endorsements")
+    .where(admin.firestore.FieldPath.documentId(), ">=", minePrefix)
+    .where(admin.firestore.FieldPath.documentId(), "<", `${minePrefix}`);
+  const MAX_ENDORSEMENTS_PER_SESSION = 2;
+  const callerIsStaff = await isStaffUid(uid);
+
+  await db.runTransaction(async (tx) => {
+    // Locate the session in either the live or archived collection (mirrors
+    // markAttended, which also spans sessions + sessions_history).
+    const sessionDoc = await tx.get(sessionRef);
+    let data: FirebaseFirestore.DocumentData;
+    if (sessionDoc.exists) {
+      data = sessionDoc.data()!;
+    } else {
+      const historyDoc = await tx.get(historyRef);
+      if (!historyDoc.exists) {
+        throw new HttpsError("not-found", "Session not found");
+      }
+      data = historyDoc.data()!;
+    }
+
+    // All reads must precede any writes in a Firestore transaction, so the
+    // idempotency check and the per-session count are read here, before the
+    // set/update below.
+    const existing = await tx.get(endorsementRef);
+    const mine = await tx.get(mineQuery);
+
+    // Endorsements can only be given once the session has ended (players do
+    // this from history). Applies to everyone, staff included.
+    const endTime = data["endTime"] as admin.firestore.Timestamp | undefined;
+    if (!endTime || endTime.toMillis() > Date.now()) {
+      throw new HttpsError(
+        "failed-precondition",
+        "Session has not ended yet"
+      );
+    }
+
+    const attendedIds: string[] = data["attendedIds"] ?? [];
+    // Target must have actually attended.
+    if (!attendedIds.includes(userId)) {
+      throw new HttpsError(
+        "failed-precondition",
+        "That player did not attend this session"
+      );
+    }
+    // Caller must be a fellow attendee, or the session's coach, or staff.
+    const callerMayEndorse =
+      attendedIds.includes(uid) || data["coachId"] === uid || callerIsStaff;
+    if (!callerMayEndorse) {
+      throw new HttpsError(
+        "permission-denied",
+        "Only players who attended this session can endorse"
+      );
+    }
+
+    // Idempotent: the endorsement already exists — nothing to do (and it must
+    // not count against the cap).
+    if (existing.exists) return;
+
+    // Cap: at most 2 endorsements per endorser per session (everyone).
+    if (mine.size >= MAX_ENDORSEMENTS_PER_SESSION) {
+      throw new HttpsError(
+        "failed-precondition",
+        "No endorsements left for this session"
+      );
+    }
+
+    tx.set(endorsementRef, {
+      sessionId,
+      fromUid: uid,
+      toUid: userId,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+    tx.update(targetRef, {
+      endorsementCount: admin.firestore.FieldValue.increment(1),
+    });
+  });
+
+  return { success: true };
+});
+
+// ---------------------------------------------------------------------------
 // mirrorUserPublic — maintains users_public/{uid} with only the fields any
 // verified user is allowed to know about any other user. Skips writes when
 // none of the mirrored fields actually changed.
@@ -1236,6 +1372,19 @@ export const createRecurringSessions = onSchedule(
       return;
     }
 
+    // Seed the "avoid twice in a row" state from the most recently created
+    // session so the first session materialized tonight also differs from it.
+    let lastDesignIndex: number | null = null;
+    const recent = await db
+      .collection("sessions")
+      .orderBy("createdAt", "desc")
+      .limit(1)
+      .get();
+    if (!recent.empty) {
+      const di = recent.docs[0].data()["designIndex"];
+      if (typeof di === "number") lastDesignIndex = di % CARD_DESIGN_COUNT;
+    }
+
     let created = 0;
     for (const doc of snap.docs) {
       const data = doc.data();
@@ -1263,7 +1412,7 @@ export const createRecurringSessions = onSchedule(
         waitlistIds: [] as string[],
         notified: false,
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        designIndex: Math.floor(Math.random() * 4),
+        designIndex: pickDesignIndex(lastDesignIndex),
       };
 
       try {
@@ -1280,6 +1429,9 @@ export const createRecurringSessions = onSchedule(
         });
         if (didCreate) {
           created++;
+          // Advance the "avoid twice in a row" state so the next session in this
+          // batch doesn't repeat the card we just used.
+          lastDesignIndex = sessionData.designIndex;
           logger.info("createRecurringSessions: created", { recurringId: doc.id, tomorrowStr });
         } else {
           logger.info("createRecurringSessions: skipping (dedup, tx)", { id: doc.id });
@@ -1293,7 +1445,7 @@ export const createRecurringSessions = onSchedule(
   }
 );
 
-const PUBLIC_KEYS = ["name", "photoUrl", "role", "gender", "attendanceCount", "injured"];
+const PUBLIC_KEYS = ["name", "photoUrl", "role", "gender", "attendanceCount", "injured", "endorsementCount"];
 
 export const mirrorUserPublic = onDocumentWritten(
   { document: "users/{uid}", region: REGION },
@@ -1329,6 +1481,7 @@ export const mirrorUserPublic = onDocumentWritten(
           gender: after["gender"] ?? "male",
           attendanceCount: after["attendanceCount"] ?? 0,
           injured: after["injured"] ?? false,
+          endorsementCount: after["endorsementCount"] ?? 0,
         },
         { merge: false }
       );

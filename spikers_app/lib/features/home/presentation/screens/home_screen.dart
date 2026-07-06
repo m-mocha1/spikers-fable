@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -8,11 +9,13 @@ import '../../../../core/constants/app_motion.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'package:spikers_app/core/widgets/floating_nav_bar.dart';
+import 'package:spikers_app/core/widgets/gradient_background.dart';
 import '../../../announcements/presentation/widgets/announcements_bell.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../notifications/application/notifications_service.dart';
 import '../../../players/presentation/screens/players_peer_tab.dart';
 import '../../../players/presentation/screens/players_tab.dart';
+import '../../../players/presentation/widgets/export_attendance_button.dart';
 import '../../../sessions/presentation/screens/sessions_tab.dart';
 import 'profile_tab.dart';
 
@@ -136,15 +139,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     return Scaffold(
       extendBody: true,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text(l.appName),
         actions: [
-          if (_index == 0 && isCoach)
+          // History is open to everyone: players view past sessions to give
+          // endorsements (only allowed once a session has ended).
+          if (_index == 0)
             IconButton(
               tooltip: l.sessionsHistory,
               icon: const Icon(Icons.history),
               onPressed: () => context.push(Routes.sessionsHistory),
             ),
+          // The roster (full users collection) is only readable by staff, so
+          // the export is coach-gated; players get the peer tab instead.
+          if (_index == 1 && isCoach) const ExportAttendanceButton(),
           if (_index == 1)
             IconButton(
               tooltip: l.coachesTab,
@@ -159,7 +168,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           const AnnouncementsBell(),
         ],
       ),
-      body: IndexedStack(index: safeIndex, children: tabs),
+      body: GradientBackground(
+        child: IndexedStack(index: safeIndex, children: tabs),
+      ),
       floatingActionButton: (isCoach && _index == 0)
           ? FloatingActionButton.small(
               onPressed: () => _showSessionOptions(context, l),
@@ -173,10 +184,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           : null,
       bottomNavigationBar: FloatingNavBar(
         currentIndex: _index >= 3 ? 0 : _index,
-        onTap: (i) => setState(() {
-          if (i != _index) _reveal[i]++;
-          _index = i;
-        }),
+        onTap: (i) {
+          HapticFeedback.selectionClick();
+          setState(() {
+            if (i != _index) _reveal[i]++;
+            _index = i;
+          });
+        },
         items: [
           FloatingNavItem(
             icon: Icons.sports_volleyball_outlined,

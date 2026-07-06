@@ -9,6 +9,7 @@ class PlayerSummary {
   final String gender;
   final String photoUrl;
   final DateTime? dateOfBirth;
+  final DateTime? createdAt;
   final int attendanceCount;
   final DateTime? paidUntil;
   final bool lifetimeMember;
@@ -20,6 +21,7 @@ class PlayerSummary {
     required this.gender,
     required this.photoUrl,
     required this.dateOfBirth,
+    required this.createdAt,
     required this.attendanceCount,
     required this.paidUntil,
     required this.lifetimeMember,
@@ -41,6 +43,7 @@ class PlayerSummary {
       gender: (d['gender'] ?? 'male') as String,
       photoUrl: (d['photoUrl'] ?? '') as String,
       dateOfBirth: (d['dateOfBirth'] as Timestamp?)?.toDate(),
+      createdAt: (d['createdAt'] as Timestamp?)?.toDate(),
       attendanceCount: ((d['attendanceCount'] ?? 0) as num).toInt(),
       paidUntil: (d['paidUntil'] as Timestamp?)?.toDate(),
       lifetimeMember: (d['lifetimeMember'] ?? false) as bool,
