@@ -164,6 +164,60 @@ void main() {
     });
   });
 
+  group('watchHistory gender visibility', () {
+    Future<void> seedHistorySession(String id,
+        {String gender = 'mixed', required DateTime end}) async {
+      await db.collection('sessions_history').doc(id).set({
+        'title': id,
+        'location': 'hall',
+        'gender': gender,
+        'minAge': 0,
+        'maxAge': 99,
+        'startTime': Timestamp.fromDate(end.subtract(const Duration(hours: 2))),
+        'endTime': Timestamp.fromDate(end),
+        'maxPlayers': 10,
+        'coachId': 'c1',
+        'attendeeIds': <String>[],
+        'createdAt': Timestamp.fromDate(DateTime(2026)),
+      });
+    }
+
+    test('players see only their own gender and mixed sessions', () async {
+      await seedHistorySession('male-s',
+          gender: 'male', end: DateTime(2026, 6, 3, 20));
+      await seedHistorySession('female-s',
+          gender: 'female', end: DateTime(2026, 6, 2, 20));
+      await seedHistorySession('mixed-s', end: DateTime(2026, 6, 1, 20));
+
+      final list = await repo.watchHistory(user()).first;
+      expect(list.map((s) => s.title), ['male-s', 'mixed-s']);
+    });
+
+    test('coaches see all genders, most recently ended first', () async {
+      await seedHistorySession('female-s',
+          gender: 'female', end: DateTime(2026, 6, 2, 20));
+      await seedHistorySession('male-s',
+          gender: 'male', end: DateTime(2026, 6, 3, 20));
+      await seedHistorySession('mixed-s', end: DateTime(2026, 6, 1, 20));
+
+      final list = await repo.watchHistory(user(role: 'coach')).first;
+      expect(list.map((s) => s.title), ['male-s', 'female-s', 'mixed-s']);
+    });
+
+    test('players without a gender on file are not filtered', () async {
+      await seedHistorySession('female-s',
+          gender: 'female', end: DateTime(2026, 6, 2, 20));
+      final noGender = UserModel(
+        uid: 'u1',
+        name: 'U',
+        role: 'player',
+        createdAt: DateTime(2026),
+      );
+      final list = await repo.watchHistory(noGender).first;
+      expect(list, hasLength(1));
+    });
+  });
+
   group('fetchAttendedTimes', () {
     Future<void> seedHistory(String id, DateTime start,
         {List<String> attendedIds = const ['u1']}) async {
@@ -225,6 +279,45 @@ void main() {
       await seedHistory('h1', DateTime(2026, 6, 1, 18),
           attendedIds: ['someone-else']);
       expect(await repo.fetchAttendedTimes('u1'), isEmpty);
+    });
+
+    test('fetchLastAttendedTime returns the newest history start', () async {
+      await seedHistory('h1', DateTime(2026, 6, 1, 18));
+      await seedHistory('h2', DateTime(2026, 6, 8, 18));
+      await seedHistory('other', DateTime(2026, 6, 15, 18),
+          attendedIds: ['someone-else']);
+
+      expect(await repo.fetchLastAttendedTime('u1'), DateTime(2026, 6, 8, 18));
+    });
+
+    test('fetchLastAttendedTime prefers a newer not-yet-archived live session',
+        () async {
+      await seedHistory('h1', DateTime(2026, 6, 1, 18));
+      final liveStart = DateTime(2026, 6, 20, 18);
+      await db.collection('sessions').doc('live1').set({
+        'title': 'live1',
+        'location': 'hall',
+        'gender': 'mixed',
+        'minAge': 0,
+        'maxAge': 99,
+        'startTime': Timestamp.fromDate(liveStart),
+        'endTime':
+            Timestamp.fromDate(liveStart.add(const Duration(hours: 2))),
+        'maxPlayers': 10,
+        'coachId': 'c1',
+        'attendeeIds': ['u1'],
+        'attendedIds': ['u1'],
+        'createdAt': Timestamp.fromDate(DateTime(2026)),
+      });
+
+      expect(await repo.fetchLastAttendedTime('u1'), liveStart);
+    });
+
+    test('fetchLastAttendedTime is null when the user never attended',
+        () async {
+      await seedHistory('h1', DateTime(2026, 6, 1, 18),
+          attendedIds: ['someone-else']);
+      expect(await repo.fetchLastAttendedTime('u1'), isNull);
     });
   });
 

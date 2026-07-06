@@ -8,12 +8,17 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_gradients.dart';
 import '../../../../core/constants/app_motion.dart';
 import '../../../../core/widgets/animations.dart';
+import '../../../../core/widgets/gender_filter_chips.dart';
 import '../../../../core/widgets/gradient_background.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../domain/entities/leaderboard_entry.dart';
 import '../providers/leaderboard_providers.dart';
+
+/// Coach/admin-only gender tag filter; players' boards are already scoped to
+/// their own gender by the repository.
+final _genderFilterProvider = StateProvider.autoDispose<String>((ref) => 'all');
 
 class LeaderboardScreen extends ConsumerWidget {
   const LeaderboardScreen({super.key});
@@ -25,6 +30,8 @@ class LeaderboardScreen extends ConsumerWidget {
     final isMonthly = tab == 0;
     final entriesAsync = ref.watch(
         isMonthly ? monthlyLeaderboardProvider : allTimeLeaderboardProvider);
+    final isCoach = ref.watch(currentUserProvider).value?.isCoach ?? false;
+    final genderFilter = ref.watch(_genderFilterProvider);
 
     Future<void> refresh() async {
       ref.invalidate(monthlyLeaderboardProvider);
@@ -44,14 +51,14 @@ class LeaderboardScreen extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: Row(
               children: [
-                _Chip(
+                AppFilterChip(
                   label: l.thisMonth,
                   active: tab == 0,
                   onTap: () =>
                       ref.read(leaderboardTabProvider.notifier).state = 0,
                 ),
                 const SizedBox(width: 8),
-                _Chip(
+                AppFilterChip(
                   label: l.allTime,
                   active: tab == 1,
                   onTap: () =>
@@ -60,6 +67,20 @@ class LeaderboardScreen extends ConsumerWidget {
               ],
             ),
           ),
+          // Players' boards are already gender-scoped by the repository, so
+          // only coaches/admins get the tag filter.
+          if (isCoach)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: GenderFilterChips(
+                  value: genderFilter,
+                  onChanged: (v) =>
+                      ref.read(_genderFilterProvider.notifier).state = v,
+                ),
+              ),
+            ),
           Expanded(
             child: entriesAsync.when(
               loading: () => const ListShimmer(
@@ -67,7 +88,12 @@ class LeaderboardScreen extends ConsumerWidget {
                   padding: EdgeInsets.fromLTRB(16, 4, 16, 16)),
               error: (e, _) =>
                   ErrorView(icon: Icons.error_outline, onRetry: refresh),
-              data: (entries) {
+              data: (allEntries) {
+                final entries = !isCoach || genderFilter == 'all'
+                    ? allEntries
+                    : allEntries
+                        .where((e) => e.gender == genderFilter)
+                        .toList();
                 if (entries.isEmpty) {
                   return EmptyStateView(
                     icon: Icons.emoji_events_outlined,
@@ -414,39 +440,6 @@ class _PodiumSlot extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _Chip extends StatelessWidget {
-  final String label;
-  final bool active;
-  final VoidCallback onTap;
-  const _Chip(
-      {required this.label, required this.active, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-        decoration: BoxDecoration(
-          color: active ? AppColors.gold : AppColors.navyLight,
-          borderRadius: BorderRadius.circular(20),
-          border:
-              Border.all(color: active ? AppColors.gold : AppColors.grey),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: active ? AppColors.navyBlue : AppColors.white,
-            fontWeight: FontWeight.w600,
-            fontSize: 13,
-          ),
-        ),
-      ),
     );
   }
 }

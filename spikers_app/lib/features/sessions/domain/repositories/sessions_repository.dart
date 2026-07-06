@@ -38,8 +38,9 @@ abstract class SessionsRepository {
   /// Archived copy in sessions_history; null while not yet archived.
   Stream<SessionModel?> watchArchivedSession(String id);
 
-  /// Archived sessions, most recently ended first.
-  Stream<List<SessionModel>> watchHistory({int limit});
+  /// Archived sessions, most recently ended first. Players only see their
+  /// own gender (or mixed) sessions; coaches/admins see all genders.
+  Stream<List<SessionModel>> watchHistory(UserModel viewer, {int limit});
 
   /// Batched users_public lookup (whereIn chunking handled inside).
   Future<Map<String, PublicProfile>> fetchPublicProfiles(List<String> uids);
@@ -52,6 +53,10 @@ abstract class SessionsRepository {
   /// Start times of sessions where [uid] was marked attended (recent first,
   /// bounded) — drives the weekly attendance streak on the profile.
   Future<List<DateTime>> fetchAttendedTimes(String uid);
+
+  /// Start time of the most recent session [uid] attended, or null if they
+  /// never attended — feeds the attendance export's "last session" column.
+  Future<DateTime?> fetchLastAttendedTime(String uid);
 
   /// Creates the session with a random card design.
   Future<void> create(SessionModel session);

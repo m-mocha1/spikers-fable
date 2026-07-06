@@ -7,10 +7,16 @@ import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/widgets/animations.dart';
+import '../../../../core/widgets/gender_filter_chips.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'package:spikers_app/features/sessions/domain/entities/session_model.dart';
+import '../../../auth/presentation/providers/auth_providers.dart';
 import '../providers/sessions_providers.dart';
+
+/// Coach/admin-only gender tag filter; players' lists are already
+/// gender-scoped by the history query itself.
+final _genderFilterProvider = StateProvider.autoDispose<String>((ref) => 'all');
 
 class SessionsHistoryScreen extends ConsumerStatefulWidget {
   const SessionsHistoryScreen({super.key});
@@ -36,6 +42,8 @@ class _SessionsHistoryScreenState
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     final historyAsync = ref.watch(sessionsHistoryProvider);
+    final isCoach = ref.watch(currentUserProvider).value?.isCoach ?? false;
+    final genderFilter = ref.watch(_genderFilterProvider);
 
     return Scaffold(
       appBar: AppBar(title: Text(l.sessionsHistory)),
@@ -44,17 +52,39 @@ class _SessionsHistoryScreenState
         error: (e, _) => ErrorView(
             onRetry: () => ref.invalidate(sessionsHistoryProvider)),
         data: (sessions) {
-          if (sessions.isEmpty) {
-            return EmptyStateView(
-                icon: Icons.history, title: l.noSessionsHistory);
-          }
-          return ListView.builder(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-            itemCount: sessions.length,
-            itemBuilder: (_, i) => AppStaggeredItem(
-              index: i,
-              child: _HistoryCard(session: sessions[i]),
-            ),
+          final filtered = !isCoach || genderFilter == 'all'
+              ? sessions
+              : sessions.where((s) => s.gender == genderFilter).toList();
+
+          final Widget list = filtered.isEmpty
+              ? EmptyStateView(icon: Icons.history, title: l.noSessionsHistory)
+              : ListView.builder(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                  itemCount: filtered.length,
+                  itemBuilder: (_, i) => AppStaggeredItem(
+                    index: i,
+                    child: _HistoryCard(session: filtered[i]),
+                  ),
+                );
+
+          // Players' lists are already gender-scoped by the query, so only
+          // coaches/admins get the tag filter.
+          if (!isCoach) return list;
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                child: Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: GenderFilterChips(
+                    value: genderFilter,
+                    onChanged: (v) =>
+                        ref.read(_genderFilterProvider.notifier).state = v,
+                  ),
+                ),
+              ),
+              Expanded(child: list),
+            ],
           );
         },
       ),

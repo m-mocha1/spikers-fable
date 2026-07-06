@@ -15,6 +15,7 @@ import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../notifications/application/notifications_service.dart';
 import '../../../players/presentation/screens/players_peer_tab.dart';
 import '../../../players/presentation/screens/players_tab.dart';
+import '../../../players/presentation/widgets/export_attendance_button.dart';
 import '../../../sessions/presentation/screens/sessions_tab.dart';
 import 'profile_tab.dart';
 
@@ -150,6 +151,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               icon: const Icon(Icons.history),
               onPressed: () => context.push(Routes.sessionsHistory),
             ),
+          // The roster (full users collection) is only readable by staff, so
+          // the export is coach-gated; players get the peer tab instead.
+          if (_index == 1 && isCoach) const ExportAttendanceButton(),
           if (_index == 1)
             IconButton(
               tooltip: l.coachesTab,

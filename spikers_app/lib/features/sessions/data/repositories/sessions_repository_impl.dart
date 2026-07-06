@@ -35,8 +35,9 @@ class SessionsRepositoryImpl implements SessionsRepository {
       _remote.watchArchivedSession(id);
 
   @override
-  Stream<List<SessionModel>> watchHistory({int limit = 100}) =>
-      _remote.watchHistory(limit: limit);
+  Stream<List<SessionModel>> watchHistory(UserModel viewer,
+          {int limit = 100}) =>
+      _remote.watchHistory(viewer, limit: limit);
 
   @override
   Future<Map<String, PublicProfile>> fetchPublicProfiles(List<String> uids) =>
@@ -49,6 +50,10 @@ class SessionsRepositoryImpl implements SessionsRepository {
   @override
   Future<List<DateTime>> fetchAttendedTimes(String uid) =>
       _remote.fetchAttendedTimes(uid);
+
+  @override
+  Future<DateTime?> fetchLastAttendedTime(String uid) =>
+      _remote.fetchLastAttendedTime(uid);
 
   @override
   Future<void> create(SessionModel session) => _remote.create(session);

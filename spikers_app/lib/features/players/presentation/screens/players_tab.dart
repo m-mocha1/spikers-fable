@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/utils/age_calculator.dart';
+import '../../../../core/widgets/gender_filter_chips.dart';
 import '../../../../core/widgets/injured_icon.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -57,26 +58,10 @@ class _PlayersTabState extends ConsumerState<PlayersTab> {
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
               child: Row(
                 children: [
-                  _Chip(
-                    label: l.allGenders,
-                    active: genderFilter == 'all',
-                    onTap: () =>
-                        ref.read(_genderFilterProvider.notifier).state = 'all',
-                  ),
-                  const SizedBox(width: 8),
-                  _Chip(
-                    icon: Icons.male,
-                    active: genderFilter == 'male',
-                    onTap: () =>
-                        ref.read(_genderFilterProvider.notifier).state = 'male',
-                  ),
-                  const SizedBox(width: 8),
-                  _Chip(
-                    icon: Icons.female,
-                    active: genderFilter == 'female',
-                    onTap: () =>
-                        ref.read(_genderFilterProvider.notifier).state =
-                            'female',
+                  GenderFilterChips(
+                    value: genderFilter,
+                    onChanged: (v) =>
+                        ref.read(_genderFilterProvider.notifier).state = v,
                   ),
                   const SizedBox(width: 8),
                   Expanded(
@@ -354,42 +339,3 @@ class _PaidBadge extends StatelessWidget {
   }
 }
 
-class _Chip extends StatelessWidget {
-  final String? label;
-  final IconData? icon;
-  final bool active;
-  final VoidCallback onTap;
-  const _Chip({
-    this.label,
-    this.icon,
-    required this.active,
-    required this.onTap,
-  }) : assert(label != null || icon != null);
-
-  @override
-  Widget build(BuildContext context) {
-    final color = active ? AppColors.navyBlue : AppColors.white;
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-        decoration: BoxDecoration(
-          color: active ? AppColors.gold : AppColors.navyLight,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: active ? AppColors.gold : AppColors.grey),
-        ),
-        child: icon != null
-            ? Icon(icon, color: color, size: 18)
-            : Text(
-                label!,
-                style: TextStyle(
-                  color: color,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 13,
-                ),
-              ),
-      ),
-    );
-  }
-}

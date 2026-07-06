@@ -64,12 +64,22 @@ class SessionsRemoteDataSource {
       .snapshots()
       .map((doc) => doc.exists ? SessionModel.fromDoc(doc) : null);
 
-  Stream<List<SessionModel>> watchHistory({required int limit}) => _db
-      .collection('sessions_history')
-      .orderBy('endTime', descending: true)
-      .limit(limit)
-      .snapshots()
-      .map((snap) => snap.docs.map(SessionModel.fromDoc).toList());
+  Stream<List<SessionModel>> watchHistory(UserModel viewer,
+      {required int limit}) {
+    Query<Map<String, dynamic>> query = _db.collection('sessions_history');
+    // Same visibility rule as watchUpcoming: players only see their own
+    // gender (or mixed) sessions; coaches/admins see everything. A missing
+    // gender skips the filter dimension rather than matching on a value we
+    // don't have. Backed by the (gender, endTime desc) composite index.
+    if (!viewer.isCoach && viewer.gender != null) {
+      query = query.where('gender', whereIn: [viewer.gender, 'mixed']);
+    }
+    return query
+        .orderBy('endTime', descending: true)
+        .limit(limit)
+        .snapshots()
+        .map((snap) => snap.docs.map(SessionModel.fromDoc).toList());
+  }
 
   Future<Map<String, PublicProfile>> fetchPublicProfiles(
       List<String> uids) async {
@@ -135,6 +145,15 @@ class SessionsRemoteDataSource {
         for (final doc in snap.docs)
           (doc.data()['startTime'] as Timestamp).toDate(),
     ];
+  }
+
+  /// Start time of the most recent session where [uid] was marked attended,
+  /// or null if they never attended. Reads a single history doc (newest via
+  /// the same (attendedIds, startTime) index) plus the small live collection.
+  Future<DateTime?> fetchLastAttendedTime(String uid) async {
+    final times = await fetchAttendedTimes(uid, limit: 1);
+    if (times.isEmpty) return null;
+    return times.reduce((a, b) => a.isAfter(b) ? a : b);
   }
 
   Future<void> create(SessionModel session) async {

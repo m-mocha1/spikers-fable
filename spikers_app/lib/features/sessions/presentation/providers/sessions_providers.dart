@@ -87,10 +87,14 @@ final myEndorsementsProvider =
       .watchMyEndorsements(sessionId, uid);
 });
 
+/// Archived sessions visible to the signed-in user: players only see their
+/// own gender (or mixed); coaches/admins see all. Empty while signed out.
 final sessionsHistoryProvider =
-    StreamProvider.autoDispose<List<SessionModel>>(
-  (ref) => ref.watch(sessionsRepositoryProvider).watchHistory(),
-);
+    StreamProvider.autoDispose<List<SessionModel>>((ref) {
+  final viewer = ref.watch(currentUserProvider).value;
+  if (viewer == null) return Stream.value(const []);
+  return ref.watch(sessionsRepositoryProvider).watchHistory(viewer);
+});
 
 final templatesProvider =
     StreamProvider.autoDispose<List<SessionTemplate>>((ref) {

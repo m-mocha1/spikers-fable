@@ -359,6 +359,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get sessionsAttended => 'جلسة حضرها';
 
   @override
+  String get exportAttendance => 'تصدير قائمة الحضور';
+
+  @override
+  String get sessionsAttendedTitle => 'عدد مرات الحضور';
+
+  @override
+  String get registrationDate => 'تاريخ التسجيل';
+
+  @override
+  String get lastSessionDate => 'تاريخ آخر حضور';
+
+  @override
   String get addPhoto => 'أضف صورة';
 
   @override

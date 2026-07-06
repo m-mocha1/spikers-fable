@@ -362,6 +362,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sessionsAttended => 'sessions attended';
 
   @override
+  String get exportAttendance => 'Export attendance';
+
+  @override
+  String get sessionsAttendedTitle => 'Sessions Attended';
+
+  @override
+  String get registrationDate => 'Registration Date';
+
+  @override
+  String get lastSessionDate => 'Last Session Attended';
+
+  @override
   String get addPhoto => 'Add Photo';
 
   @override

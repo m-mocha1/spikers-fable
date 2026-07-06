@@ -782,6 +782,30 @@ abstract class AppLocalizations {
   /// **'sessions attended'**
   String get sessionsAttended;
 
+  /// No description provided for @exportAttendance.
+  ///
+  /// In en, this message translates to:
+  /// **'Export attendance'**
+  String get exportAttendance;
+
+  /// No description provided for @sessionsAttendedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sessions Attended'**
+  String get sessionsAttendedTitle;
+
+  /// No description provided for @registrationDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Registration Date'**
+  String get registrationDate;
+
+  /// No description provided for @lastSessionDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Last Session Attended'**
+  String get lastSessionDate;
+
   /// No description provided for @addPhoto.
   ///
   /// In en, this message translates to:
