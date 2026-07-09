@@ -62,8 +62,12 @@ final facepileProfilesProvider = FutureProvider.autoDispose
     .family<List<PublicProfile>, String>((ref, joinedUids) async {
   final uids = joinedUids.split(',').where((u) => u.isNotEmpty).toList();
   if (uids.isEmpty) return const [];
-  final map =
-      await ref.watch(sessionsRepositoryProvider).fetchPublicProfiles(uids);
+  // Cached variant: facepiles tolerate slightly stale names/photos, and the
+  // shared cache stops every card (and every rebuild) re-reading the same
+  // players from Firestore.
+  final map = await ref
+      .watch(sessionsRepositoryProvider)
+      .fetchPublicProfilesCached(uids);
   return [
     for (final uid in uids)
       if (map[uid] != null) map[uid]!,

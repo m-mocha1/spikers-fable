@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../domain/entities/leaderboard_entry.dart';
@@ -60,19 +62,20 @@ class LeaderboardRemoteDataSource {
     if (counts.isEmpty) return const [];
 
     final uids = counts.keys.toList();
-    final profiles = <String, Map<String, dynamic>>{};
-    // whereIn caps at 10 ids per query.
-    for (var i = 0; i < uids.length; i += 10) {
-      final batch =
-          uids.sublist(i, i + 10 > uids.length ? uids.length : i + 10);
-      final snap = await _db
-          .collection('users_public')
-          .where(FieldPath.documentId, whereIn: batch)
-          .get();
-      for (final doc in snap.docs) {
-        profiles[doc.id] = doc.data();
-      }
-    }
+    // whereIn caps at 30 ids per query; fetch all chunks in parallel so a
+    // busy month costs one round trip, not one per chunk.
+    final snaps = await Future.wait([
+      for (var i = 0; i < uids.length; i += 30)
+        _db
+            .collection('users_public')
+            .where(FieldPath.documentId,
+                whereIn: uids.sublist(i, min(i + 30, uids.length)))
+            .get(),
+    ]);
+    final profiles = <String, Map<String, dynamic>>{
+      for (final snap in snaps)
+        for (final doc in snap.docs) doc.id: doc.data(),
+    };
 
     final entries = <LeaderboardEntry>[
       for (final uid in uids)

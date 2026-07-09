@@ -52,7 +52,6 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
   List<String> _lastFetchedIds = [];
   List<String> _lastAttendedIds = const [];
   String _coachName = '';
-  String _fetchedCoachId = '';
   bool _isArchived = false;
   bool _archiveTriggered = false;
   Timer? _archiveTimer;
@@ -81,8 +80,12 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
     if (arg != null) {
       _session = arg;
       _sessionId = arg.id;
-      _fetchUsers([...arg.attendeeIds, ...arg.waitlistIds]);
-      _fetchCoachName(arg.coachId);
+      // Seed synchronously from the profile cache so rows for anyone seen
+      // before render on the very first frame; _fetchProfiles then swaps in
+      // the fresh copies.
+      _userMap = _repo.cachedProfiles(_profileIds(arg));
+      _coachName = _userMap[arg.coachId]?.name ?? '';
+      _fetchProfiles(arg);
     } else if (widget.sessionId != null) {
       _sessionId = widget.sessionId!;
     }
@@ -134,13 +137,15 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
   }
 
   void _refreshDerived(SessionModel session) {
+    // A change in attendedIds means attendanceCounts changed server-side, so
+    // force a refetch to refresh the per-row counters. (Refetching only the
+    // toggled uid would save reads; not worth the diff logic yet.)
     final sortedAttended = [...session.attendedIds]..sort();
     if (!_listsEqual(sortedAttended, _lastAttendedIds)) {
       _lastFetchedIds = const [];
       _lastAttendedIds = sortedAttended;
     }
-    _fetchUsers([...session.attendeeIds, ...session.waitlistIds]);
-    _fetchCoachName(session.coachId);
+    _fetchProfiles(session);
   }
 
   void _scheduleArchival(SessionModel session) {
@@ -164,36 +169,45 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
     await _repo.archiveExpiredNow();
   }
 
-  Future<void> _fetchCoachName(String coachId) async {
-    if (coachId.isEmpty || coachId == _fetchedCoachId) return;
-    _fetchedCoachId = coachId;
-    try {
-      final profiles = await _repo.fetchPublicProfiles([coachId]);
-      if (!mounted) return;
-      setState(() {
-        _coachName = profiles[coachId]?.name ?? '';
-      });
-    } catch (_) {
-      // Leave _coachName empty; the row will render with a blank value.
-    }
-  }
+  /// Everyone this screen displays a profile for — attendees, waitlist and
+  /// the coach — deduped so they resolve in one batched read.
+  List<String> _profileIds(SessionModel session) => {
+        ...session.attendeeIds,
+        ...session.waitlistIds,
+        if (session.coachId.isNotEmpty) session.coachId,
+      }.toList();
 
-  Future<void> _fetchUsers(List<String> ids) async {
-    final unique = ids.toSet().toList();
-    final sorted = [...unique]..sort();
+  /// Stale-while-revalidate profile load: cached rows appear immediately,
+  /// then one fresh batched fetch replaces the whole map (a full replace so
+  /// players removed from the session drop out).
+  Future<void> _fetchProfiles(SessionModel session) async {
+    final ids = _profileIds(session);
+    final sorted = [...ids]..sort();
     if (_listsEqual(sorted, _lastFetchedIds)) return;
     _lastFetchedIds = sorted;
 
-    if (unique.isEmpty) {
+    if (ids.isEmpty) {
       if (mounted) setState(() => _userMap = {});
       return;
     }
 
+    final seeded = _repo.cachedProfiles(ids);
+    if (seeded.keys.any((uid) => !_userMap.containsKey(uid)) && mounted) {
+      setState(() {
+        _userMap = {..._userMap, ...seeded};
+        _coachName = _userMap[session.coachId]?.name ?? _coachName;
+      });
+    }
+
     try {
-      final next = await _repo.fetchPublicProfiles(unique);
-      if (mounted) setState(() => _userMap = next);
+      final fresh = await _repo.fetchPublicProfiles(ids);
+      if (!mounted) return;
+      setState(() {
+        _userMap = fresh;
+        _coachName = fresh[session.coachId]?.name ?? '';
+      });
     } catch (_) {
-      // Keep the previous map; rows for unknown users simply don't render.
+      // Keep the seeded/previous map; unresolved rows stay as placeholders.
     }
   }
 
@@ -1023,7 +1037,11 @@ class _AttendeesSection extends StatelessWidget {
             const SizedBox(height: 6),
             ...session.attendeeIds.map((uid) {
               final a = userMap[uid];
-              if (a == null) return const SizedBox.shrink();
+              // Profile still loading (or fetch failed) — hold the row's
+              // place with a shimmer instead of collapsing the list.
+              if (a == null) {
+                return PersonRowShimmer(key: ValueKey('att_sk_$uid'));
+              }
               final isAttended = attendedIds.contains(uid);
               // You can only endorse someone who actually attended, isn't you,
               // and only if you're eligible (attended too, or staff).
@@ -1085,7 +1103,13 @@ class _AttendeesSection extends StatelessWidget {
                 final pos = e.key + 1;
                 final uid = e.value;
                 final u = userMap[uid];
-                if (u == null) return const SizedBox.shrink();
+                if (u == null) {
+                  return PersonRowShimmer(
+                    key: ValueKey('wl_sk_$uid'),
+                    avatarRadius: 16,
+                    showSubtitle: false,
+                  );
+                }
                 return _WaitlistItem(
                   key: ValueKey('wl_$uid'),
                   uid: uid,

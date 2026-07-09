@@ -8,6 +8,14 @@ import '../datasources/sessions_remote_datasource.dart';
 class SessionsRepositoryImpl implements SessionsRepository {
   final SessionsRemoteDataSource _remote;
 
+  /// In-memory users_public cache (uid → profile), fed by every profile read.
+  /// Lets screens seed attendee lists synchronously instead of blanking for a
+  /// network round trip. Deliberately unbounded and never invalidated: the
+  /// club has at most a few hundred members and a profile is six scalar
+  /// fields, so TTL/LRU machinery isn't justified, and users_public is
+  /// viewer-independent so it survives sign-out safely.
+  final Map<String, PublicProfile> _profileCache = {};
+
   SessionsRepositoryImpl(this._remote);
 
   @override
@@ -40,12 +48,38 @@ class SessionsRepositoryImpl implements SessionsRepository {
       _remote.watchHistory(viewer, limit: limit);
 
   @override
-  Future<Map<String, PublicProfile>> fetchPublicProfiles(List<String> uids) =>
-      _remote.fetchPublicProfiles(uids);
+  Future<Map<String, PublicProfile>> fetchPublicProfiles(
+      List<String> uids) async {
+    final fresh = await _remote.fetchPublicProfiles(uids);
+    _profileCache.addAll(fresh);
+    return fresh;
+  }
+
+  @override
+  Map<String, PublicProfile> cachedProfiles(List<String> uids) => {
+        for (final uid in uids)
+          if (_profileCache[uid] != null) uid: _profileCache[uid]!,
+      };
+
+  @override
+  Future<Map<String, PublicProfile>> fetchPublicProfilesCached(
+      List<String> uids) async {
+    final missing = [
+      for (final uid in {...uids})
+        if (!_profileCache.containsKey(uid)) uid,
+    ];
+    if (missing.isNotEmpty) {
+      _profileCache.addAll(await _remote.fetchPublicProfiles(missing));
+    }
+    return cachedProfiles(uids);
+  }
 
   @override
   Stream<PublicProfile?> watchPublicProfile(String uid) =>
-      _remote.watchPublicProfile(uid);
+      _remote.watchPublicProfile(uid).map((profile) {
+        if (profile != null) _profileCache[uid] = profile;
+        return profile;
+      });
 
   @override
   Future<List<DateTime>> fetchAttendedTimes(String uid) =>

@@ -8,7 +8,8 @@ class AnnouncementsRepositoryImpl implements AnnouncementsRepository {
   AnnouncementsRepositoryImpl(this._remote);
 
   @override
-  Stream<List<AnnouncementModel>> watchAll() => _remote.watchAll();
+  Stream<List<AnnouncementModel>> watchAll({int limit = 100}) =>
+      _remote.watchAll(limit: limit);
 
   @override
   Future<void> markRead(String uid) => _remote.markRead(uid);

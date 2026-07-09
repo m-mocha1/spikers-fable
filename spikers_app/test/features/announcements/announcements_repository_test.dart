@@ -66,6 +66,22 @@ void main() {
     expect(await repo.watchAll().first, isEmpty);
   });
 
+  test('watchAll respects the limit, keeping the newest items', () async {
+    for (final title in ['oldest', 'middle', 'newest']) {
+      await repo.create(
+          title: title,
+          body: 'b',
+          authorId: 'c1',
+          authorName: 'Coach',
+          audience: 'all');
+      // fake server timestamps can collide within the same instant; nudge.
+      await Future<void>.delayed(const Duration(milliseconds: 5));
+    }
+
+    final list = await repo.watchAll(limit: 2).first;
+    expect(list.map((a) => a.title), ['newest', 'middle']);
+  });
+
   test('markRead stamps lastSeenAnnouncementsAt on the user doc', () async {
     await db.collection('users').doc('u1').set({'name': 'x'});
     await repo.markRead('u1');

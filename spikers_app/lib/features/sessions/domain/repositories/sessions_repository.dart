@@ -43,7 +43,19 @@ abstract class SessionsRepository {
   Stream<List<SessionModel>> watchHistory(UserModel viewer, {int limit});
 
   /// Batched users_public lookup (whereIn chunking handled inside).
+  /// Always hits the server; results feed the in-memory profile cache.
   Future<Map<String, PublicProfile>> fetchPublicProfiles(List<String> uids);
+
+  /// Profiles already fetched earlier in this app run, returned synchronously
+  /// (uids never fetched are simply absent). Stale-while-revalidate seed for
+  /// attendee lists — pair with [fetchPublicProfiles] for the fresh copy.
+  Map<String, PublicProfile> cachedProfiles(List<String> uids);
+
+  /// Like [fetchPublicProfiles] but serves cached uids from memory and only
+  /// queries Firestore for the missing ones. Use where slight staleness is
+  /// acceptable (facepiles, history avatars, chat sender names).
+  Future<Map<String, PublicProfile>> fetchPublicProfilesCached(
+      List<String> uids);
 
   /// Live single users_public profile for [uid]; null until the mirror exists.
   /// Powers the profile's own reactive attendance/endorsement counts so they

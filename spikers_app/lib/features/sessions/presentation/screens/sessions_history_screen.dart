@@ -128,9 +128,11 @@ class _HistoryCardState extends ConsumerState<_HistoryCard> {
     }
     final ids = attended.take(_maxVisible).toList();
     try {
+      // Cached variant: avatars tolerate staleness, and the same players
+      // recur across history cards — only never-seen uids hit Firestore.
       final profiles = await ref
           .read(sessionsRepositoryProvider)
-          .fetchPublicProfiles(ids);
+          .fetchPublicProfilesCached(ids);
       // Preserve attendedIds order so avatars don't reshuffle by doc order.
       final ordered = [
         for (final uid in ids)

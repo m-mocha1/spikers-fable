@@ -432,6 +432,91 @@ void main() {
     });
   });
 
+  group('profile cache', () {
+    Future<void> seedProfile(String uid, String name,
+            {int attendanceCount = 0}) =>
+        db.collection('users_public').doc(uid).set({
+          'name': name,
+          'photoUrl': '',
+          'gender': 'male',
+          'attendanceCount': attendanceCount,
+          'injured': false,
+          'endorsementCount': 0,
+        });
+
+    test('cachedProfiles is empty before any fetch', () async {
+      await seedProfile('u2', 'Two');
+      expect(repo.cachedProfiles(['u2']), isEmpty);
+    });
+
+    test('fetchPublicProfiles populates the cache', () async {
+      await seedProfile('u2', 'Two');
+      await repo.fetchPublicProfiles(['u2']);
+      expect(repo.cachedProfiles(['u2'])['u2']!.name, 'Two');
+    });
+
+    test('fetchPublicProfilesCached serves cached uids without re-querying',
+        () async {
+      await seedProfile('u2', 'Two');
+      await seedProfile('u3', 'Three');
+      await repo.fetchPublicProfiles(['u2']);
+      // Deleting the doc proves a cache hit: a re-query couldn't find it.
+      await db.collection('users_public').doc('u2').delete();
+
+      final map = await repo.fetchPublicProfilesCached(['u2', 'u3']);
+      expect(map['u2']!.name, 'Two');
+      expect(map['u3']!.name, 'Three');
+    });
+
+    test('fetchPublicProfiles refreshes stale cache entries', () async {
+      await seedProfile('u2', 'Two', attendanceCount: 1);
+      await repo.fetchPublicProfiles(['u2']);
+      await db
+          .collection('users_public')
+          .doc('u2')
+          .update({'attendanceCount': 2});
+
+      await repo.fetchPublicProfiles(['u2']);
+      expect(repo.cachedProfiles(['u2'])['u2']!.attendanceCount, 2);
+    });
+
+    test('watchPublicProfile emissions feed the cache', () async {
+      await seedProfile('u2', 'Two');
+      await repo.watchPublicProfile('u2').first;
+      expect(repo.cachedProfiles(['u2'])['u2']!.name, 'Two');
+    });
+
+    test('uids with no users_public doc are omitted and never cached',
+        () async {
+      expect(await repo.fetchPublicProfilesCached(['ghost']), isEmpty);
+      // Absence must not be cached: once the doc exists it is found again.
+      await seedProfile('ghost', 'Now Exists');
+      final map = await repo.fetchPublicProfilesCached(['ghost']);
+      expect(map['ghost']!.name, 'Now Exists');
+    });
+  });
+
+  group('fetchPublicProfiles chunking', () {
+    test('fetches more than 30 uids across parallel whereIn chunks',
+        () async {
+      final uids = List.generate(35, (i) => 'p$i');
+      for (final uid in uids) {
+        await db.collection('users_public').doc(uid).set({
+          'name': 'name-$uid',
+          'photoUrl': '',
+        });
+      }
+
+      final map = await repo.fetchPublicProfiles(uids);
+      expect(map, hasLength(35));
+      expect(map['p34']!.name, 'name-p34');
+    });
+
+    test('empty uid list returns an empty map', () async {
+      expect(await repo.fetchPublicProfiles([]), isEmpty);
+    });
+  });
+
   group('chat repository', () {
     test('send + watchLatest round-trip, newest first', () async {
       final chat = SessionChatRepositoryImpl(ds);

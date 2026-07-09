@@ -1,9 +1,12 @@
 import '../entities/announcement.dart';
 
 abstract class AnnouncementsRepository {
-  /// All announcements, newest first. Audience filtering for players happens
-  /// client-side (see visibleAnnouncementsProvider); coaches see the full list.
-  Stream<List<AnnouncementModel>> watchAll();
+  /// Newest [limit] announcements, newest first. Audience filtering for
+  /// players happens client-side (see visibleAnnouncementsProvider); coaches
+  /// see the full list. Bounded because this stream stays alive for the whole
+  /// app run (it feeds the bell badge) — anything older than the newest
+  /// [limit] simply drops off the list screen.
+  Stream<List<AnnouncementModel>> watchAll({int limit});
 
   /// Stamps the user's lastSeenAnnouncementsAt to now.
   Future<void> markRead(String uid);

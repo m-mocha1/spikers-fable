@@ -115,9 +115,11 @@ class _SessionChatScreenState extends ConsumerState<SessionChatScreen> {
     if (needed.isEmpty) return;
 
     try {
+      // Cached variant: sender names tolerate staleness, and the detail
+      // screen has usually just fetched these exact profiles.
       final profiles = await ref
           .read(sessionsRepositoryProvider)
-          .fetchPublicProfiles(needed.toList());
+          .fetchPublicProfilesCached(needed.toList());
       _senderInfo.addAll(profiles);
     } catch (_) {
       // Leave missing senders unresolved; bubbles render with empty name.

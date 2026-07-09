@@ -83,18 +83,21 @@ class SessionsRemoteDataSource {
 
   Future<Map<String, PublicProfile>> fetchPublicProfiles(
       List<String> uids) async {
-    final profiles = <String, PublicProfile>{};
-    for (var i = 0; i < uids.length; i += 30) {
-      final chunk = uids.sublist(i, (i + 30).clamp(0, uids.length));
-      final snap = await _db
-          .collection('users_public')
-          .where(FieldPath.documentId, whereIn: chunk)
-          .get();
-      for (final doc in snap.docs) {
-        profiles[doc.id] = _profileFromData(doc.data());
-      }
-    }
-    return profiles;
+    if (uids.isEmpty) return {};
+    // whereIn caps at 30 ids per query; fetch all chunks in parallel so a
+    // large session costs one round trip, not one per chunk.
+    final snaps = await Future.wait([
+      for (var i = 0; i < uids.length; i += 30)
+        _db
+            .collection('users_public')
+            .where(FieldPath.documentId,
+                whereIn: uids.sublist(i, min(i + 30, uids.length)))
+            .get(),
+    ]);
+    return {
+      for (final snap in snaps)
+        for (final doc in snap.docs) doc.id: _profileFromData(doc.data()),
+    };
   }
 
   /// Live single-profile view of users_public/{uid}; null while the mirror doc

@@ -129,6 +129,70 @@ class EmptyStateView extends StatelessWidget {
   }
 }
 
+/// Shimmer stand-in for one person row (avatar circle + name/subtitle bars)
+/// while that uid's public profile is still loading. Sized to match the real
+/// attendee/waitlist rows so the swap to live data causes no layout shift.
+/// Colours are inverted relative to [ListShimmer] because these rows sit
+/// inside a navyLight card rather than on the gradient background.
+class PersonRowShimmer extends StatelessWidget {
+  /// Effective avatar radius including any ring the real row draws (the
+  /// attendee avatar is radius 19 plus a 2px border, hence 21).
+  final double avatarRadius;
+
+  /// Attendee rows carry a subtitle line ("N sessions attended");
+  /// waitlist rows don't.
+  final bool showSubtitle;
+
+  const PersonRowShimmer({
+    super.key,
+    this.avatarRadius = 21,
+    this.showSubtitle = true,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    Widget bar(double width, double height) => Container(
+          width: width,
+          height: height,
+          decoration: BoxDecoration(
+            color: AppColors.navyBlue,
+            borderRadius: BorderRadius.circular(4),
+          ),
+        );
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 7),
+      child: Shimmer.fromColors(
+        baseColor: AppColors.navyBlue,
+        highlightColor: AppColors.grey.withValues(alpha: 0.35),
+        child: Row(
+          children: [
+            Container(
+              width: avatarRadius * 2,
+              height: avatarRadius * 2,
+              decoration: const BoxDecoration(
+                color: AppColors.navyBlue,
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                bar(140, 12),
+                if (showSubtitle) ...[
+                  const SizedBox(height: 6),
+                  bar(90, 9),
+                ],
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 /// Shimmer placeholder for card lists while the first snapshot loads —
 /// matches the rounded-card look of the real rows it stands in for.
 class ListShimmer extends StatelessWidget {

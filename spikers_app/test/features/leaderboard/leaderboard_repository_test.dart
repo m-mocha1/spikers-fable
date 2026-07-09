@@ -99,10 +99,10 @@ void main() {
       expect(await repo.fetchMonthly(viewer(role: 'coach')), isEmpty);
     });
 
-    test('joins profiles for more than 10 uids (whereIn batching)', () async {
+    test('joins profiles for more than 30 uids (whereIn batching)', () async {
       final thisMonth =
           Timestamp.fromDate(DateTime.now().add(const Duration(minutes: 1)));
-      final uids = List.generate(13, (i) => 'u$i');
+      final uids = List.generate(35, (i) => 'u$i');
       await db.collection('sessions').doc('s1').set({
         'startTime': thisMonth,
         'attendedIds': uids,
@@ -115,7 +115,7 @@ void main() {
       }
 
       final entries = await repo.fetchMonthly(viewer(role: 'coach'));
-      expect(entries.length, 13);
+      expect(entries.length, 35);
       expect(entries.every((e) => e.name == 'name-${e.uid}'), isTrue);
     });
   });

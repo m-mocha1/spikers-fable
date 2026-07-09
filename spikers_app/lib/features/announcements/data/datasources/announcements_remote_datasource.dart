@@ -7,9 +7,10 @@ class AnnouncementsRemoteDataSource {
 
   AnnouncementsRemoteDataSource(this._db);
 
-  Stream<List<AnnouncementModel>> watchAll() => _db
+  Stream<List<AnnouncementModel>> watchAll({required int limit}) => _db
       .collection('announcements')
       .orderBy('createdAt', descending: true)
+      .limit(limit)
       .snapshots()
       .map((snap) => snap.docs.map(AnnouncementModel.fromDoc).toList());
 
