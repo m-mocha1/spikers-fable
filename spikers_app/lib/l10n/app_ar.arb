@@ -106,8 +106,31 @@
   "years": "سنة",
   "upcoming": "قادم",
   "ongoing": "جارٍ",
-  "startsIn": "يبدأ في",
+  "startsIn": "يبدأ خلال",
   "endsIn": "ينتهي في",
+  "countdownDays": "{days} يوم",
+  "@countdownDays": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+  "countdownHoursMinutes": "{hours} س {minutes} د",
+  "@countdownHoursMinutes": {
+    "placeholders": {
+      "hours": { "type": "int" },
+      "minutes": { "type": "int" }
+    }
+  },
+  "countdownMinutes": "{minutes} د",
+  "@countdownMinutes": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+  "unitDays": "يوم",
+  "unitHours": "ساعة",
+  "unitMinutes": "دقيقة",
+  "unitSeconds": "ثانية",
   "confirm": "تأكيد",
   "yes": "نعم",
   "no": "لا",

@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,10 +11,9 @@ import '../../core/router/app_router.dart';
 import '../../features/auth/presentation/providers/auth_providers.dart';
 import '../../l10n/app_localizations.dart';
 import 'package:spikers_app/features/sessions/domain/entities/session_model.dart';
-import 'package:spikers_app/features/sessions/domain/repositories/sessions_repository.dart'
-    show PublicProfile;
-import 'package:spikers_app/features/sessions/presentation/providers/sessions_providers.dart';
 import 'animations.dart';
+import 'attendee_facepile.dart';
+import 'date_block.dart';
 
 class SessionCard extends StatefulWidget {
   final SessionModel session;
@@ -43,8 +41,9 @@ class _SessionCardState extends State<SessionCard> {
     final designAsset = AppAssets
         .cardDesigns[session.designIndex % AppAssets.cardDesigns.length];
 
-    // Fill ratio drives the left accent stripe colour (green → orange → red),
-    // reusing the same thresholds as the spots indicator below.
+    // Fill ratio drives the left accent stripe and the capacity bar colour
+    // (green → orange → red), reusing the same thresholds as the spots
+    // indicator below.
     final filled = session.attendeeIds.length;
     final ratio = session.maxPlayers > 0 ? filled / session.maxPlayers : 1.0;
     final statusColor = ratio >= 1.0
@@ -53,65 +52,97 @@ class _SessionCardState extends State<SessionCard> {
             ? Colors.orange
             : AppColors.success;
 
+    // Ticket-style header: weekday + kick-off time as a gold overline so the
+    // eye lands on *when* first, then the title. Bare DateFormat picks up
+    // Intl.defaultLocale (set in main.dart), so this localizes for Arabic.
+    final overline =
+        '${DateFormat('EEEE').format(session.startTime)} • ${DateFormat('HH:mm').format(session.startTime)}'
+            .toUpperCase();
+
     // Content rows, extracted so they can be re-wrapped in an entrance
     // cascade when the user navigates back from the detail screen. On first
     // mount they render plain — the list's AppStaggeredItem already animates
     // the whole card, and double-fading the text would look muddy.
     final contentRows = <Widget>[
       Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          DateBlock(session.startTime),
+          const SizedBox(width: 14),
           Expanded(
-            child: Text(
-              session.title,
-              style:
-                  const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        overline,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.gold,
+                          letterSpacing: 1.3,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    if (session.isOngoing)
+                      Pulse(
+                          child:
+                              _Badge(l.live.toUpperCase(), AppColors.success)),
+                    if (session.isFull && !session.isOngoing)
+                      _Badge(l.full.toUpperCase(), AppColors.errorRed),
+                    _MembershipBadge(session),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  session.title,
+                  style: const TextStyle(
+                      fontSize: 21, fontWeight: FontWeight.w800, height: 1.15),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
             ),
           ),
-          const SizedBox(width: 10),
-          if (session.isOngoing)
-            Pulse(child: _Badge(l.live.toUpperCase(), AppColors.success)),
-          if (session.isFull && !session.isOngoing)
-            _Badge(l.full.toUpperCase(), AppColors.errorRed),
-          _MembershipBadge(session),
         ],
       ),
-      const SizedBox(height: 10),
+      const SizedBox(height: 16),
       Row(
         children: [
           const Icon(Icons.location_on_outlined,
-              size: 17, color: AppColors.grey),
+              size: 16, color: AppColors.grey),
           const SizedBox(width: 5),
           Expanded(
             child: Text(
               session.location,
-              style: const TextStyle(color: AppColors.grey, fontSize: 15),
+              style: const TextStyle(color: AppColors.grey, fontSize: 14.5),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          const SizedBox(width: 8),
-          _Facepile(session.attendeeIds),
+          const SizedBox(width: 10),
+          AttendeeFacepile(session.attendeeIds),
         ],
       ),
-      const SizedBox(height: 18),
+      const SizedBox(height: 14),
       Row(
         children: [
-          _InfoChip(
-            icon: Icons.schedule,
-            label: DateFormat('MMM d  HH:mm').format(session.startTime),
-          ),
-          const SizedBox(width: 12),
           _GenderBadge(session.gender),
-          const Spacer(),
-          _SpotsIndicator(session),
           if (session.hasWaitlist) ...[
-            const SizedBox(width: 10),
+            const SizedBox(width: 12),
             _WaitlistIndicator(session),
           ],
+          const Spacer(),
+          _SpotsIndicator(session),
         ],
       ),
+      const SizedBox(height: 10),
+      _CapacityBar(ratio: ratio, color: statusColor),
     ];
 
     // Left status stripe — revealed with the content: after the art settles
@@ -162,18 +193,31 @@ class _SessionCardState extends State<SessionCard> {
     return Pressable(
       onTap: _openDetail,
       child: Container(
-        margin: const EdgeInsets.only(bottom: 20),
+        margin: const EdgeInsets.only(bottom: 22),
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
           color: AppColors.navyLight,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.white.withValues(alpha: 0.06)),
+          border: Border.all(color: AppColors.white.withValues(alpha: 0.08)),
+          // Layered depth: a soft ambient drop + a tight contact shadow, and a
+          // gentle green halo while the session is live.
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.35),
-              blurRadius: 16,
-              offset: const Offset(0, 8),
+              color: Colors.black.withValues(alpha: 0.38),
+              blurRadius: 22,
+              offset: const Offset(0, 10),
             ),
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.22),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+            if (session.isOngoing)
+              BoxShadow(
+                color: AppColors.success.withValues(alpha: 0.22),
+                blurRadius: 26,
+                spreadRadius: 1,
+              ),
           ],
         ),
         child: Stack(
@@ -196,6 +240,10 @@ class _SessionCardState extends State<SessionCard> {
                         decoration:
                             BoxDecoration(gradient: AppGradients.cardScrim),
                       ),
+                      const DecoratedBox(
+                        decoration:
+                            BoxDecoration(gradient: AppGradients.cardSheen),
+                      ),
                     ],
                   ),
                 ),
@@ -209,11 +257,55 @@ class _SessionCardState extends State<SessionCard> {
               child: animatedStripe,
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
               child: content,
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Slim capacity meter along the card's bottom edge — the stripe colour,
+/// restated as *how full* the session is. Animates on mount and whenever the
+/// attendee count changes.
+class _CapacityBar extends StatelessWidget {
+  final double ratio;
+  final Color color;
+  const _CapacityBar({required this.ratio, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: ratio.clamp(0.0, 1.0)),
+      duration: AppMotion.slow,
+      curve: AppMotion.enter,
+      builder: (context, value, child) => Container(
+        height: 4,
+        decoration: BoxDecoration(
+          color: AppColors.white.withValues(alpha: 0.10),
+          borderRadius: BorderRadius.circular(2),
+        ),
+        alignment: AlignmentDirectional.centerStart,
+        child: value <= 0
+            ? const SizedBox.shrink()
+            : FractionallySizedBox(
+                widthFactor: value,
+                heightFactor: 1,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: color,
+                    borderRadius: BorderRadius.circular(2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: color.withValues(alpha: 0.45),
+                        blurRadius: 6,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
       ),
     );
   }
@@ -268,24 +360,6 @@ class _MembershipBadge extends ConsumerWidget {
       );
     }
     return const SizedBox.shrink();
-  }
-}
-
-class _InfoChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  const _InfoChip({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 16, color: AppColors.gold),
-        const SizedBox(width: 5),
-        Text(label, style: const TextStyle(fontSize: 14, color: AppColors.grey)),
-      ],
-    );
   }
 }
 
@@ -354,94 +428,9 @@ class _SpotsIndicator extends StatelessWidget {
         Icon(Icons.group_outlined, size: 17, color: color),
         const SizedBox(width: 5),
         Text('$filled/$max',
-            style: TextStyle(fontSize: 14, color: color, fontWeight: FontWeight.w600)),
+            style: TextStyle(
+                fontSize: 14, color: color, fontWeight: FontWeight.w700)),
       ],
-    );
-  }
-}
-
-/// Overlapping attendee avatars ("+N" when there are more) — makes a card read
-/// as *people playing*, not just a capacity number. Renders nothing while the
-/// profile fetch is in flight or when the session is empty.
-class _Facepile extends ConsumerWidget {
-  final List<String> uids;
-  const _Facepile(this.uids);
-
-  static const _maxFaces = 3;
-  static const double _diameter = 24;
-  static const double _step = 15;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    if (uids.isEmpty) return const SizedBox.shrink();
-    final shown = uids.take(_maxFaces).join(',');
-    final profiles = ref.watch(facepileProfilesProvider(shown)).value;
-    if (profiles == null || profiles.isEmpty) return const SizedBox.shrink();
-    final extra = uids.length - profiles.length;
-
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        SizedBox(
-          width: _diameter + _step * (profiles.length - 1),
-          height: _diameter,
-          child: Stack(
-            children: [
-              for (var i = 0; i < profiles.length; i++)
-                PositionedDirectional(
-                  start: i * _step,
-                  child: _FaceDot(profiles[i]),
-                ),
-            ],
-          ),
-        ),
-        if (extra > 0) ...[
-          const SizedBox(width: 4),
-          Text(
-            '+$extra',
-            style: const TextStyle(
-              color: AppColors.grey,
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-}
-
-class _FaceDot extends StatelessWidget {
-  final PublicProfile profile;
-  const _FaceDot(this.profile);
-
-  @override
-  Widget build(BuildContext context) {
-    final initial =
-        profile.name.trim().isEmpty ? '?' : profile.name.trim()[0].toUpperCase();
-    return Container(
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        // Ring in the card surface colour so stacked faces separate cleanly.
-        border: Border.all(color: AppColors.navyLight, width: 2),
-      ),
-      child: CircleAvatar(
-        radius: 10,
-        backgroundColor: AppColors.gold.withValues(alpha: 0.25),
-        backgroundImage: profile.photoUrl.isNotEmpty
-            ? CachedNetworkImageProvider(profile.photoUrl)
-            : null,
-        child: profile.photoUrl.isEmpty
-            ? Text(
-                initial,
-                style: const TextStyle(
-                  color: AppColors.gold,
-                  fontSize: 9,
-                  fontWeight: FontWeight.w700,
-                ),
-              )
-            : null,
-      ),
     );
   }
 }

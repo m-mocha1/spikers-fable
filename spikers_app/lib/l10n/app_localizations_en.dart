@@ -313,6 +313,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String get endsIn => 'Ends in';
 
   @override
+  String countdownDays(int days) {
+    return '${days}d';
+  }
+
+  @override
+  String countdownHoursMinutes(int hours, int minutes) {
+    return '${hours}h ${minutes}m';
+  }
+
+  @override
+  String countdownMinutes(int minutes) {
+    return '${minutes}m';
+  }
+
+  @override
+  String get unitDays => 'days';
+
+  @override
+  String get unitHours => 'hours';
+
+  @override
+  String get unitMinutes => 'min';
+
+  @override
+  String get unitSeconds => 'sec';
+
+  @override
   String get confirm => 'Confirm';
 
   @override
@@ -614,11 +641,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get joinedBadge => 'Joined';
-
-  @override
-  String countdownDays(int days) {
-    return '${days}d';
-  }
 
   @override
   String get sessionStartedLeaveBlocked =>

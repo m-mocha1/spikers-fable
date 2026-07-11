@@ -1,18 +1,19 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_gradients.dart';
+import '../../../../core/constants/app_motion.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/utils/age_calculator.dart';
+import '../../../../core/widgets/animations.dart';
 import '../../../../core/widgets/gender_filter_chips.dart';
-import '../../../../core/widgets/injured_icon.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../domain/entities/player_summary.dart';
 import '../providers/players_providers.dart';
 import '../widgets/payment_confirm_dialog.dart';
+import '../widgets/player_card.dart';
 
 final _genderFilterProvider = StateProvider.autoDispose<String>((ref) => 'all');
 
@@ -40,7 +41,7 @@ class _PlayersTabState extends ConsumerState<PlayersTab> {
     final genderFilter = ref.watch(_genderFilterProvider);
 
     return playersAsync.when(
-      loading: () => const ListShimmer(),
+      loading: () => const ListShimmer(itemHeight: 86),
       error: (e, _) =>
           ErrorView(onRetry: () => ref.invalidate(playersProvider)),
       data: (players) {
@@ -54,8 +55,25 @@ class _PlayersTabState extends ConsumerState<PlayersTab> {
 
         return Column(
           children: [
+            // Search on its own full-width row, filters underneath — gives
+            // the search field room to breathe instead of fighting the chips
+            // for one line.
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+              child: _SearchField(
+                controller: _searchController,
+                query: _query,
+                hint: l.searchPlayers,
+                onChanged: (v) => setState(() => _query = v),
+                onClear: () {
+                  _searchController.clear();
+                  setState(() => _query = '');
+                },
+              ),
+            ),
+            const SizedBox(height: 10),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 children: [
                   GenderFilterChips(
@@ -63,60 +81,8 @@ class _PlayersTabState extends ConsumerState<PlayersTab> {
                     onChanged: (v) =>
                         ref.read(_genderFilterProvider.notifier).state = v,
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: TextField(
-                      controller: _searchController,
-                      onChanged: (v) => setState(() => _query = v),
-                      textInputAction: TextInputAction.search,
-                      style: const TextStyle(
-                        color: AppColors.white,
-                        fontSize: 14,
-                      ),
-                      decoration: InputDecoration(
-                        isDense: true,
-                        hintText: l.searchPlayers,
-                        hintStyle: const TextStyle(
-                          color: AppColors.grey,
-                          fontSize: 13,
-                        ),
-                        prefixIcon: const Icon(
-                          Icons.search,
-                          color: AppColors.grey,
-                          size: 20,
-                        ),
-                        prefixIconConstraints: const BoxConstraints(
-                          minWidth: 36,
-                          minHeight: 36,
-                        ),
-                        suffixIcon: _query.isEmpty
-                            ? null
-                            : IconButton(
-                                visualDensity: VisualDensity.compact,
-                                icon: const Icon(
-                                  Icons.close,
-                                  color: AppColors.grey,
-                                  size: 18,
-                                ),
-                                onPressed: () {
-                                  _searchController.clear();
-                                  setState(() => _query = '');
-                                },
-                              ),
-                        suffixIconConstraints: const BoxConstraints(
-                          minWidth: 36,
-                          minHeight: 36,
-                        ),
-                        filled: true,
-                        fillColor: AppColors.navyLight,
-                        contentPadding: const EdgeInsets.symmetric(vertical: 8),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(20),
-                          borderSide: BorderSide.none,
-                        ),
-                      ),
-                    ),
-                  ),
+                  const Spacer(),
+                  _ResultCountPill(count: filtered.length, l: l),
                 ],
               ),
             ),
@@ -127,21 +93,42 @@ class _PlayersTabState extends ConsumerState<PlayersTab> {
                       title: q.isEmpty ? l.noPlayers : l.noPlayersMatch,
                     )
                   : ListView.builder(
-                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 100),
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
                       itemCount: filtered.length,
-                      itemBuilder: (_, i) => _PlayerCard(
-                        key: ValueKey(filtered[i].uid),
-                        player: filtered[i],
-                        l: l,
-                        onTapBadge: () => confirmTogglePayment(
-                          context,
-                          ref,
-                          uid: filtered[i].uid,
-                          name: filtered[i].name,
-                          paidUntil: filtered[i].paidUntil,
-                          isLifetime: filtered[i].lifetimeMember,
-                        ),
-                      ),
+                      itemBuilder: (_, i) {
+                        final p = filtered[i];
+                        return AppStaggeredItem(
+                          key: ValueKey(p.uid),
+                          index: i,
+                          child: PlayerCard(
+                            name: p.name,
+                            photoUrl: p.photoUrl,
+                            injured: p.injured,
+                            attendanceCount: p.attendanceCount,
+                            age: p.dateOfBirth == null
+                                ? null
+                                : AgeCalculator.fromDate(p.dateOfBirth!),
+                            onTap: () => context.push(
+                              Routes.playerProfile,
+                              extra: p.uid,
+                            ),
+                            trailing: _PaidBadge(
+                              isPaid: p.isPaid,
+                              daysLeft: p.paymentDaysLeft,
+                              isLifetime: p.lifetimeMember,
+                              l: l,
+                              onTap: () => confirmTogglePayment(
+                                context,
+                                ref,
+                                uid: p.uid,
+                                name: p.name,
+                                paidUntil: p.paidUntil,
+                                isLifetime: p.lifetimeMember,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
                     ),
             ),
           ],
@@ -151,128 +138,111 @@ class _PlayersTabState extends ConsumerState<PlayersTab> {
   }
 }
 
-class _PlayerCard extends StatelessWidget {
-  final PlayerSummary player;
-  final AppLocalizations l;
-  final VoidCallback onTapBadge;
-  const _PlayerCard({
-    super.key,
-    required this.player,
-    required this.l,
-    required this.onTapBadge,
+/// Full-width rounded search field. Hairline border at rest, gold when
+/// focused, matching the card borders used across the app.
+class _SearchField extends StatelessWidget {
+  final TextEditingController controller;
+  final String query;
+  final String hint;
+  final ValueChanged<String> onChanged;
+  final VoidCallback onClear;
+  const _SearchField({
+    required this.controller,
+    required this.query,
+    required this.hint,
+    required this.onChanged,
+    required this.onClear,
   });
 
   @override
   Widget build(BuildContext context) {
-    final age = player.dateOfBirth == null
-        ? 0
-        : AgeCalculator.fromDate(player.dateOfBirth!);
-    final initials = player.name.trim().isEmpty
-        ? '?'
-        : player.name
-              .trim()
-              .split(' ')
-              .map((w) => w[0])
-              .take(2)
-              .join()
-              .toUpperCase();
+    OutlineInputBorder border(Color color) => OutlineInputBorder(
+      borderRadius: BorderRadius.circular(24),
+      borderSide: BorderSide(color: color),
+    );
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      decoration: BoxDecoration(
-        color: AppColors.navyLight,
-        borderRadius: BorderRadius.circular(16),
+    return TextField(
+      controller: controller,
+      onChanged: onChanged,
+      textInputAction: TextInputAction.search,
+      cursorColor: AppColors.gold,
+      style: const TextStyle(color: AppColors.white, fontSize: 14),
+      decoration: InputDecoration(
+        isDense: true,
+        hintText: hint,
+        hintStyle: const TextStyle(color: AppColors.grey, fontSize: 13.5),
+        prefixIcon: const Icon(Icons.search, color: AppColors.grey, size: 20),
+        prefixIconConstraints: const BoxConstraints(
+          minWidth: 42,
+          minHeight: 42,
+        ),
+        suffixIcon: query.isEmpty
+            ? null
+            : IconButton(
+                visualDensity: VisualDensity.compact,
+                icon: const Icon(
+                  Icons.close,
+                  color: AppColors.grey,
+                  size: 18,
+                ),
+                onPressed: onClear,
+              ),
+        suffixIconConstraints: const BoxConstraints(
+          minWidth: 42,
+          minHeight: 42,
+        ),
+        filled: true,
+        fillColor: AppColors.navyLight,
+        contentPadding: const EdgeInsets.symmetric(vertical: 11),
+        enabledBorder: border(AppColors.white.withValues(alpha: 0.08)),
+        focusedBorder: border(AppColors.gold.withValues(alpha: 0.55)),
+        border: border(Colors.transparent),
       ),
-      clipBehavior: Clip.antiAlias,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => context.push(Routes.playerProfile, extra: player.uid),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 22,
-                  backgroundColor: AppColors.gold.withValues(alpha: 0.2),
-                  backgroundImage: player.photoUrl.isNotEmpty
-                      ? CachedNetworkImageProvider(player.photoUrl)
-                      : null,
-                  child: player.photoUrl.isEmpty
-                      ? Text(
-                          initials,
-                          style: const TextStyle(
-                            color: AppColors.gold,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        )
-                      : null,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              player.name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 15,
-                              ),
-                            ),
-                          ),
-                          if (player.injured) ...[
-                            const SizedBox(width: 6),
-                            const InjuredIcon(),
-                          ],
-                        ],
-                      ),
-                      const SizedBox(height: 3),
-                      Row(
-                        children: [
-                          Text(
-                            '$age ${l.years}',
-                            style: const TextStyle(
-                              color: AppColors.grey,
-                              fontSize: 12,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          const Icon(
-                            Icons.sports_volleyball,
-                            size: 11,
-                            color: AppColors.grey,
-                          ),
-                          const SizedBox(width: 3),
-                          Text(
-                            '${player.attendanceCount} ${l.sessionsAttended}',
-                            style: const TextStyle(
-                              color: AppColors.grey,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                _PaidBadge(
-                  isPaid: player.isPaid,
-                  daysLeft: player.paymentDaysLeft,
-                  isLifetime: player.lifetimeMember,
-                  onTap: onTapBadge,
-                  l: l,
-                ),
-              ],
+    );
+  }
+}
+
+/// Quiet live count of the rows the current search + gender filter produce —
+/// instant feedback that a filter actually did something. Same pill style as
+/// the sessions tab's section count.
+class _ResultCountPill extends StatelessWidget {
+  final int count;
+  final AppLocalizations l;
+  const _ResultCountPill({required this.count, required this.l});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: AppColors.white.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AnimatedSwitcher(
+            duration: AppMotion.fast,
+            child: Text(
+              '$count',
+              key: ValueKey(count),
+              style: const TextStyle(
+                color: AppColors.gold,
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ),
-        ),
+          const SizedBox(width: 4),
+          Text(
+            l.players,
+            style: const TextStyle(
+              color: AppColors.grey,
+              fontSize: 11.5,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -295,16 +265,24 @@ class _PaidBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Color color;
+    final IconData icon;
     if (isLifetime) {
       color = AppColors.gold;
+      icon = Icons.workspace_premium;
     } else if (!isPaid || daysLeft == 0) {
       color = AppColors.errorRed;
+      icon = Icons.error_outline;
     } else if (daysLeft <= 9) {
       color = AppColors.warning;
+      icon = Icons.schedule;
     } else {
       color = AppColors.success;
+      icon = Icons.check_circle_outline;
     }
     final showDays = !isLifetime && isPaid && daysLeft <= 9;
+    // Lifetime members get the solid gold-gradient treatment; everyone else
+    // stays on the tinted-outline pill so lifetime reads as the special case.
+    final fg = isLifetime ? AppColors.navyBlue : color;
 
     // InkWell + outer padding: a ripple on tap and a ≥44px hit area for what
     // is the coach's most-tapped control, without growing the pill visually.
@@ -317,30 +295,46 @@ class _PaidBadge extends StatelessWidget {
           padding: const EdgeInsets.all(4),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
-            constraints: const BoxConstraints(minHeight: 36),
+            constraints: const BoxConstraints(minHeight: 34),
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.15),
+              gradient: isLifetime ? AppGradients.goldCta : null,
+              color: isLifetime ? null : color.withValues(alpha: 0.14),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: color),
+              border: isLifetime ? null : Border.all(color: color),
+              boxShadow: isLifetime
+                  ? [
+                      BoxShadow(
+                        color: AppColors.gold.withValues(alpha: 0.35),
+                        blurRadius: 10,
+                      ),
+                    ]
+                  : const [],
             ),
-            child: Column(
+            child: Row(
               mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  isLifetime ? l.lifetime : (isPaid ? l.paid : l.unpaid),
-                  style: TextStyle(
-                    color: color,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 12,
-                  ),
+                Icon(icon, size: 14, color: fg),
+                const SizedBox(width: 5),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isLifetime ? l.lifetime : (isPaid ? l.paid : l.unpaid),
+                      style: TextStyle(
+                        color: fg,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 11.5,
+                      ),
+                    ),
+                    if (showDays)
+                      Text(
+                        l.daysLeft(daysLeft),
+                        style: TextStyle(color: fg, fontSize: 9.5),
+                      ),
+                  ],
                 ),
-                if (showDays)
-                  Text(
-                    l.daysLeft(daysLeft),
-                    style: TextStyle(color: color, fontSize: 10),
-                  ),
               ],
             ),
           ),
@@ -349,4 +343,3 @@ class _PaidBadge extends StatelessWidget {
     );
   }
 }
-

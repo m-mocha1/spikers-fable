@@ -686,6 +686,48 @@ abstract class AppLocalizations {
   /// **'Ends in'**
   String get endsIn;
 
+  /// No description provided for @countdownDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{days}d'**
+  String countdownDays(int days);
+
+  /// No description provided for @countdownHoursMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours}h {minutes}m'**
+  String countdownHoursMinutes(int hours, int minutes);
+
+  /// No description provided for @countdownMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes}m'**
+  String countdownMinutes(int minutes);
+
+  /// No description provided for @unitDays.
+  ///
+  /// In en, this message translates to:
+  /// **'days'**
+  String get unitDays;
+
+  /// No description provided for @unitHours.
+  ///
+  /// In en, this message translates to:
+  /// **'hours'**
+  String get unitHours;
+
+  /// No description provided for @unitMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'min'**
+  String get unitMinutes;
+
+  /// No description provided for @unitSeconds.
+  ///
+  /// In en, this message translates to:
+  /// **'sec'**
+  String get unitSeconds;
+
   /// No description provided for @confirm.
   ///
   /// In en, this message translates to:
@@ -1237,12 +1279,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Joined'**
   String get joinedBadge;
-
-  /// No description provided for @countdownDays.
-  ///
-  /// In en, this message translates to:
-  /// **'{days}d'**
-  String countdownDays(int days);
 
   /// No description provided for @sessionStartedLeaveBlocked.
   ///

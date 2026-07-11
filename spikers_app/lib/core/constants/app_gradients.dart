@@ -33,4 +33,22 @@ class AppGradients {
     colors: [Color(0x990D1B3E), Color(0x4D0D1B3E), Color(0x260D1B3E)],
     stops: [0.0, 0.55, 1.0],
   );
+
+  /// Heavier variant of [cardScrim] for the Next-Up spotlight, whose text sits
+  /// directly on the artwork with no card surface underneath.
+  static const heroScrim = LinearGradient(
+    begin: Alignment.bottomCenter,
+    end: Alignment.topCenter,
+    colors: [Color(0xCC0D1B3E), Color(0x8C0D1B3E), Color(0x590D1B3E)],
+    stops: [0.0, 0.55, 1.0],
+  );
+
+  /// Faint diagonal light sheen laid on top of card artwork — a whisper of
+  /// gloss that makes the surface read as printed/laminated rather than flat.
+  static const cardSheen = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0x12FFFFFF), Color(0x00FFFFFF), Color(0x00FFFFFF)],
+    stops: [0.0, 0.45, 1.0],
+  );
 }

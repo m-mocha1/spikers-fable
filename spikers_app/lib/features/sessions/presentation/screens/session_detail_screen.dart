@@ -18,6 +18,7 @@ import '../../../../core/utils/app_snackbar.dart';
 import '../../../../core/widgets/animations.dart';
 import '../../../../core/widgets/celebration.dart';
 import '../../../../core/widgets/confirm_dialog.dart';
+import '../../../../core/widgets/date_block.dart';
 import '../../../../core/widgets/gradient_background.dart';
 import '../../../../core/widgets/injured_icon.dart';
 import '../../../../core/widgets/state_views.dart';
@@ -675,10 +676,15 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
               // landing pad — kept OUTSIDE the staggered fade below so the flight
               // lands cleanly.
               _CountdownCard(session: session, l: l),
-              const SizedBox(height: 20),
+              const SizedBox(height: 18),
               ...[
-                    _InfoSection(session: session, l: l, coachName: _coachName),
-                    const SizedBox(height: 20),
+                    _InfoSection(
+                      session: session,
+                      l: l,
+                      coachName: _coachName,
+                      coach: _userMap[session.coachId],
+                    ),
+                    const SizedBox(height: 18),
                     // Coach controls for a custom (members-only) session:
                     // adjust the member list or open it up to the public.
                     if (isCoach && session.isCustom && !_isArchived) ...[
@@ -693,8 +699,11 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
                                   style:
                                       const TextStyle(color: AppColors.gold)),
                               style: OutlinedButton.styleFrom(
-                                minimumSize: const Size.fromHeight(44),
+                                minimumSize: const Size.fromHeight(48),
                                 side: const BorderSide(color: AppColors.gold),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
                               ),
                             ),
                           ),
@@ -708,14 +717,17 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
                                   style:
                                       const TextStyle(color: AppColors.gold)),
                               style: OutlinedButton.styleFrom(
-                                minimumSize: const Size.fromHeight(44),
+                                minimumSize: const Size.fromHeight(48),
                                 side: const BorderSide(color: AppColors.gold),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
                               ),
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 18),
                     ],
                     _AttendeesSection(
                       session: session,
@@ -737,7 +749,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
                             .toList(),
                       ),
                     ),
-                    const SizedBox(height: 30),
+                    const SizedBox(height: 26),
                     // Coaches/admins own sessions but may also play in them, so the
                     // Join button is shown to everyone — owners included.
                     _JoinButton(
@@ -770,9 +782,11 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
   }
 }
 
-/// The countdown "clock" laid over the session artwork. The art is the Hero
-/// landing pad (pure art, so the flight from [SessionCard] stays clean); the
-/// status label + timer overlay on top, centered.
+/// The hero countdown laid over the session artwork. The art is the Hero
+/// landing pad (pure art, so the flight from [SessionCard] stays clean); a
+/// status chip sits in the top corner and a segmented flip-clock countdown is
+/// centered on the art like a scoreboard. An ambient gloss sweep (matching the
+/// Next-Up spotlight) keeps the panel alive without demanding attention.
 class _CountdownCard extends StatelessWidget {
   final SessionModel session;
   final AppLocalizations l;
@@ -783,7 +797,7 @@ class _CountdownCard extends StatelessWidget {
     final asset = AppAssets
         .cardDesigns[session.designIndex % AppAssets.cardDesigns.length];
     return SizedBox(
-      height: 150,
+      height: 190,
       width: double.infinity,
       // Clip the whole panel so the veil / frame follow the rounded image
       // corners instead of squaring them off.
@@ -812,6 +826,10 @@ class _CountdownCard extends StatelessWidget {
             ),
             // Uniform veil so the centered timer stays legible over any design.
             ColoredBox(color: Colors.black.withValues(alpha: 0.22)),
+            // Laminated gloss, same finish as the list cards.
+            const DecoratedBox(
+              decoration: BoxDecoration(gradient: AppGradients.cardSheen),
+            ),
             // Gold ring to keep the old clock card's framing.
             IgnorePointer(
               child: DecoratedBox(
@@ -823,41 +841,65 @@ class _CountdownCard extends StatelessWidget {
                 ),
               ),
             ),
-            // Status label + timer, centered over the art — reveals with a
-            // fade + pop once the hero art has settled (heroSettle delay).
+            // Status chip + countdown — reveals with a fade + pop once the
+            // hero art has settled (heroSettle delay).
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+              padding: const EdgeInsets.all(14),
               child:
                   Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            session.isExpired
-                                ? l.sessionEnded.toUpperCase()
-                                : session.isOngoing
-                                ? l.ongoing.toUpperCase()
-                                : l.upcoming.toUpperCase(),
-                            style: TextStyle(
-                              color: session.isExpired || session.isOngoing
-                                  ? AppColors.success
-                                  : AppColors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 1.2,
+                          if (!session.isExpired)
+                            _HeroStatusChip(session: session, l: l),
+                          Expanded(
+                            child: Center(
+                              child: session.isExpired
+                                  ? Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          l.sessionEnded.toUpperCase(),
+                                          textAlign: TextAlign.center,
+                                          style: const TextStyle(
+                                            color: AppColors.success,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600,
+                                            letterSpacing: 1.2,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          l.sessionEndedSubtitle,
+                                          style: const TextStyle(
+                                            color: AppColors.gold,
+                                            fontSize: 28,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                      ],
+                                    )
+                                  : Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          (session.isOngoing
+                                                  ? l.endsIn
+                                                  : l.startsIn)
+                                              .toUpperCase(),
+                                          textAlign: TextAlign.center,
+                                          style: const TextStyle(
+                                            color: AppColors.gold,
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w800,
+                                            letterSpacing: 1.5,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 10),
+                                        _SegmentedCountdown(session: session),
+                                      ],
+                                    ),
                             ),
                           ),
-                          const SizedBox(height: 8),
-                          if (session.isExpired)
-                            Text(
-                              l.sessionEndedSubtitle,
-                              style: const TextStyle(
-                                color: AppColors.gold,
-                                fontSize: 28,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            )
-                          else
-                            _CountdownTimer(session: session),
                         ],
                       )
                       .animate(delay: AppMotion.heroSettle)
@@ -876,13 +918,93 @@ class _CountdownCard extends StatelessWidget {
           ],
         ),
       ),
+    )
+        .animate(onPlay: (c) => c.repeat())
+        .shimmer(
+          delay: const Duration(milliseconds: 3200),
+          duration: const Duration(milliseconds: 1400),
+          angle: 0.6,
+          color: AppColors.white.withValues(alpha: 0.08),
+        );
+  }
+}
+
+/// Top-corner state pill on the hero art: a quiet frosted "UPCOMING" tile, or
+/// a pulsing green LIVE pill (mirroring the Next-Up spotlight) once ongoing.
+class _HeroStatusChip extends StatelessWidget {
+  final SessionModel session;
+  final AppLocalizations l;
+  const _HeroStatusChip({required this.session, required this.l});
+
+  @override
+  Widget build(BuildContext context) {
+    if (session.isOngoing) {
+      return Pulse(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: AppColors.success,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 6,
+                height: 6,
+                decoration: const BoxDecoration(
+                  color: AppColors.white,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                l.live.toUpperCase(),
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.white,
+                  letterSpacing: 0.8,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.navyDeep.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.white.withValues(alpha: 0.14)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.schedule, size: 13, color: AppColors.gold),
+          const SizedBox(width: 5),
+          Text(
+            l.upcoming.toUpperCase(),
+            style: const TextStyle(
+              fontSize: 11.5,
+              fontWeight: FontWeight.w800,
+              color: AppColors.white,
+              letterSpacing: 1,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
 
-class _CountdownTimer extends StatelessWidget {
+/// Scoreboard-style countdown: one translucent tile per time unit (the days
+/// tile appears only when needed), each with a small unit caption. Ticks every
+/// second; each value change slides in with a subtle flip-clock feel.
+class _SegmentedCountdown extends StatelessWidget {
   final SessionModel session;
-  const _CountdownTimer({required this.session});
+  const _SegmentedCountdown({required this.session});
 
   @override
   Widget build(BuildContext context) {
@@ -898,8 +1020,6 @@ class _CountdownTimer extends StatelessWidget {
         } else {
           diff = Duration.zero;
         }
-        // Roll hours past 24 into a day count — "1d 12:00:00" instead of a
-        // clock-like "36:00:00".
         final days = diff.inDays;
         final h = (diff.inHours % 24).toString().padLeft(2, '0');
         final m = (diff.inMinutes % 60).toString().padLeft(2, '0');
@@ -907,14 +1027,19 @@ class _CountdownTimer extends StatelessWidget {
         final l = AppLocalizations.of(ctx)!;
         return FittedBox(
           fit: BoxFit.scaleDown,
-          child: Text(
-            days >= 1 ? '${l.countdownDays(days)} $h:$m:$s' : '$h:$m:$s',
-            style: const TextStyle(
-              color: AppColors.gold,
-              fontSize: 42,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 2,
-            ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (days > 0) ...[
+                _TimeTile(value: '$days', label: l.unitDays),
+                const SizedBox(width: 8),
+              ],
+              _TimeTile(value: h, label: l.unitHours),
+              const SizedBox(width: 8),
+              _TimeTile(value: m, label: l.unitMinutes),
+              const SizedBox(width: 8),
+              _TimeTile(value: s, label: l.unitSeconds),
+            ],
           ),
         );
       },
@@ -922,20 +1047,113 @@ class _CountdownTimer extends StatelessWidget {
   }
 }
 
+/// One unit of the segmented countdown — gold digits over a small caption, on
+/// the same translucent navy tile as [DateBlock] so the hero reads as one set.
+class _TimeTile extends StatelessWidget {
+  final String value;
+  final String label;
+  const _TimeTile({required this.value, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 58,
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      decoration: BoxDecoration(
+        color: AppColors.navyDeep.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.white.withValues(alpha: 0.14)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Flip-clock beat: the incoming digit fades in with a small upward
+          // slide as the outgoing one drops away.
+          ClipRect(
+            child: AnimatedSwitcher(
+              duration: AppMotion.fast,
+              switchInCurve: AppMotion.enter,
+              switchOutCurve: Curves.easeIn,
+              transitionBuilder: (child, anim) => FadeTransition(
+                opacity: anim,
+                child: SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(0, 0.4),
+                    end: Offset.zero,
+                  ).animate(anim),
+                  child: child,
+                ),
+              ),
+              child: Text(
+                value,
+                key: ValueKey(value),
+                style: const TextStyle(
+                  color: AppColors.gold,
+                  fontSize: 24,
+                  fontWeight: FontWeight.w800,
+                  height: 1.1,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label.toUpperCase(),
+            style: TextStyle(
+              color: AppColors.white.withValues(alpha: 0.65),
+              fontSize: 9,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Shared surface for the detail page's panels — the list card's premium
+/// treatment (hairline border + layered shadows) on a plain navy body.
+BoxDecoration _panelDecoration() => BoxDecoration(
+      color: AppColors.navyLight,
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(color: AppColors.white.withValues(alpha: 0.08)),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.30),
+          blurRadius: 18,
+          offset: const Offset(0, 8),
+        ),
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.18),
+          blurRadius: 5,
+          offset: const Offset(0, 2),
+        ),
+      ],
+    );
+
+/// Hairline rule used inside the panels instead of full-width [Divider]s.
+Widget _hairline() =>
+    Container(height: 1, color: AppColors.white.withValues(alpha: 0.08));
+
+/// The "when / where / who" panel. Leads with a ticket date block and the
+/// kick-off time in display type, then icon-tile rows (location, coach with
+/// their real avatar), and closes with audience pills — so the essentials
+/// carry the hierarchy instead of a flat label:value list.
 class _InfoSection extends ConsumerWidget {
   final SessionModel session;
   final AppLocalizations l;
   final String coachName;
+  final PublicProfile? coach;
   const _InfoSection({
     required this.session,
     required this.l,
     required this.coachName,
+    required this.coach,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final fmt = DateFormat('EEEE, MMM d  •  HH:mm');
-
     // Resolve the available-coach uids to names via the coaches list (best
     // effort — a name that isn't found yet is simply omitted).
     String? availableCoachNames;
@@ -949,93 +1167,130 @@ class _InfoSection extends ConsumerWidget {
       if (names.isNotEmpty) availableCoachNames = names.join(', ');
     }
 
+    final time = DateFormat('HH:mm');
+    final duration = session.endTime.difference(session.startTime);
+    final durationText = duration.inHours >= 1
+        ? l.countdownHoursMinutes(duration.inHours, duration.inMinutes % 60)
+        : l.countdownMinutes(duration.inMinutes);
+
     return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.navyLight,
-        borderRadius: BorderRadius.circular(16),
-      ),
+      padding: const EdgeInsets.all(18),
+      decoration: _panelDecoration(),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (session.isCustom) ...[
-            Row(
-              children: [
-                const Icon(Icons.lock_outline,
-                    size: 18, color: AppColors.gold),
-                const SizedBox(width: 10),
-                Text(
-                  l.membersOnly,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                      color: AppColors.gold),
+          Row(
+            children: [
+              DateBlock(session.startTime, scale: 1.15),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      DateFormat('EEEE')
+                          .format(session.startTime)
+                          .toUpperCase(),
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.gold,
+                        letterSpacing: 1.3,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      '${time.format(session.startTime)} – ${time.format(session.endTime)}',
+                      style: const TextStyle(
+                        fontSize: 21,
+                        fontWeight: FontWeight.w800,
+                        height: 1.1,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    Row(
+                      children: [
+                        const Icon(Icons.schedule,
+                            size: 13, color: AppColors.grey),
+                        const SizedBox(width: 4),
+                        Text(
+                          durationText,
+                          style: const TextStyle(
+                            color: AppColors.grey,
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            const Divider(height: 20),
-          ],
-          _DetailRow(
-            icon: Icons.person_outline,
-            label: l.coachLabel,
-            value: coachName,
+              ),
+            ],
           ),
+          const SizedBox(height: 16),
+          _hairline(),
+          const SizedBox(height: 16),
+          _InfoTileRow(
+            icon: Icons.location_on_outlined,
+            label: l.location,
+            value: session.location,
+          ),
+          const SizedBox(height: 14),
+          _CoachTileRow(label: l.coachLabel, name: coachName, coach: coach),
           if (availableCoachNames != null) ...[
-            const Divider(height: 20),
-            _DetailRow(
+            const SizedBox(height: 14),
+            _InfoTileRow(
               icon: Icons.groups_outlined,
               label: l.availableCoaches,
               value: availableCoachNames,
             ),
           ],
-          const Divider(height: 20),
-          _DetailRow(
-            icon: Icons.location_on_outlined,
-            label: l.location,
-            value: session.location,
+          const SizedBox(height: 16),
+          // Audience pills: a custom session ignores gender/age, so it shows
+          // the members-only pill instead.
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              if (session.isCustom)
+                _AudiencePill(icon: Icons.lock_outline, label: l.membersOnly)
+              else ...[
+                _AudiencePill(
+                  icon: session.gender == 'male'
+                      ? Icons.male
+                      : session.gender == 'female'
+                          ? Icons.female
+                          : Icons.people_outline,
+                  label: session.gender == 'male'
+                      ? l.male
+                      : session.gender == 'female'
+                          ? l.female
+                          : l.genderMixed,
+                ),
+                _AudiencePill(
+                  icon: Icons.cake_outlined,
+                  label: '${session.minAge} – ${session.maxAge} ${l.years}',
+                ),
+              ],
+            ],
           ),
-          const Divider(height: 20),
-          _DetailRow(
-            icon: Icons.play_arrow_outlined,
-            label: l.startTime,
-            value: fmt.format(session.startTime),
-          ),
-          const Divider(height: 20),
-          _DetailRow(
-            icon: Icons.stop_outlined,
-            label: l.endTime,
-            value: fmt.format(session.endTime),
-          ),
-          // Age/gender describe the auto audience; a custom session ignores
-          // them, so hide those rows when it's members-only.
-          if (!session.isCustom) ...[
-            const Divider(height: 20),
-            _DetailRow(
-              icon: Icons.cake_outlined,
-              label: l.ageRange,
-              value: '${session.minAge} – ${session.maxAge} ${l.years}',
-            ),
-            const Divider(height: 20),
-            _DetailRow(
-              icon: Icons.people_outline,
-              label: l.gender,
-              value: session.gender == 'male'
-                  ? l.male
-                  : session.gender == 'female'
-                      ? l.female
-                      : l.genderMixed,
-            ),
-          ],
         ],
       ),
     );
   }
 }
 
-class _DetailRow extends StatelessWidget {
+/// Icon-tile detail row: a gold-tinted rounded square, a small-caps caption,
+/// and the value in body weight underneath — the caption/value pairing gives
+/// the panel its vertical rhythm.
+class _InfoTileRow extends StatelessWidget {
   final IconData icon;
   final String label;
   final String value;
-  const _DetailRow({
+  const _InfoTileRow({
     required this.icon,
     required this.label,
     required this.value,
@@ -1044,21 +1299,153 @@ class _DetailRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 18, color: AppColors.gold),
-        const SizedBox(width: 10),
-        Text(
-          '$label: ',
-          style: const TextStyle(color: AppColors.grey, fontSize: 13),
+        Container(
+          width: 38,
+          height: 38,
+          decoration: BoxDecoration(
+            color: AppColors.gold.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(icon, size: 19, color: AppColors.gold),
         ),
+        const SizedBox(width: 12),
         Expanded(
-          child: Text(
-            value,
-            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label.toUpperCase(),
+                style: const TextStyle(
+                  color: AppColors.grey,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.2,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                value,
+                style:
+                    const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w600),
+              ),
+            ],
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Coach row in the same caption/value rhythm as [_InfoTileRow], but led by
+/// the coach's actual avatar (initials while the profile is still loading).
+class _CoachTileRow extends StatelessWidget {
+  final String label;
+  final String name;
+  final PublicProfile? coach;
+  const _CoachTileRow({
+    required this.label,
+    required this.name,
+    required this.coach,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final display = name.isNotEmpty ? name : (coach?.name ?? '');
+    final photoUrl = coach?.photoUrl ?? '';
+    final initials = display.trim().isEmpty
+        ? '?'
+        : display
+            .trim()
+            .split(' ')
+            .map((w) => w[0])
+            .take(2)
+            .join()
+            .toUpperCase();
+    return Row(
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border:
+                Border.all(color: AppColors.gold.withValues(alpha: 0.4), width: 2),
+          ),
+          child: CircleAvatar(
+            radius: 17,
+            backgroundColor: AppColors.gold.withValues(alpha: 0.15),
+            backgroundImage: photoUrl.isNotEmpty
+                ? CachedNetworkImageProvider(photoUrl)
+                : null,
+            child: photoUrl.isEmpty
+                ? Text(
+                    initials,
+                    style: const TextStyle(
+                      color: AppColors.gold,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12,
+                    ),
+                  )
+                : null,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label.toUpperCase(),
+                style: const TextStyle(
+                  color: AppColors.grey,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.2,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                display,
+                style:
+                    const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Small gold-tinted audience tag (gender / age range / members-only).
+class _AudiencePill extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  const _AudiencePill({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: AppColors.gold.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.gold.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: AppColors.gold),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 12.5,
+              color: AppColors.gold,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -1109,40 +1496,34 @@ class _AttendeesSection extends StatelessWidget {
     final canEditCapacity = isCoach && !session.isExpired;
 
     return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.navyLight,
-        borderRadius: BorderRadius.circular(16),
-      ),
+      padding: const EdgeInsets.all(18),
+      decoration: _panelDecoration(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.group_outlined, color: AppColors.gold, size: 18),
-              const SizedBox(width: 8),
-              Text(
-                l.attendees,
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-              const Spacer(),
-              if (isCoach && attendedCount > 0) ...[
-                Text(
-                  '$attendedCount ${l.attended}',
-                  style: const TextStyle(
-                    color: AppColors.success,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
-                  ),
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: AppColors.gold.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                const SizedBox(width: 8),
-              ],
-              Text(
-                '$filled / $max',
-                style: const TextStyle(
+                child: const Icon(
+                  Icons.group_outlined,
+                  size: 19,
                   color: AppColors.gold,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  l.attendees,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15.5,
+                  ),
                 ),
               ),
               // One-tap courtside shortcut: check off everyone still
@@ -1185,33 +1566,84 @@ class _AttendeesSection extends StatelessWidget {
                 ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 14),
 
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: TweenAnimationBuilder<double>(
-              tween: Tween(begin: 0, end: ratio.clamp(0.0, 1.0)),
-              duration: AppMotion.slow,
-              curve: AppMotion.enter,
-              builder: (_, value, _) => LinearProgressIndicator(
-                value: value,
-                minHeight: 8,
-                backgroundColor: AppColors.navyBlue,
-                color: barColor,
-              ),
-            ),
-          ),
-          if (session.isFull)
-            Padding(
-              padding: const EdgeInsets.only(top: 6),
-              child: Text(
-                l.sessionFull,
+          // Roster at a glance: big filled-count against capacity, with the
+          // attendance tally (coach) and the spots-left state as quiet pills.
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '$filled',
                 style: const TextStyle(
-                  color: AppColors.errorRed,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 26,
+                  fontWeight: FontWeight.w800,
+                  height: 1,
                 ),
               ),
+              Text(
+                ' / $max',
+                style: const TextStyle(
+                  color: AppColors.grey,
+                  fontSize: 14.5,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const Spacer(),
+              if (isCoach && attendedCount > 0) ...[
+                _StatPill(
+                  icon: Icons.check,
+                  label: '$attendedCount ${l.attended}',
+                  color: AppColors.success,
+                ),
+                const SizedBox(width: 6),
+              ],
+              _StatPill(
+                icon: session.isFull
+                    ? Icons.block
+                    : Icons.local_fire_department_outlined,
+                label: session.isFull
+                    ? l.sessionFull
+                    : l.spotsLeft(session.spotsLeft),
+                color: barColor,
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+
+          // Glowing capacity meter — the same treatment as the list card's
+          // bottom edge, restating the pill colour as *how full*.
+          TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0, end: ratio.clamp(0.0, 1.0)),
+            duration: AppMotion.slow,
+            curve: AppMotion.enter,
+            builder: (_, value, _) => Container(
+              height: 6,
+              decoration: BoxDecoration(
+                color: AppColors.navyBlue,
+                borderRadius: BorderRadius.circular(3),
+              ),
+              alignment: AlignmentDirectional.centerStart,
+              child: value <= 0
+                  ? const SizedBox.shrink()
+                  : FractionallySizedBox(
+                      widthFactor: value,
+                      heightFactor: 1,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: barColor,
+                          borderRadius: BorderRadius.circular(3),
+                          boxShadow: [
+                            BoxShadow(
+                              color: barColor.withValues(alpha: 0.45),
+                              blurRadius: 6,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
             ),
+          ),
 
           // "You have N endorsements left" — shown only when the viewer is
           // actually allowed to endorse (session ended + attended/staff).
@@ -1239,15 +1671,16 @@ class _AttendeesSection extends StatelessWidget {
             ),
 
           if (session.attendeeIds.isNotEmpty) ...[
-            const SizedBox(height: 14),
-            const Divider(height: 1),
-            const SizedBox(height: 6),
+            const SizedBox(height: 16),
             ...session.attendeeIds.map((uid) {
               final a = userMap[uid];
               // Profile still loading (or fetch failed) — hold the row's
               // place with a shimmer instead of collapsing the list.
               if (a == null) {
-                return PersonRowShimmer(key: ValueKey('att_sk_$uid'));
+                return _PersonTile(
+                  key: ValueKey('att_sk_$uid'),
+                  child: const PersonRowShimmer(),
+                );
               }
               final isAttended = attendedIds.contains(uid);
               // You can only endorse someone who actually attended, isn't you,
@@ -1262,6 +1695,7 @@ class _AttendeesSection extends StatelessWidget {
                 attendanceCount: a.attendanceCount,
                 injured: a.injured,
                 isAttended: isAttended,
+                isViewer: uid == viewerUid,
                 canMark: isCoach,
                 canRemove: canManage,
                 canViewProfile: true,
@@ -1278,9 +1712,9 @@ class _AttendeesSection extends StatelessWidget {
           ],
 
           if (session.hasWaitlist) ...[
+            const SizedBox(height: 8),
+            _hairline(),
             const SizedBox(height: 14),
-            const Divider(height: 1),
-            const SizedBox(height: 10),
             Row(
               children: [
                 const Icon(
@@ -1291,7 +1725,10 @@ class _AttendeesSection extends StatelessWidget {
                 const SizedBox(width: 8),
                 Text(
                   l.waitlist,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14.5,
+                  ),
                 ),
                 const Spacer(),
                 Text(
@@ -1299,22 +1736,24 @@ class _AttendeesSection extends StatelessWidget {
                   style: const TextStyle(
                     color: AppColors.gold,
                     fontWeight: FontWeight.w700,
-                    fontSize: 16,
+                    fontSize: 15,
                   ),
                 ),
               ],
             ),
             if (session.waitlistIds.isNotEmpty) ...[
-              const SizedBox(height: 6),
+              const SizedBox(height: 12),
               ...session.waitlistIds.asMap().entries.map((e) {
                 final pos = e.key + 1;
                 final uid = e.value;
                 final u = userMap[uid];
                 if (u == null) {
-                  return PersonRowShimmer(
+                  return _PersonTile(
                     key: ValueKey('wl_sk_$uid'),
-                    avatarRadius: 16,
-                    showSubtitle: false,
+                    child: const PersonRowShimmer(
+                      avatarRadius: 16,
+                      showSubtitle: false,
+                    ),
                   );
                 }
                 return _WaitlistItem(
@@ -1337,6 +1776,66 @@ class _AttendeesSection extends StatelessWidget {
   }
 }
 
+/// Small tinted status pill used in the roster stats row.
+class _StatPill extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  const _StatPill({
+    required this.icon,
+    required this.label,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: color),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontSize: 11.5,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Shared surface for one person in the roster — a quiet inset tile so each
+/// player reads as their own card inside the panel.
+class _PersonTile extends StatelessWidget {
+  final Widget child;
+  const _PersonTile({super.key, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: AppColors.navyBlue.withValues(alpha: 0.45),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.white.withValues(alpha: 0.05)),
+      ),
+      child: child,
+    );
+  }
+}
+
 class _AttendeeItem extends StatelessWidget {
   final String uid;
   final String name;
@@ -1344,6 +1843,7 @@ class _AttendeeItem extends StatelessWidget {
   final int attendanceCount;
   final bool injured;
   final bool isAttended;
+  final bool isViewer;
   final bool canMark;
   final bool canRemove;
   final bool canViewProfile;
@@ -1362,6 +1862,7 @@ class _AttendeeItem extends StatelessWidget {
     required this.attendanceCount,
     required this.injured,
     required this.isAttended,
+    required this.isViewer,
     required this.canMark,
     required this.canRemove,
     required this.canViewProfile,
@@ -1383,28 +1884,62 @@ class _AttendeeItem extends StatelessWidget {
         ? AppColors.success
         : AppColors.gold.withValues(alpha: 0.4);
 
-    final avatar = Container(
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(color: ringColor, width: 2),
-      ),
-      child: CircleAvatar(
-        radius: 19,
-        backgroundColor: AppColors.gold.withValues(alpha: 0.15),
-        backgroundImage: photoUrl.isNotEmpty
-            ? CachedNetworkImageProvider(photoUrl)
-            : null,
-        child: photoUrl.isEmpty
-            ? Text(
-                initials,
-                style: const TextStyle(
-                  color: AppColors.gold,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 13,
+    final avatar = Stack(
+      clipBehavior: Clip.none,
+      children: [
+        // The ring recolours with a quick cross-fade when attendance flips.
+        AnimatedContainer(
+          duration: AppMotion.fast,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: ringColor, width: 2),
+          ),
+          child: CircleAvatar(
+            radius: 19,
+            backgroundColor: AppColors.gold.withValues(alpha: 0.15),
+            backgroundImage: photoUrl.isNotEmpty
+                ? CachedNetworkImageProvider(photoUrl)
+                : null,
+            child: photoUrl.isEmpty
+                ? Text(
+                    initials,
+                    style: const TextStyle(
+                      color: AppColors.gold,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                    ),
+                  )
+                : null,
+          ),
+        ),
+        // Checked-in badge, popping in the moment the coach marks them.
+        if (isAttended)
+          PositionedDirectional(
+            end: -2,
+            bottom: -2,
+            child: Container(
+              width: 16,
+              height: 16,
+              decoration: BoxDecoration(
+                color: AppColors.success,
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.navyLight, width: 2),
+              ),
+              child: const Icon(
+                Icons.check,
+                size: 9,
+                color: AppColors.white,
+              ),
+            )
+                .animate()
+                .scale(
+                  begin: const Offset(0, 0),
+                  end: const Offset(1, 1),
+                  duration: AppMotion.fast,
+                  curve: Curves.easeOutBack,
                 ),
-              )
-            : null,
-      ),
+          ),
+      ],
     );
 
     final identity = Row(
@@ -1415,13 +1950,43 @@ class _AttendeeItem extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                name,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
-                  color: canViewProfile ? AppColors.gold : null,
-                ),
+              Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: canViewProfile ? AppColors.gold : null,
+                      ),
+                    ),
+                  ),
+                  if (isViewer) ...[
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 5,
+                        vertical: 1,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.gold.withValues(alpha: 0.18),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        l.youLabel.toUpperCase(),
+                        style: const TextStyle(
+                          color: AppColors.gold,
+                          fontSize: 9,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
               const SizedBox(height: 2),
               Row(
@@ -1444,8 +2009,7 @@ class _AttendeeItem extends StatelessWidget {
       ],
     );
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 7),
+    return _PersonTile(
       child: Row(
         children: [
           Expanded(
@@ -1588,21 +2152,35 @@ class _WaitlistItem extends StatelessWidget {
         ),
       ],
     );
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+    return _PersonTile(
       child: Row(
         children: [
-          SizedBox(
-            width: 28,
-            child: Text(
-              '#$position',
-              style: const TextStyle(
-                color: AppColors.grey,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
+          // Queue position as a numbered dot, styled like the facepile so the
+          // waitlist reads as "next in line" rather than a plain list.
+          Container(
+            width: 26,
+            height: 26,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.gold.withValues(alpha: 0.15),
+              border: Border.all(color: AppColors.gold.withValues(alpha: 0.35)),
+            ),
+            alignment: Alignment.center,
+            child: FittedBox(
+              child: Padding(
+                padding: const EdgeInsets.all(2),
+                child: Text(
+                  '$position',
+                  style: const TextStyle(
+                    color: AppColors.gold,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
               ),
             ),
           ),
+          const SizedBox(width: 10),
           Expanded(
             child: canViewProfile
                 ? InkWell(
@@ -1661,22 +2239,14 @@ class _JoinButton extends StatelessWidget {
     if (session.isExpired || session.isOngoing) return const SizedBox.shrink();
 
     if (isJoined) {
-      return SizedBox(
-        width: double.infinity,
-        height: 52,
-        child: OutlinedButton.icon(
-          onPressed: onLeave,
-          icon: const Icon(Icons.exit_to_app, color: AppColors.errorRed),
-          label: Text(
-            l.leaveSession,
-            style: const TextStyle(color: AppColors.errorRed),
-          ),
-          style: OutlinedButton.styleFrom(
-            side: const BorderSide(color: AppColors.errorRed),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
+      return _ActionShell(
+        onTap: onLeave,
+        fill: AppColors.errorRed.withValues(alpha: 0.08),
+        borderColor: AppColors.errorRed,
+        child: _actionRow(
+          Icons.exit_to_app,
+          l.leaveSession,
+          AppColors.errorRed,
         ),
       );
     }
@@ -1714,22 +2284,14 @@ class _JoinButton extends StatelessWidget {
               ],
             ),
           ),
-          SizedBox(
-            width: double.infinity,
-            height: 52,
-            child: OutlinedButton.icon(
-              onPressed: onLeave,
-              icon: const Icon(Icons.hourglass_bottom, color: AppColors.gold),
-              label: Text(
-                l.leaveWaitlist,
-                style: const TextStyle(color: AppColors.gold),
-              ),
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: AppColors.gold),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
+          _ActionShell(
+            onTap: onLeave,
+            fill: AppColors.gold.withValues(alpha: 0.08),
+            borderColor: AppColors.gold,
+            child: _actionRow(
+              Icons.hourglass_bottom,
+              l.leaveWaitlist,
+              AppColors.gold,
             ),
           ),
         ],
@@ -1759,13 +2321,97 @@ class _JoinButton extends StatelessWidget {
       canTap = false;
     }
 
-    return SizedBox(
-      width: double.infinity,
-      height: 52,
-      child: ElevatedButton.icon(
-        onPressed: canTap ? onJoin : null,
-        icon: Icon(icon),
-        label: Text(label),
+    if (!canTap) {
+      return _ActionShell(
+        onTap: null,
+        fill: AppColors.white.withValues(alpha: 0.06),
+        borderColor: AppColors.white.withValues(alpha: 0.10),
+        child: _actionRow(icon, label, AppColors.grey),
+      );
+    }
+
+    // The one action the screen builds toward — a glowing gold gradient bar.
+    return Pressable(
+      onTap: onJoin,
+      child: Container(
+        height: 54,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          gradient: AppGradients.goldCta,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.gold.withValues(alpha: 0.30),
+              blurRadius: 18,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 20, color: AppColors.navyBlue),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: const TextStyle(
+                color: AppColors.navyBlue,
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _actionRow(IconData icon, String label, Color color) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(icon, size: 20, color: color),
+        const SizedBox(width: 8),
+        Text(
+          label,
+          style: TextStyle(
+            color: color,
+            fontSize: 15.5,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Secondary action bar (leave / disabled states) sharing the CTA's geometry
+/// so the button area never shifts as membership changes.
+class _ActionShell extends StatelessWidget {
+  final VoidCallback? onTap;
+  final Color fill;
+  final Color borderColor;
+  final Widget child;
+  const _ActionShell({
+    required this.onTap,
+    required this.fill,
+    required this.borderColor,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Pressable(
+      onTap: onTap,
+      child: Container(
+        height: 54,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: fill,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: borderColor, width: 1.4),
+        ),
+        child: child,
       ),
     );
   }

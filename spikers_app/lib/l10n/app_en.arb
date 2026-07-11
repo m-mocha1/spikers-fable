@@ -108,6 +108,29 @@
   "ongoing": "Ongoing",
   "startsIn": "Starts in",
   "endsIn": "Ends in",
+  "countdownDays": "{days}d",
+  "@countdownDays": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+  "countdownHoursMinutes": "{hours}h {minutes}m",
+  "@countdownHoursMinutes": {
+    "placeholders": {
+      "hours": { "type": "int" },
+      "minutes": { "type": "int" }
+    }
+  },
+  "countdownMinutes": "{minutes}m",
+  "@countdownMinutes": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+  "unitDays": "days",
+  "unitHours": "hours",
+  "unitMinutes": "min",
+  "unitSeconds": "sec",
   "confirm": "Confirm",
   "yes": "Yes",
   "no": "No",

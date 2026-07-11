@@ -26,7 +26,7 @@ class SessionsTab extends ConsumerWidget {
     return KeyedSubtree(
       key: ValueKey(revealGeneration),
       child: sessionsAsync.when(
-        loading: () => const ListShimmer(itemHeight: 140, itemCount: 5),
+        loading: () => const ListShimmer(itemHeight: 172, itemCount: 4),
         error: (e, _) =>
             ErrorView(onRetry: () => ref.invalidate(upcomingSessionsProvider)),
         data: (sessions) {

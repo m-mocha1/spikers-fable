@@ -305,10 +305,37 @@ class AppLocalizationsAr extends AppLocalizations {
   String get ongoing => 'جارٍ';
 
   @override
-  String get startsIn => 'يبدأ في';
+  String get startsIn => 'يبدأ خلال';
 
   @override
   String get endsIn => 'ينتهي في';
+
+  @override
+  String countdownDays(int days) {
+    return '$daysي';
+  }
+
+  @override
+  String countdownHoursMinutes(int hours, int minutes) {
+    return '$hours س $minutes د';
+  }
+
+  @override
+  String countdownMinutes(int minutes) {
+    return '$minutes د';
+  }
+
+  @override
+  String get unitDays => 'يوم';
+
+  @override
+  String get unitHours => 'ساعة';
+
+  @override
+  String get unitMinutes => 'دقيقة';
+
+  @override
+  String get unitSeconds => 'ثانية';
 
   @override
   String get confirm => 'تأكيد';
@@ -611,11 +638,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get joinedBadge => 'منضم';
-
-  @override
-  String countdownDays(int days) {
-    return '$daysي';
-  }
 
   @override
   String get sessionStartedLeaveBlocked =>
