@@ -884,6 +884,23 @@ export const joinSession = onCall({ region: REGION }, async (request) => {
       throw new HttpsError("not-found", "Session not found");
 
     const session = sessionDoc.data()!;
+
+    // Custom (members-only) sessions are stored with a wide-open gender/age
+    // audience and are only hidden client-side, so the member list must be
+    // enforced here. Staff and the owning coach may still join — they can
+    // see custom sessions in the app.
+    const memberIds: string[] = Array.isArray(session["memberIds"])
+      ? (session["memberIds"] as string[])
+      : [];
+    if (
+      memberIds.length > 0 &&
+      !memberIds.includes(uid) &&
+      session["coachId"] !== uid &&
+      !(await isStaffUid(uid))
+    ) {
+      throw new HttpsError("permission-denied", "Members-only session");
+    }
+
     const attendeeIds: string[] = session["attendeeIds"] ?? [];
     const waitlistIds: string[] = session["waitlistIds"] ?? [];
     const maxPlayers = session["maxPlayers"] as number;

@@ -367,6 +367,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get endTimeError => 'End time must be after start time';
 
   @override
+  String get invalidAgeRange => 'Min age can\'t exceed max age';
+
+  @override
   String get errorOccurred => 'An error occurred';
 
   @override

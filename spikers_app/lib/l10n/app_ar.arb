@@ -131,6 +131,7 @@
   "genderMixed": "مختلط",
   "coachSessions": "جلساتي",
   "endTimeError": "وقت الانتهاء يجب أن يكون بعد وقت البدء",
+  "invalidAgeRange": "الحد الأدنى للعمر لا يمكن أن يتجاوز الحد الأقصى",
   "errorOccurred": "حدث خطأ",
   "quickSession": "جلسة سريعة",
   "selectTemplate": "اختر نموذجاً",

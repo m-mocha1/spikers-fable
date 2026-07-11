@@ -130,7 +130,9 @@ class _CreateSessionScreenState extends ConsumerState<CreateSessionScreen> {
     final maxAge = _isCustom ? 99 : (int.tryParse(_maxAgeCtrl.text) ?? 99);
 
     try {
-      if (_saveAsTemplate) {
+      // The template checkbox is hidden (not reset) when custom is toggled
+      // on, so _saveAsTemplate may still hold a stale true.
+      if (_saveAsTemplate && !_isCustom) {
         await ref.read(templatesRepositoryProvider).save(
             user.uid,
             SessionTemplate(

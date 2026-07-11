@@ -131,6 +131,7 @@
   "genderMixed": "Mixed",
   "coachSessions": "My Sessions",
   "endTimeError": "End time must be after start time",
+  "invalidAgeRange": "Min age can't exceed max age",
   "errorOccurred": "An error occurred",
   "quickSession": "Quick Session",
   "selectTemplate": "Pick a template",

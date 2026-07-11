@@ -365,6 +365,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get endTimeError => 'وقت الانتهاء يجب أن يكون بعد وقت البدء';
 
   @override
+  String get invalidAgeRange =>
+      'الحد الأدنى للعمر لا يمكن أن يتجاوز الحد الأقصى';
+
+  @override
   String get errorOccurred => 'حدث خطأ';
 
   @override

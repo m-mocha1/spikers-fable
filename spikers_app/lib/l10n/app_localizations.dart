@@ -788,6 +788,12 @@ abstract class AppLocalizations {
   /// **'End time must be after start time'**
   String get endTimeError;
 
+  /// No description provided for @invalidAgeRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Min age can\'t exceed max age'**
+  String get invalidAgeRange;
+
   /// No description provided for @errorOccurred.
   ///
   /// In en, this message translates to:

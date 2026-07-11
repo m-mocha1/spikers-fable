@@ -358,6 +358,23 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
     }
   }
 
+  /// One-tap "mark everyone attended". All checkmarks flip optimistically at
+  /// once, but the callables run one at a time: every markAttended is a
+  /// transaction on this same session doc, and firing them in parallel can
+  /// exhaust their retry budget and silently drop marks.
+  Future<void> _markAllAttended(List<String> pending) async {
+    if (pending.isEmpty) return;
+    HapticFeedback.mediumImpact();
+    setState(() {
+      for (final id in pending) {
+        _optimisticAttended[id] = true;
+      }
+    });
+    for (final id in pending) {
+      await _markAttended(id, true);
+    }
+  }
+
   Future<void> _endorse(String userId, String name) async {
     final l = AppLocalizations.of(context)!;
     // Flip the button to "endorsed" and celebrate the instant they tap; the
@@ -700,14 +717,11 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
                       onRemove: _removeAttendee,
                       onEndorse: _endorse,
                       onEditCapacity: () => _editCapacity(l),
-                      onMarkAllAttended: () {
-                        HapticFeedback.mediumImpact();
-                        for (final id in session.attendeeIds) {
-                          if (!attendedIds.contains(id)) {
-                            _markAttended(id, true);
-                          }
-                        }
-                      },
+                      onMarkAllAttended: () => _markAllAttended(
+                        session.attendeeIds
+                            .where((id) => !attendedIds.contains(id))
+                            .toList(),
+                      ),
                     ),
                     const SizedBox(height: 30),
                     // Coaches/admins own sessions but may also play in them, so the
@@ -1953,7 +1967,7 @@ class _MakePublicDialogState extends State<_MakePublicDialog> {
             final minAge = int.parse(_minCtrl.text);
             final maxAge = int.parse(_maxCtrl.text);
             if (minAge > maxAge) {
-              showAppSnackbar(l.requiredField);
+              showAppSnackbar(l.invalidAgeRange);
               return;
             }
             Navigator.of(context).pop((_gender, minAge, maxAge));
