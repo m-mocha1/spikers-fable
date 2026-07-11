@@ -63,7 +63,7 @@ class _ExportAttendanceButtonState
           female: l.female,
         ),
       );
-      final stamp = DateFormat('yyyy-MM-dd').format(DateTime.now());
+      final stamp = DateFormat('yyyy-MM-dd', 'en').format(DateTime.now());
       final dir = await getTemporaryDirectory();
       final file = File('${dir.path}/spikers_attendance_$stamp.xlsx');
       await file.writeAsBytes(bytes, flush: true);

@@ -126,6 +126,19 @@ class SessionsRepositoryImpl implements SessionsRepository {
           newMaxPlayers: newMaxPlayers, newWaitlistSize: newWaitlistSize));
 
   @override
+  Future<void> makeSessionPublic(String sessionId,
+          {required String gender,
+          required int minAge,
+          required int maxAge}) =>
+      _wrap(() => _remote.makeSessionPublic(sessionId,
+          gender: gender, minAge: minAge, maxAge: maxAge));
+
+  @override
+  Future<void> updateSessionMembers(
+          String sessionId, List<String> memberIds) =>
+      _wrap(() => _remote.updateSessionMembers(sessionId, memberIds));
+
+  @override
   Future<void> markAttended(String sessionId, String userId, bool attended) =>
       _wrap(() => _remote.markAttended(sessionId, userId, attended));
 

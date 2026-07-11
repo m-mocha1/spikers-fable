@@ -142,7 +142,7 @@ class GamesPlayedCard extends ConsumerWidget {
                   ),
                   Expanded(
                     child: Align(
-                      alignment: Alignment.centerRight,
+                      alignment: AlignmentDirectional.centerEnd,
                       child: LevelPill(label: tierLabel(l, tier)),
                     ),
                   ),
@@ -288,7 +288,7 @@ class EndorsementsCard extends ConsumerWidget {
               ),
               Expanded(
                 child: Align(
-                  alignment: Alignment.centerRight,
+                  alignment: AlignmentDirectional.centerEnd,
                   child: LevelPill(label: l.endorsementLevelLabel(level)),
                 ),
               ),

@@ -124,6 +124,12 @@ async function fetchFcmTokenRefs(
 async function matchSessionPlayers(
   session: FirebaseFirestore.DocumentData
 ): Promise<string[]> {
+  // Custom (members-only) session: the audience is the hand-picked member
+  // list, regardless of gender/age/paid status (the coach chose them).
+  const memberIds = session["memberIds"];
+  if (Array.isArray(memberIds) && memberIds.length > 0) {
+    return memberIds.filter((x): x is string => typeof x === "string");
+  }
   const gender = session["gender"];
   const minAge = session["minAge"];
   const maxAge = session["maxAge"];
@@ -244,6 +250,45 @@ async function sendFcmToUids(
     )
   );
 }
+
+// ---------------------------------------------------------------------------
+// autoVerifyNewUsers — email verification is DISABLED: every new registration
+// is marked verified server-side. The shipped client gate
+// (currentUser.emailVerified), the firestore.rules isVerified() check, and
+// the callables' email_verified checks all read the Auth record / ID-token
+// claim, so flipping it here satisfies every layer without an app update.
+// Stamping verifiedAt also takes the user out of cleanupUnverifiedUsers'
+// delete query. Delete this trigger and redeploy to re-enable verification
+// for future signups (already-verified users stay verified).
+// ---------------------------------------------------------------------------
+export const autoVerifyNewUsers = onDocumentCreated(
+  { document: "users/{uid}", region: REGION },
+  async (event) => {
+    const snap = event.data;
+    if (!snap) return;
+    const uid = event.params["uid"];
+
+    try {
+      await admin.auth().updateUser(uid, { emailVerified: true });
+    } catch (e) {
+      // Leave verifiedAt null so cleanupUnverifiedUsers treats the account
+      // normally instead of keeping a half-initialized registration.
+      logger.error("autoVerifyNewUsers: updateUser failed", { uid, error: e });
+      return;
+    }
+
+    if (snap.data()["verifiedAt"] == null) {
+      await snap.ref
+        .update({ verifiedAt: admin.firestore.FieldValue.serverTimestamp() })
+        .catch((e) =>
+          logger.warn("autoVerifyNewUsers: verifiedAt stamp failed", {
+            uid,
+            error: e,
+          })
+        );
+    }
+  }
+);
 
 // ---------------------------------------------------------------------------
 // cleanupUnverifiedUsers — every 5 min, deletes registrations that never
@@ -839,6 +884,23 @@ export const joinSession = onCall({ region: REGION }, async (request) => {
       throw new HttpsError("not-found", "Session not found");
 
     const session = sessionDoc.data()!;
+
+    // Custom (members-only) sessions are stored with a wide-open gender/age
+    // audience and are only hidden client-side, so the member list must be
+    // enforced here. Staff and the owning coach may still join — they can
+    // see custom sessions in the app.
+    const memberIds: string[] = Array.isArray(session["memberIds"])
+      ? (session["memberIds"] as string[])
+      : [];
+    if (
+      memberIds.length > 0 &&
+      !memberIds.includes(uid) &&
+      session["coachId"] !== uid &&
+      !(await isStaffUid(uid))
+    ) {
+      throw new HttpsError("permission-denied", "Members-only session");
+    }
+
     const attendeeIds: string[] = session["attendeeIds"] ?? [];
     const waitlistIds: string[] = session["waitlistIds"] ?? [];
     const maxPlayers = session["maxPlayers"] as number;
@@ -1136,6 +1198,169 @@ export const updateSessionCapacity = onCall(
 );
 
 // ---------------------------------------------------------------------------
+// makeSessionPublic — converts a custom (members-only) session into a public
+// one targeting the given gender/age audience. Owner-coach or any staff.
+// Clears memberIds and notifies the players who can now see the session but
+// weren't on the old member list.
+// ---------------------------------------------------------------------------
+export const makeSessionPublic = onCall({ region: REGION }, async (request) => {
+  const uid = request.auth?.uid;
+  if (!uid) throw new HttpsError("unauthenticated", "Not authenticated");
+  if (request.auth?.token?.email_verified !== true) {
+    throw new HttpsError("permission-denied", "Email not verified");
+  }
+
+  const sessionId = request.data?.["sessionId"] as string | undefined;
+  const gender = request.data?.["gender"];
+  const minAge = request.data?.["minAge"];
+  const maxAge = request.data?.["maxAge"];
+  if (!sessionId)
+    throw new HttpsError("invalid-argument", "sessionId required");
+  if (
+    typeof gender !== "string" ||
+    !["male", "female", "mixed"].includes(gender) ||
+    !Number.isInteger(minAge) ||
+    !Number.isInteger(maxAge) ||
+    minAge < 0 ||
+    maxAge > 120 ||
+    minAge > maxAge
+  ) {
+    throw new HttpsError("invalid-argument", "invalid gender/age");
+  }
+
+  const sessionRef = db.collection("sessions").doc(sessionId);
+  const sessionDoc = await sessionRef.get();
+  if (!sessionDoc.exists)
+    throw new HttpsError("not-found", "Session not found");
+
+  const session = sessionDoc.data()!;
+  if (session["coachId"] !== uid && !(await isStaffUid(uid))) {
+    throw new HttpsError("permission-denied", "Not your session");
+  }
+
+  const oldMembers: string[] = Array.isArray(session["memberIds"])
+    ? (session["memberIds"] as string[])
+    : [];
+
+  await sessionRef.update({ memberIds: [], gender, minAge, maxAge });
+
+  // Notify players newly able to see it: the public gender/age audience minus
+  // whoever was already on the member list (they've seen it) and the caller.
+  const publicSession = { ...session, memberIds: [], gender, minAge, maxAge };
+  const audience = await matchSessionPlayers(publicSession);
+  const exclude = new Set<string>([...oldMembers, uid]);
+  const recipients = audience.filter((id) => !exclude.has(id));
+  if (recipients.length > 0) {
+    const title = (session["title"] as string) ?? "";
+    const location = (session["location"] as string) ?? "";
+    const coachName = await fetchUserName(session["coachId"] as string);
+    await sendFcmToUids(
+      recipients,
+      {
+        notification: {
+          title: `${coachName}: ${title} is now open`,
+          body: location,
+        },
+        data: { sessionId },
+      },
+      "makeSessionPublic"
+    );
+  }
+
+  logger.info("makeSessionPublic ok", {
+    sessionId,
+    gender,
+    minAge,
+    maxAge,
+    notified: recipients.length,
+  });
+  return { success: true, notified: recipients.length };
+});
+
+// ---------------------------------------------------------------------------
+// updateSessionMembers — owner-coach or staff edits the member list of a
+// custom (members-only) session, e.g. to remove someone added by mistake.
+// Anyone dropped from the list also loses their attendee/waitlist spot (they
+// can no longer see the session); freed spots promote the head of the
+// remaining waitlist, matching updateSessionCapacity.
+// ---------------------------------------------------------------------------
+export const updateSessionMembers = onCall({ region: REGION }, async (request) => {
+  const uid = request.auth?.uid;
+  if (!uid) throw new HttpsError("unauthenticated", "Not authenticated");
+  if (request.auth?.token?.email_verified !== true) {
+    throw new HttpsError("permission-denied", "Email not verified");
+  }
+
+  const sessionId = request.data?.["sessionId"] as string | undefined;
+  const rawMembers = request.data?.["memberIds"];
+  if (!sessionId)
+    throw new HttpsError("invalid-argument", "sessionId required");
+  if (!Array.isArray(rawMembers)) {
+    throw new HttpsError("invalid-argument", "memberIds required");
+  }
+  const memberIds = [
+    ...new Set(rawMembers.filter((x): x is string => typeof x === "string")),
+  ];
+  if (memberIds.length === 0) {
+    throw new HttpsError(
+      "failed-precondition",
+      "A custom session needs at least one member; use makeSessionPublic to open it."
+    );
+  }
+
+  const sessionRef = db.collection("sessions").doc(sessionId);
+  const callerIsStaff = await isStaffUid(uid);
+  let promotedUids: string[] = [];
+  let sessionTitle = "";
+
+  await db.runTransaction(async (tx) => {
+    const doc = await tx.get(sessionRef);
+    if (!doc.exists) throw new HttpsError("not-found", "Session not found");
+    const session = doc.data()!;
+    if (session["coachId"] !== uid && !callerIsStaff) {
+      throw new HttpsError("permission-denied", "Not your session");
+    }
+    const wasCustom =
+      Array.isArray(session["memberIds"]) &&
+      (session["memberIds"] as unknown[]).length > 0;
+    if (!wasCustom) {
+      throw new HttpsError("failed-precondition", "Not a custom session");
+    }
+    sessionTitle = (session["title"] as string) ?? "";
+
+    const allowed = new Set(memberIds);
+    const attendeeIds = ((session["attendeeIds"] ?? []) as string[]).filter(
+      (id) => allowed.has(id)
+    );
+    let waitlistIds = ((session["waitlistIds"] ?? []) as string[]).filter(
+      (id) => allowed.has(id)
+    );
+    const maxPlayers = (session["maxPlayers"] ?? 0) as number;
+
+    const freeSpots = maxPlayers - attendeeIds.length;
+    if (freeSpots > 0 && waitlistIds.length > 0) {
+      const n = Math.min(freeSpots, waitlistIds.length);
+      promotedUids = waitlistIds.slice(0, n);
+      attendeeIds.push(...promotedUids);
+      waitlistIds = waitlistIds.slice(n);
+    }
+
+    tx.update(sessionRef, { memberIds, attendeeIds, waitlistIds });
+  });
+
+  if (promotedUids.length > 0) {
+    await notifyPromoted(promotedUids, sessionId, sessionTitle);
+  }
+
+  logger.info("updateSessionMembers ok", {
+    sessionId,
+    memberCount: memberIds.length,
+    promoted: promotedUids.length,
+  });
+  return { success: true };
+});
+
+// ---------------------------------------------------------------------------
 // markAttended — transactional toggle of a user's presence at a session.
 // Only the owning coach can call. attendanceCount on the user doc and
 // attendedIds on the session are written together; idempotent so two
@@ -1406,6 +1631,8 @@ export const createRecurringSessions = onSchedule(
         endTime: admin.firestore.Timestamp.fromMillis(endMs),
         maxPlayers: data["maxPlayers"],
         coachId: data["coachId"],
+        coachIds: (data["coachIds"] ?? []) as string[],
+        memberIds: (data["memberIds"] ?? []) as string[],
         attendeeIds: [] as string[],
         attendedIds: [] as string[],
         waitlistSize: data["waitlistSize"] ?? 0,

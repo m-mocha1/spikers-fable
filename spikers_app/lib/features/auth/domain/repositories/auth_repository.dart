@@ -13,8 +13,9 @@ class AuthException implements Exception {
   String toString() => 'AuthException($code)';
 }
 
-/// Outcome of the coach-key check during registration.
-enum CoachPromotion { notRequested, promoted, invalidKey, networkError }
+/// Outcome of a coach-key promotion attempt (from the profile screen —
+/// registration always creates players).
+enum CoachPromotion { promoted, invalidKey, networkError }
 
 abstract class AuthRepository {
   /// Completes once session restore has been attempted and the first user
@@ -33,10 +34,10 @@ abstract class AuthRepository {
   /// Throws [AuthException] on failure. Saves credentials for silent restore.
   Future<void> signIn(String email, String password);
 
-  /// Creates the account, uploads the photo, writes the user doc, and asks
-  /// the backend to promote to coach when requested. Throws [AuthException]
-  /// on auth failure; a failed coach promotion does NOT throw.
-  Future<CoachPromotion> register({
+  /// Creates the account (always as a player), uploads the photo, and writes
+  /// the user doc. Throws [AuthException] on auth failure. Coach promotion
+  /// happens later via [promoteToCoach].
+  Future<void> register({
     required String name,
     required String email,
     required String password,
@@ -44,10 +45,12 @@ abstract class AuthRepository {
     DateTime? dateOfBirth,
     int? heightCm,
     int? weightKg,
-    required String role,
-    required String coachKey,
     XFile? photoFile,
   });
+
+  /// Asks the backend to promote the signed-in user to coach with the club's
+  /// coach key. Never throws — failures map to [CoachPromotion] values.
+  Future<CoachPromotion> promoteToCoach(String coachKey);
 
   /// Clears stored credentials and signs out of Firebase.
   Future<void> signOut();

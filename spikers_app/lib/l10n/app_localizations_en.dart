@@ -108,6 +108,51 @@ class AppLocalizationsEn extends AppLocalizations {
   String get createSession => 'Create Session';
 
   @override
+  String get availableCoaches => 'Available Coaches';
+
+  @override
+  String get customSession => 'Custom session';
+
+  @override
+  String get customSessionSubtitle =>
+      'Only selected members can see this session';
+
+  @override
+  String get chooseMembers => 'Choose members';
+
+  @override
+  String membersSelected(int count) {
+    return '$count selected';
+  }
+
+  @override
+  String get selectMembersError => 'Select at least one member';
+
+  @override
+  String get searchMembers => 'Search members';
+
+  @override
+  String get membersOnly => 'Members only';
+
+  @override
+  String get done => 'Done';
+
+  @override
+  String get editMembers => 'Edit members';
+
+  @override
+  String get membersUpdated => 'Members updated';
+
+  @override
+  String get makePublic => 'Make public';
+
+  @override
+  String get makePublicSubtitle => 'Choose who can now see this session';
+
+  @override
+  String get sessionMadePublic => 'Session is now public';
+
+  @override
   String get sessionTitle => 'Session Title';
 
   @override
@@ -320,6 +365,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get endTimeError => 'End time must be after start time';
+
+  @override
+  String get invalidAgeRange => 'Min age can\'t exceed max age';
 
   @override
   String get errorOccurred => 'An error occurred';
@@ -553,6 +601,52 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get waitlistedSnack => 'You\'ve been added to the waitlist';
+
+  @override
+  String waitlistedSnackPos(int pos) {
+    return 'You\'ve been added to the waitlist — you\'re #$pos in line';
+  }
+
+  @override
+  String waitlistStanding(int pos) {
+    return 'You\'re #$pos in line — we\'ll notify you the moment a spot opens.';
+  }
+
+  @override
+  String get joinedBadge => 'Joined';
+
+  @override
+  String countdownDays(int days) {
+    return '${days}d';
+  }
+
+  @override
+  String get sessionStartedLeaveBlocked =>
+      'The session has started — the roster is locked.';
+
+  @override
+  String get markAllAttended => 'Mark all attended';
+
+  @override
+  String get haveCoachKey => 'Have a coach key?';
+
+  @override
+  String get coachPromotedSnack => 'You\'re a coach now!';
+
+  @override
+  String get leaderboardMensBoard => 'Men\'s board — sessions attended';
+
+  @override
+  String get leaderboardWomensBoard => 'Women\'s board — sessions attended';
+
+  @override
+  String get leaderboardSubtitle => 'Sessions attended';
+
+  @override
+  String get audienceMen => 'For men';
+
+  @override
+  String get audienceWomen => 'For women';
 
   @override
   String get increaseCapacity => 'Increase Capacity';

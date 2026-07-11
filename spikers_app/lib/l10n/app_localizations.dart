@@ -296,6 +296,90 @@ abstract class AppLocalizations {
   /// **'Create Session'**
   String get createSession;
 
+  /// No description provided for @availableCoaches.
+  ///
+  /// In en, this message translates to:
+  /// **'Available Coaches'**
+  String get availableCoaches;
+
+  /// No description provided for @customSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom session'**
+  String get customSession;
+
+  /// No description provided for @customSessionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Only selected members can see this session'**
+  String get customSessionSubtitle;
+
+  /// No description provided for @chooseMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose members'**
+  String get chooseMembers;
+
+  /// No description provided for @membersSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected'**
+  String membersSelected(int count);
+
+  /// No description provided for @selectMembersError.
+  ///
+  /// In en, this message translates to:
+  /// **'Select at least one member'**
+  String get selectMembersError;
+
+  /// No description provided for @searchMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'Search members'**
+  String get searchMembers;
+
+  /// No description provided for @membersOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Members only'**
+  String get membersOnly;
+
+  /// No description provided for @done.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get done;
+
+  /// No description provided for @editMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit members'**
+  String get editMembers;
+
+  /// No description provided for @membersUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Members updated'**
+  String get membersUpdated;
+
+  /// No description provided for @makePublic.
+  ///
+  /// In en, this message translates to:
+  /// **'Make public'**
+  String get makePublic;
+
+  /// No description provided for @makePublicSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose who can now see this session'**
+  String get makePublicSubtitle;
+
+  /// No description provided for @sessionMadePublic.
+  ///
+  /// In en, this message translates to:
+  /// **'Session is now public'**
+  String get sessionMadePublic;
+
   /// No description provided for @sessionTitle.
   ///
   /// In en, this message translates to:
@@ -703,6 +787,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'End time must be after start time'**
   String get endTimeError;
+
+  /// No description provided for @invalidAgeRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Min age can\'t exceed max age'**
+  String get invalidAgeRange;
 
   /// No description provided for @errorOccurred.
   ///
@@ -1129,6 +1219,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You\'ve been added to the waitlist'**
   String get waitlistedSnack;
+
+  /// No description provided for @waitlistedSnackPos.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve been added to the waitlist — you\'re #{pos} in line'**
+  String waitlistedSnackPos(int pos);
+
+  /// No description provided for @waitlistStanding.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re #{pos} in line — we\'ll notify you the moment a spot opens.'**
+  String waitlistStanding(int pos);
+
+  /// No description provided for @joinedBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Joined'**
+  String get joinedBadge;
+
+  /// No description provided for @countdownDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{days}d'**
+  String countdownDays(int days);
+
+  /// No description provided for @sessionStartedLeaveBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'The session has started — the roster is locked.'**
+  String get sessionStartedLeaveBlocked;
+
+  /// No description provided for @markAllAttended.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all attended'**
+  String get markAllAttended;
+
+  /// No description provided for @haveCoachKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Have a coach key?'**
+  String get haveCoachKey;
+
+  /// No description provided for @coachPromotedSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re a coach now!'**
+  String get coachPromotedSnack;
+
+  /// No description provided for @leaderboardMensBoard.
+  ///
+  /// In en, this message translates to:
+  /// **'Men\'s board — sessions attended'**
+  String get leaderboardMensBoard;
+
+  /// No description provided for @leaderboardWomensBoard.
+  ///
+  /// In en, this message translates to:
+  /// **'Women\'s board — sessions attended'**
+  String get leaderboardWomensBoard;
+
+  /// No description provided for @leaderboardSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sessions attended'**
+  String get leaderboardSubtitle;
+
+  /// No description provided for @audienceMen.
+  ///
+  /// In en, this message translates to:
+  /// **'For men'**
+  String get audienceMen;
+
+  /// No description provided for @audienceWomen.
+  ///
+  /// In en, this message translates to:
+  /// **'For women'**
+  String get audienceWomen;
 
   /// No description provided for @increaseCapacity.
   ///

@@ -36,6 +36,32 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
     // We just sent one on register/signin; start cooldown so the resend
     // button doesn't immediately invite a duplicate.
     _startCooldown();
+    // Accounts may already be verified server-side (auto-verification
+    // trigger) before this screen settles — poll a few times so those users
+    // pass straight through instead of hunting for an email they don't need.
+    _autoCheck();
+  }
+
+  Future<void> _autoCheck() async {
+    final repo = ref.read(authRepositoryProvider);
+    for (var attempt = 0; attempt < 3; attempt++) {
+      // Give the server-side trigger a moment to land before each try.
+      await Future.delayed(const Duration(milliseconds: 1200));
+      if (!mounted || _checking) return;
+      final bool verified;
+      try {
+        verified = await repo.reloadAndCheckVerified();
+      } catch (_) {
+        continue; // transient network failure — try again silently
+      }
+      if (!mounted) return;
+      if (verified) {
+        await repo.markVerifiedAt();
+        if (!mounted) return;
+        context.go(Routes.home);
+        return;
+      }
+    }
   }
 
   @override

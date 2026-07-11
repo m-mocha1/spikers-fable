@@ -11,6 +11,14 @@ class SessionModel {
   final DateTime endTime;
   final int maxPlayers;
   final String coachId;
+
+  /// Additional coaches marked as available/assigned for this session, on top
+  /// of the owner [coachId]. Uids of accounts with role 'coach'.
+  final List<String> coachIds;
+
+  /// When non-empty, the session is a "custom" session visible only to these
+  /// members (players), overriding the gender/age audience. See [isCustom].
+  final List<String> memberIds;
   final List<String> attendeeIds;
   final List<String> attendedIds;
   final int waitlistSize;
@@ -30,6 +38,8 @@ class SessionModel {
     required this.endTime,
     required this.maxPlayers,
     required this.coachId,
+    this.coachIds = const [],
+    this.memberIds = const [],
     required this.attendeeIds,
     this.attendedIds = const [],
     this.waitlistSize = 0,
@@ -38,6 +48,10 @@ class SessionModel {
     required this.createdAt,
     this.designIndex = 0,
   });
+
+  /// A custom session is scoped to a hand-picked member list rather than the
+  /// gender/age audience. Visible only to those members (and to coaches).
+  bool get isCustom => memberIds.isNotEmpty;
 
   bool get isFull => attendeeIds.length >= maxPlayers;
   bool get isExpired => endTime.isBefore(DateTime.now());
@@ -68,6 +82,8 @@ class SessionModel {
       endTime: (d['endTime'] as Timestamp).toDate(),
       maxPlayers: (d['maxPlayers'] ?? 10) as int,
       coachId: d['coachId'] ?? '',
+      coachIds: List<String>.from(d['coachIds'] ?? []),
+      memberIds: List<String>.from(d['memberIds'] ?? []),
       attendeeIds: List<String>.from(d['attendeeIds'] ?? []),
       attendedIds: List<String>.from(d['attendedIds'] ?? []),
       waitlistSize: (d['waitlistSize'] ?? 0) as int,
@@ -88,6 +104,8 @@ class SessionModel {
         'endTime': Timestamp.fromDate(endTime),
         'maxPlayers': maxPlayers,
         'coachId': coachId,
+        'coachIds': coachIds,
+        'memberIds': memberIds,
         'attendeeIds': attendeeIds,
         'attendedIds': attendedIds,
         'waitlistSize': waitlistSize,

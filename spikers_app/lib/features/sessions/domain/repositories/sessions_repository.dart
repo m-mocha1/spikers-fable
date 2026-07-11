@@ -88,6 +88,16 @@ abstract class SessionsRepository {
   Future<void> updateCapacity(String sessionId,
       {int? newMaxPlayers, int? newWaitlistSize});
 
+  /// Converts a custom (members-only) session to a public one with the given
+  /// audience, clearing its member list and notifying newly-eligible players.
+  /// Owner-coach or staff. Throws [SessionActionException].
+  Future<void> makeSessionPublic(String sessionId,
+      {required String gender, required int minAge, required int maxAge});
+
+  /// Replaces the member list of a custom session (e.g. to remove someone
+  /// added by mistake). Owner-coach or staff. Throws [SessionActionException].
+  Future<void> updateSessionMembers(String sessionId, List<String> memberIds);
+
   /// Throws [SessionActionException].
   Future<void> markAttended(String sessionId, String userId, bool attended);
 
