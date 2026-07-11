@@ -9,6 +9,14 @@
 # packages, and plugins designed to encourage good coding practices.
 include: package:flutter_lints/flutter.yaml
 
+analyzer:
+  # Generated localizations: the Arabic strings intentionally carry FSI/PDI
+  # bidi isolates (U+2068/U+2069) around interpolated names, which trips the
+  # trojan-source lint. The .arb sources are the reviewed files; skip the
+  # generated output.
+  exclude:
+    - lib/l10n/app_localizations*.dart
+
 linter:
   # The lint rules applied to this project can be customized in the
   # section below to disable rules from the `package:flutter_lints/flutter.yaml`

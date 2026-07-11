@@ -42,9 +42,16 @@ class SessionsRemoteDataSource {
           .where((s) => s.endTime.isAfter(now))
           .toList();
       if (!viewer.isCoach) {
+        // Custom (members-only) sessions are visible only to their picked
+        // members. Non-members never see them; coaches see everything.
+        all = all
+            .where((s) => !s.isCustom || s.memberIds.contains(viewer.uid))
+            .toList();
         final age = viewer.age;
         if (age != null) {
-          all = all.where((s) => age >= s.minAge && age <= s.maxAge).toList();
+          all = all
+              .where((s) => s.isCustom || (age >= s.minAge && age <= s.maxAge))
+              .toList();
         }
       }
       all.sort((a, b) => a.startTime.compareTo(b.startTime));
@@ -78,7 +85,17 @@ class SessionsRemoteDataSource {
         .orderBy('endTime', descending: true)
         .limit(limit)
         .snapshots()
-        .map((snap) => snap.docs.map(SessionModel.fromDoc).toList());
+        .map((snap) {
+      var all = snap.docs.map(SessionModel.fromDoc).toList();
+      if (!viewer.isCoach) {
+        // Hide past custom (members-only) sessions from non-members, mirroring
+        // watchUpcoming. Coaches keep full history visibility.
+        all = all
+            .where((s) => !s.isCustom || s.memberIds.contains(viewer.uid))
+            .toList();
+      }
+      return all;
+    });
   }
 
   Future<Map<String, PublicProfile>> fetchPublicProfiles(
@@ -211,6 +228,23 @@ class SessionsRemoteDataSource {
         'sessionId': sessionId,
         'newMaxPlayers': ?newMaxPlayers,
         'newWaitlistSize': ?newWaitlistSize,
+      });
+
+  Future<void> makeSessionPublic(String sessionId,
+          {required String gender,
+          required int minAge,
+          required int maxAge}) =>
+      _fns.httpsCallable('makeSessionPublic').call({
+        'sessionId': sessionId,
+        'gender': gender,
+        'minAge': minAge,
+        'maxAge': maxAge,
+      });
+
+  Future<void> updateSessionMembers(String sessionId, List<String> memberIds) =>
+      _fns.httpsCallable('updateSessionMembers').call({
+        'sessionId': sessionId,
+        'memberIds': memberIds,
       });
 
   Future<void> markAttended(String sessionId, String userId, bool attended) =>

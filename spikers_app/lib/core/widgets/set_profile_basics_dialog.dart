@@ -67,7 +67,7 @@ class _SetProfileBasicsDialogState
     if (picked != null) {
       setState(() {
         _dob = picked;
-        _dobCtrl.text = DateFormat('yyyy-MM-dd').format(picked);
+        _dobCtrl.text = DateFormat('yyyy-MM-dd', 'en').format(picked);
       });
     }
   }
@@ -229,23 +229,27 @@ class _GenderChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        decoration: BoxDecoration(
-          color: selected ? AppColors.gold : AppColors.navyBlue,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: selected ? AppColors.gold : AppColors.grey,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          decoration: BoxDecoration(
+            color: selected ? AppColors.gold : AppColors.navyBlue,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: selected ? AppColors.gold : AppColors.grey,
+            ),
           ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: selected ? AppColors.navyBlue : AppColors.white,
-            fontWeight: FontWeight.w600,
+          child: Text(
+            label,
+            style: TextStyle(
+              color: selected ? AppColors.navyBlue : AppColors.white,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ),

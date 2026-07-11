@@ -11,6 +11,14 @@ class RecurringSessionModel {
   final int maxAge;
   final int maxPlayers;
   final int waitlistSize;
+
+  /// Additional coaches marked as available/assigned, copied onto each session
+  /// this recurring template materializes. Uids of accounts with role 'coach'.
+  final List<String> coachIds;
+
+  /// When non-empty, materialized sessions are custom (members-only): visible
+  /// to these member uids (and coaches), overriding the gender/age audience.
+  final List<String> memberIds;
   final List<int> recurrenceDays;
   final int startHour;
   final int startMinute;
@@ -30,6 +38,8 @@ class RecurringSessionModel {
     required this.maxAge,
     required this.maxPlayers,
     this.waitlistSize = 0,
+    this.coachIds = const [],
+    this.memberIds = const [],
     required this.recurrenceDays,
     required this.startHour,
     required this.startMinute,
@@ -57,6 +67,8 @@ class RecurringSessionModel {
       maxAge: (d['maxAge'] ?? 40) as int,
       maxPlayers: (d['maxPlayers'] ?? 12) as int,
       waitlistSize: (d['waitlistSize'] ?? 0) as int,
+      coachIds: List<String>.from(d['coachIds'] ?? []),
+      memberIds: List<String>.from(d['memberIds'] ?? []),
       recurrenceDays: List<int>.from(d['recurrenceDays'] ?? []),
       startHour: (d['startHour'] ?? 18) as int,
       startMinute: (d['startMinute'] ?? 0) as int,
@@ -78,6 +90,8 @@ class RecurringSessionModel {
         'maxAge': maxAge,
         'maxPlayers': maxPlayers,
         'waitlistSize': waitlistSize,
+        'coachIds': coachIds,
+        'memberIds': memberIds,
         'recurrenceDays': recurrenceDays,
         'startHour': startHour,
         'startMinute': startMinute,

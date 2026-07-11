@@ -24,9 +24,11 @@ import '../../../../core/widgets/state_views.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'package:spikers_app/features/sessions/domain/entities/session_model.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
+import '../../../coaches/presentation/providers/coaches_providers.dart';
 import '../../domain/repositories/sessions_repository.dart';
 import '../providers/sessions_providers.dart';
 import '../utils/session_error_l10n.dart';
+import '../widgets/member_picker_sheet.dart';
 
 /// What the viewer's membership optimistically becomes the instant they tap
 /// join/leave, shown before the Cloud Function + live snapshot confirm.
@@ -265,7 +267,10 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
     // immediately. The button has already flipped via [_optimistic] above.
     if (willWaitlist) {
       HapticFeedback.selectionClick();
-      showAppSnackbar(l.waitlistedSnack);
+      // Position they're about to take: current tail of the waitlist + 1.
+      showAppSnackbar(
+        l.waitlistedSnackPos(session.waitlistIds.length + 1),
+      );
     } else {
       HapticFeedback.mediumImpact();
       if (mounted) {
@@ -322,8 +327,17 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
     }
     try {
       await _repo.leave(session.id);
-    } catch (_) {
+    } on SessionActionException catch (e) {
       if (mounted) setState(() => _optimistic = null); // roll back the flip
+      // failed-precondition = the session started while the screen was open;
+      // "something went wrong" would be misleading for a deliberate rule.
+      showAppSnackbar(
+        e.code == 'failed-precondition'
+            ? l.sessionStartedLeaveBlocked
+            : l.unknownError,
+      );
+    } catch (_) {
+      if (mounted) setState(() => _optimistic = null);
       showAppSnackbar(l.unknownError);
     } finally {
       if (mounted) setState(() => _actionInFlight = false);
@@ -476,6 +490,65 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
     }
   }
 
+  Future<void> _makePublic(AppLocalizations l) async {
+    final session = _session!;
+    final result = await showDialog<(String, int, int)>(
+      context: context,
+      useRootNavigator: true,
+      builder: (_) => _MakePublicDialog(l: l),
+    );
+    if (!mounted || result == null) return;
+    final (gender, minAge, maxAge) = result;
+
+    try {
+      await _repo.makeSessionPublic(session.id,
+          gender: gender, minAge: minAge, maxAge: maxAge);
+      if (!mounted) return;
+      showAppSnackbar(l.sessionMadePublic);
+    } on SessionActionException catch (e) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        showAppSnackbar(cancelErrorMessage(l, e.code));
+      });
+    } catch (_) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        showAppSnackbar(l.unknownError);
+      });
+    }
+  }
+
+  Future<void> _editMembers(AppLocalizations l) async {
+    final session = _session!;
+    final picked =
+        await showMemberPicker(context, initial: session.memberIds.toSet());
+    if (!mounted || picked == null) return;
+
+    // No change — skip the round-trip.
+    if (picked.length == session.memberIds.length &&
+        picked.containsAll(session.memberIds)) {
+      return;
+    }
+    // Emptying the list would orphan the session; steer the coach to the
+    // "make public" action instead (the callable rejects an empty list too).
+    if (picked.isEmpty) {
+      showAppSnackbar(l.selectMembersError);
+      return;
+    }
+
+    try {
+      await _repo.updateSessionMembers(session.id, picked.toList());
+      if (!mounted) return;
+      showAppSnackbar(l.membersUpdated);
+    } on SessionActionException catch (e) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        showAppSnackbar(cancelErrorMessage(l, e.code));
+      });
+    } catch (_) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        showAppSnackbar(l.unknownError);
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final session = _session;
@@ -575,6 +648,44 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
               ...[
                     _InfoSection(session: session, l: l, coachName: _coachName),
                     const SizedBox(height: 20),
+                    // Coach controls for a custom (members-only) session:
+                    // adjust the member list or open it up to the public.
+                    if (isCoach && session.isCustom && !_isArchived) ...[
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: () => _editMembers(l),
+                              icon: const Icon(Icons.group_outlined,
+                                  color: AppColors.gold, size: 18),
+                              label: Text(l.editMembers,
+                                  style:
+                                      const TextStyle(color: AppColors.gold)),
+                              style: OutlinedButton.styleFrom(
+                                minimumSize: const Size.fromHeight(44),
+                                side: const BorderSide(color: AppColors.gold),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: () => _makePublic(l),
+                              icon: const Icon(Icons.public,
+                                  color: AppColors.gold, size: 18),
+                              label: Text(l.makePublic,
+                                  style:
+                                      const TextStyle(color: AppColors.gold)),
+                              style: OutlinedButton.styleFrom(
+                                minimumSize: const Size.fromHeight(44),
+                                side: const BorderSide(color: AppColors.gold),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                    ],
                     _AttendeesSection(
                       session: session,
                       l: l,
@@ -589,6 +700,14 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
                       onRemove: _removeAttendee,
                       onEndorse: _endorse,
                       onEditCapacity: () => _editCapacity(l),
+                      onMarkAllAttended: () {
+                        HapticFeedback.mediumImpact();
+                        for (final id in session.attendeeIds) {
+                          if (!attendedIds.contains(id)) {
+                            _markAttended(id, true);
+                          }
+                        }
+                      },
                     ),
                     const SizedBox(height: 30),
                     // Coaches/admins own sessions but may also play in them, so the
@@ -597,6 +716,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
                       session: session,
                       isJoined: isJoined,
                       isWaitlisted: isWaitlisted,
+                      viewerUid: uid,
                       onJoin: () => _join(l),
                       onLeave: () => _leave(l),
                       l: l,
@@ -750,16 +870,23 @@ class _CountdownTimer extends StatelessWidget {
         } else {
           diff = Duration.zero;
         }
-        final h = diff.inHours.toString().padLeft(2, '0');
+        // Roll hours past 24 into a day count — "1d 12:00:00" instead of a
+        // clock-like "36:00:00".
+        final days = diff.inDays;
+        final h = (diff.inHours % 24).toString().padLeft(2, '0');
         final m = (diff.inMinutes % 60).toString().padLeft(2, '0');
         final s = (diff.inSeconds % 60).toString().padLeft(2, '0');
-        return Text(
-          '$h:$m:$s',
-          style: const TextStyle(
-            color: AppColors.gold,
-            fontSize: 42,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 2,
+        final l = AppLocalizations.of(ctx)!;
+        return FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            days >= 1 ? '${l.countdownDays(days)} $h:$m:$s' : '$h:$m:$s',
+            style: const TextStyle(
+              color: AppColors.gold,
+              fontSize: 42,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 2,
+            ),
           ),
         );
       },
@@ -767,7 +894,7 @@ class _CountdownTimer extends StatelessWidget {
   }
 }
 
-class _InfoSection extends StatelessWidget {
+class _InfoSection extends ConsumerWidget {
   final SessionModel session;
   final AppLocalizations l;
   final String coachName;
@@ -778,8 +905,22 @@ class _InfoSection extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final fmt = DateFormat('EEEE, MMM d  •  HH:mm');
+
+    // Resolve the available-coach uids to names via the coaches list (best
+    // effort — a name that isn't found yet is simply omitted).
+    String? availableCoachNames;
+    if (session.coachIds.isNotEmpty) {
+      final coaches = ref.watch(coachesProvider).valueOrNull ?? const [];
+      final byUid = {for (final c in coaches) c.uid: c.name};
+      final names = session.coachIds
+          .map((uid) => byUid[uid] ?? '')
+          .where((n) => n.isNotEmpty)
+          .toList();
+      if (names.isNotEmpty) availableCoachNames = names.join(', ');
+    }
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -788,11 +929,36 @@ class _InfoSection extends StatelessWidget {
       ),
       child: Column(
         children: [
+          if (session.isCustom) ...[
+            Row(
+              children: [
+                const Icon(Icons.lock_outline,
+                    size: 18, color: AppColors.gold),
+                const SizedBox(width: 10),
+                Text(
+                  l.membersOnly,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                      color: AppColors.gold),
+                ),
+              ],
+            ),
+            const Divider(height: 20),
+          ],
           _DetailRow(
             icon: Icons.person_outline,
             label: l.coachLabel,
             value: coachName,
           ),
+          if (availableCoachNames != null) ...[
+            const Divider(height: 20),
+            _DetailRow(
+              icon: Icons.groups_outlined,
+              label: l.availableCoaches,
+              value: availableCoachNames,
+            ),
+          ],
           const Divider(height: 20),
           _DetailRow(
             icon: Icons.location_on_outlined,
@@ -811,22 +977,26 @@ class _InfoSection extends StatelessWidget {
             label: l.endTime,
             value: fmt.format(session.endTime),
           ),
-          const Divider(height: 20),
-          _DetailRow(
-            icon: Icons.cake_outlined,
-            label: l.ageRange,
-            value: '${session.minAge} – ${session.maxAge} ${l.years}',
-          ),
-          const Divider(height: 20),
-          _DetailRow(
-            icon: Icons.people_outline,
-            label: l.gender,
-            value: session.gender == 'male'
-                ? l.male
-                : session.gender == 'female'
-                ? l.female
-                : l.genderMixed,
-          ),
+          // Age/gender describe the auto audience; a custom session ignores
+          // them, so hide those rows when it's members-only.
+          if (!session.isCustom) ...[
+            const Divider(height: 20),
+            _DetailRow(
+              icon: Icons.cake_outlined,
+              label: l.ageRange,
+              value: '${session.minAge} – ${session.maxAge} ${l.years}',
+            ),
+            const Divider(height: 20),
+            _DetailRow(
+              icon: Icons.people_outline,
+              label: l.gender,
+              value: session.gender == 'male'
+                  ? l.male
+                  : session.gender == 'female'
+                      ? l.female
+                      : l.genderMixed,
+            ),
+          ],
         ],
       ),
     );
@@ -879,6 +1049,7 @@ class _AttendeesSection extends StatelessWidget {
   final void Function(String uid, String name) onRemove;
   final void Function(String uid, String name) onEndorse;
   final VoidCallback onEditCapacity;
+  final VoidCallback onMarkAllAttended;
   const _AttendeesSection({
     required this.session,
     required this.l,
@@ -893,6 +1064,7 @@ class _AttendeesSection extends StatelessWidget {
     required this.onRemove,
     required this.onEndorse,
     required this.onEditCapacity,
+    required this.onMarkAllAttended,
   });
 
   @override
@@ -945,6 +1117,27 @@ class _AttendeesSection extends StatelessWidget {
                   fontSize: 16,
                 ),
               ),
+              // One-tap courtside shortcut: check off everyone still
+              // unmarked. Individual toggles undo any mistakes.
+              if (isCoach &&
+                  session.attendeeIds.isNotEmpty &&
+                  attendedCount < session.attendeeIds.length)
+                IconButton(
+                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                    minWidth: 32,
+                    minHeight: 32,
+                  ),
+                  splashRadius: 18,
+                  tooltip: l.markAllAttended,
+                  onPressed: onMarkAllAttended,
+                  icon: const Icon(
+                    Icons.done_all,
+                    color: AppColors.success,
+                    size: 18,
+                  ),
+                ),
               if (canEditCapacity)
                 IconButton(
                   visualDensity: VisualDensity.compact,
@@ -1411,6 +1604,7 @@ class _JoinButton extends StatelessWidget {
   final SessionModel session;
   final bool isJoined;
   final bool isWaitlisted;
+  final String viewerUid;
   final VoidCallback onJoin;
   final VoidCallback onLeave;
   final AppLocalizations l;
@@ -1418,6 +1612,7 @@ class _JoinButton extends StatelessWidget {
     required this.session,
     required this.isJoined,
     required this.isWaitlisted,
+    required this.viewerUid,
     required this.onJoin,
     required this.onLeave,
     required this.l,
@@ -1449,23 +1644,57 @@ class _JoinButton extends StatelessWidget {
     }
 
     if (isWaitlisted) {
-      return SizedBox(
-        width: double.infinity,
-        height: 52,
-        child: OutlinedButton.icon(
-          onPressed: onLeave,
-          icon: const Icon(Icons.hourglass_bottom, color: AppColors.gold),
-          label: Text(
-            l.leaveWaitlist,
-            style: const TextStyle(color: AppColors.gold),
-          ),
-          style: OutlinedButton.styleFrom(
-            side: const BorderSide(color: AppColors.gold),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+      // The viewer's live queue position. An optimistic (just-tapped) join
+      // isn't in waitlistIds yet — they're about to take the tail spot.
+      final idx = session.waitlistIds.indexOf(viewerUid);
+      final position = idx >= 0 ? idx + 1 : session.waitlistIds.length + 1;
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.hourglass_bottom,
+                  size: 14,
+                  color: AppColors.gold,
+                ),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    l.waitlistStanding(position),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: AppColors.gold,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-        ),
+          SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: OutlinedButton.icon(
+              onPressed: onLeave,
+              icon: const Icon(Icons.hourglass_bottom, color: AppColors.gold),
+              label: Text(
+                l.leaveWaitlist,
+                style: const TextStyle(color: AppColors.gold),
+              ),
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: AppColors.gold),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ),
+        ],
       );
     }
 
@@ -1619,6 +1848,119 @@ class _EditCapacityDialogState extends State<_EditCapacityDialog> {
               fontWeight: FontWeight.w700,
             ),
           ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Dialog shown when a coach converts a custom session to public: pick the
+/// gender + age audience it should open to. Returns (gender, minAge, maxAge).
+class _MakePublicDialog extends StatefulWidget {
+  final AppLocalizations l;
+  const _MakePublicDialog({required this.l});
+
+  @override
+  State<_MakePublicDialog> createState() => _MakePublicDialogState();
+}
+
+class _MakePublicDialogState extends State<_MakePublicDialog> {
+  final _formKey = GlobalKey<FormState>();
+  String _gender = 'mixed';
+  final _minCtrl = TextEditingController(text: '16');
+  final _maxCtrl = TextEditingController(text: '40');
+
+  @override
+  void dispose() {
+    _minCtrl.dispose();
+    _maxCtrl.dispose();
+    super.dispose();
+  }
+
+  String? _validateAge(String? v) {
+    final n = int.tryParse(v ?? '');
+    if (n == null || n < 0 || n > 120) return widget.l.requiredField;
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = widget.l;
+    return AlertDialog(
+      backgroundColor: AppColors.navyLight,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: Text(l.makePublic, style: const TextStyle(color: AppColors.white)),
+      content: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(l.makePublicSubtitle,
+                style: const TextStyle(color: AppColors.grey, fontSize: 13)),
+            const SizedBox(height: 12),
+            SegmentedButton<String>(
+              segments: [
+                ButtonSegment(value: 'male', label: Text(l.male)),
+                ButtonSegment(value: 'female', label: Text(l.female)),
+                ButtonSegment(value: 'mixed', label: Text(l.genderMixed)),
+              ],
+              selected: {_gender},
+              showSelectedIcon: false,
+              onSelectionChanged: (s) => setState(() => _gender = s.first),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _minCtrl,
+                    keyboardType: TextInputType.number,
+                    style: const TextStyle(color: AppColors.white),
+                    decoration: InputDecoration(
+                      labelText: l.minAge,
+                      labelStyle: const TextStyle(color: AppColors.grey),
+                    ),
+                    validator: _validateAge,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: TextFormField(
+                    controller: _maxCtrl,
+                    keyboardType: TextInputType.number,
+                    style: const TextStyle(color: AppColors.white),
+                    decoration: InputDecoration(
+                      labelText: l.maxAge,
+                      labelStyle: const TextStyle(color: AppColors.grey),
+                    ),
+                    validator: _validateAge,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(l.cancel, style: const TextStyle(color: AppColors.grey)),
+        ),
+        TextButton(
+          onPressed: () {
+            if (!_formKey.currentState!.validate()) return;
+            final minAge = int.parse(_minCtrl.text);
+            final maxAge = int.parse(_maxCtrl.text);
+            if (minAge > maxAge) {
+              showAppSnackbar(l.requiredField);
+              return;
+            }
+            Navigator.of(context).pop((_gender, minAge, maxAge));
+          },
+          child: Text(l.makePublic,
+              style: const TextStyle(
+                  color: AppColors.gold, fontWeight: FontWeight.w700)),
         ),
       ],
     );

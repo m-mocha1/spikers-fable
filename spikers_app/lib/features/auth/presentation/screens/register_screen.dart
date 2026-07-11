@@ -32,7 +32,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   final _confirmCtrl = TextEditingController();
-  final _coachKeyCtrl = TextEditingController();
   final _dobCtrl = TextEditingController();
   final _heightCtrl = TextEditingController();
   final _weightCtrl = TextEditingController();
@@ -40,7 +39,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   bool _showPass = false;
   bool _showConfirm = false;
   String? _gender; // optional — null means "not provided"
-  String _role = 'player';
   DateTime? _dob;
   XFile? _photoFile;
   bool _loading = false;
@@ -51,7 +49,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     _emailCtrl.dispose();
     _passCtrl.dispose();
     _confirmCtrl.dispose();
-    _coachKeyCtrl.dispose();
     _dobCtrl.dispose();
     _heightCtrl.dispose();
     _weightCtrl.dispose();
@@ -78,7 +75,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     if (picked != null) {
       setState(() {
         _dob = picked;
-        _dobCtrl.text = DateFormat('yyyy-MM-dd').format(picked);
+        _dobCtrl.text = DateFormat('yyyy-MM-dd', 'en').format(picked);
       });
     }
   }
@@ -150,7 +147,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final l = AppLocalizations.of(context)!;
     setState(() => _loading = true);
     try {
-      final promotion = await ref.read(authRepositoryProvider).register(
+      await ref.read(authRepositoryProvider).register(
             name: _nameCtrl.text,
             email: _emailCtrl.text,
             password: _passCtrl.text,
@@ -158,21 +155,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             dateOfBirth: _dob,
             heightCm: int.tryParse(_heightCtrl.text.trim()),
             weightKg: int.tryParse(_weightCtrl.text.trim()),
-            role: _role,
-            coachKey: _coachKeyCtrl.text,
             photoFile: _photoFile,
           );
-      switch (promotion) {
-        case CoachPromotion.invalidKey:
-          // User stays a player; they keep the account and can retry coach
-          // promotion later. Continue to verify-email either way.
-          showAppSnackbar(l.invalidCoachKey);
-        case CoachPromotion.networkError:
-          showAppSnackbar(l.networkError);
-        case CoachPromotion.notRequested:
-        case CoachPromotion.promoted:
-          break;
-      }
       if (!mounted) return;
       context.go(Routes.verifyEmail);
     } on AuthException catch (e) {
@@ -361,50 +345,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 24),
-
-              // --- Role ---
-              Text(l.role,
-                  style: const TextStyle(
-                      color: AppColors.gold, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  _GenderChip(
-                    label: l.player,
-                    selected: _role == 'player',
-                    onTap: () => setState(() => _role = 'player'),
-                  ),
-                  const SizedBox(width: 12),
-                  _GenderChip(
-                    label: l.coach,
-                    selected: _role == 'coach',
-                    onTap: () => setState(() => _role = 'coach'),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-
-              // --- Coach Key (animated) ---
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
-                child: _role == 'coach'
-                    ? Padding(
-                        key: const ValueKey('coachKey'),
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: BrandedTextField(
-                          label: l.coachKey,
-                          hint: l.coachKeyHint,
-                          controller: _coachKeyCtrl,
-                          validator: (v) => _role == 'coach'
-                              ? Validators.required(v, l.requiredField)
-                              : null,
-                        ),
-                      )
-                    : const SizedBox.shrink(key: ValueKey('empty')),
-              ),
-
-              const SizedBox(height: 8),
+              const SizedBox(height: 32),
               BrandedButton(
                 label: l.register,
                 onPressed: _submit,
@@ -440,23 +381,27 @@ class _GenderChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        decoration: BoxDecoration(
-          color: selected ? AppColors.gold : AppColors.navyLight,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: selected ? AppColors.gold : AppColors.grey,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          decoration: BoxDecoration(
+            color: selected ? AppColors.gold : AppColors.navyLight,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: selected ? AppColors.gold : AppColors.grey,
+            ),
           ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: selected ? AppColors.navyBlue : AppColors.white,
-            fontWeight: FontWeight.w600,
+          child: Text(
+            label,
+            style: TextStyle(
+              color: selected ? AppColors.navyBlue : AppColors.white,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ),

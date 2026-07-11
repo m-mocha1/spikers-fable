@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker_android/image_picker_android.dart';
+import 'package:intl/intl.dart' show Intl;
 import 'package:image_picker_platform_interface/image_picker_platform_interface.dart';
 
 import 'core/constants/app_colors.dart';
@@ -49,6 +50,10 @@ class SpikersApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final locale = ref.watch(localeProvider);
+    // Bare DateFormat(...) calls across the app pick up this default, so day
+    // and month names follow the in-app language (the flutter_localizations
+    // delegates load the matching date symbols).
+    Intl.defaultLocale = locale.languageCode;
 
     return MaterialApp.router(
       title: 'Jerusalem Spikers',

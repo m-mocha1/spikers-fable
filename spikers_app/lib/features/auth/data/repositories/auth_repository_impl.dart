@@ -281,7 +281,7 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<CoachPromotion> register({
+  Future<void> register({
     required String name,
     required String email,
     required String password,
@@ -289,8 +289,6 @@ class AuthRepositoryImpl implements AuthRepository {
     DateTime? dateOfBirth,
     int? heightCm,
     int? weightKg,
-    required String role,
-    required String coachKey,
     XFile? photoFile,
   }) async {
     final UserCredential cred;
@@ -309,7 +307,7 @@ class AuthRepositoryImpl implements AuthRepository {
     }
 
     // Firestore rules require role == 'player' at create. Coaches are
-    // promoted server-side by validateCoachKey below.
+    // promoted later, server-side, via promoteToCoach.
     final user = UserModel(
       uid: cred.user!.uid,
       name: name.trim(),
@@ -324,24 +322,23 @@ class AuthRepositoryImpl implements AuthRepository {
     await _remote.createUserDoc(user, photoUrl);
     _emit(user);
 
-    var promotion = CoachPromotion.notRequested;
-    if (role == 'coach') {
-      try {
-        final promoted = await _remote.validateCoachKey(coachKey);
-        promotion =
-            promoted ? CoachPromotion.promoted : CoachPromotion.invalidKey;
-      } catch (_) {
-        promotion = CoachPromotion.networkError;
-      }
-    }
-
     try {
       await cred.user?.sendEmailVerification();
     } catch (_) {
       // Non-fatal — user can resend from the verify screen.
     }
+  }
 
-    return promotion;
+  @override
+  Future<CoachPromotion> promoteToCoach(String coachKey) async {
+    try {
+      final promoted = await _remote.validateCoachKey(coachKey);
+      // On success the backend sets role='coach' on the user doc; the live
+      // doc listener picks the change up, so no local emit is needed.
+      return promoted ? CoachPromotion.promoted : CoachPromotion.invalidKey;
+    } catch (_) {
+      return CoachPromotion.networkError;
+    }
   }
 
   @override

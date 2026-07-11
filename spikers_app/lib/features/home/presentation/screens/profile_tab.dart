@@ -23,6 +23,8 @@ import 'package:spikers_app/core/widgets/confirm_dialog.dart';
 import 'package:spikers_app/core/widgets/edit_body_metrics_dialog.dart';
 import 'package:spikers_app/core/widgets/profile_info.dart';
 import 'package:spikers_app/core/widgets/set_profile_basics_dialog.dart';
+import '../../../auth/domain/entities/user_model.dart';
+import '../../../auth/domain/repositories/auth_repository.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../providers/profile_providers.dart';
 import '../widgets/profile_stat_cards.dart';
@@ -104,6 +106,18 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
       if (mounted) setState(() => _deleting = false);
       showAppSnackbar(l.deleteMyAccountError);
     }
+  }
+
+  Future<void> _showCoachKeyDialog(AppLocalizations l) async {
+    final promoted = await showDialog<bool>(
+      context: context,
+      builder: (_) => const _CoachKeyDialog(),
+    );
+    if (promoted != true || !mounted) return;
+    // The user doc listener flips the role to coach; celebrate the unlock.
+    HapticFeedback.mediumImpact();
+    showCelebration(context, icon: Icons.sports, grand: true, dim: true);
+    showAppSnackbar('🎉 ${l.coachPromotedSnack}');
   }
 
   void _showAvatarPicker(AppLocalizations l) {
@@ -271,7 +285,7 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
                       ),
                     ],
                     const SizedBox(height: 24),
-                    _PaymentHistoryRow(l: l, userId: user.uid),
+                    _PaymentHistoryRow(l: l, user: user),
                     const SizedBox(height: 16),
                     _LanguageToggle(l: l),
                     const SizedBox(height: 16),
@@ -316,6 +330,20 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
                               ),
                             ),
                     ),
+                    // Deliberately low-key: the coach key is handed out
+                    // in person, so this shouldn't read as a feature to
+                    // regular players — just an unlock for those who have one.
+                    if (!user.isCoach)
+                      TextButton(
+                        onPressed: () => _showCoachKeyDialog(l),
+                        child: Text(
+                          l.haveCoachKey,
+                          style: const TextStyle(
+                            color: AppColors.grey,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
                   ]
                   .animate(interval: AppMotion.stagger)
                   .fadeIn(duration: AppMotion.normal, curve: AppMotion.enter)
@@ -362,7 +390,12 @@ class _CompleteProfileCard extends StatelessWidget {
                   ),
                 ),
               ),
-              const Icon(Icons.chevron_right, color: AppColors.gold),
+              Icon(
+                Directionality.of(context) == TextDirection.rtl
+                    ? Icons.chevron_left
+                    : Icons.chevron_right,
+                color: AppColors.gold,
+              ),
             ],
           ),
         ),
@@ -450,16 +483,18 @@ class _Avatar extends StatelessWidget {
   }
 }
 
-/// Opens the signed-in user's own payment history log.
+/// The signed-in user's own membership row: current status at a glance
+/// (players only — coaches don't pay dues) and a tap-through to the payment
+/// history log.
 class _PaymentHistoryRow extends StatelessWidget {
   final AppLocalizations l;
-  final String userId;
-  const _PaymentHistoryRow({required this.l, required this.userId});
+  final UserModel user;
+  const _PaymentHistoryRow({required this.l, required this.user});
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () => context.push('${Routes.paymentHistory}?uid=$userId'),
+      onTap: () => context.push('${Routes.paymentHistory}?uid=${user.uid}'),
       borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -477,14 +512,175 @@ class _PaymentHistoryRow extends StatelessWidget {
                 style: const TextStyle(fontWeight: FontWeight.w600),
               ),
             ),
-            const Icon(
-              Icons.arrow_forward_ios,
+            if (!user.isCoach) ...[
+              _MembershipStatusPill(user: user, l: l),
+              const SizedBox(width: 8),
+            ],
+            Icon(
+              Directionality.of(context) == TextDirection.rtl
+                  ? Icons.arrow_back_ios_new
+                  : Icons.arrow_forward_ios,
               size: 16,
               color: AppColors.grey,
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Mirrors the coach-view paid badge so a player sees the same status the
+/// coach does: gold lifetime, red expired, amber when ≤9 days remain,
+/// green otherwise.
+class _MembershipStatusPill extends StatelessWidget {
+  final UserModel user;
+  final AppLocalizations l;
+  const _MembershipStatusPill({required this.user, required this.l});
+
+  @override
+  Widget build(BuildContext context) {
+    final daysLeft = user.paymentDaysLeft;
+    final Color color;
+    if (user.lifetimeMember) {
+      color = AppColors.gold;
+    } else if (!user.isPaid || daysLeft == 0) {
+      color = AppColors.errorRed;
+    } else if (daysLeft <= 9) {
+      color = AppColors.warning;
+    } else {
+      color = AppColors.success;
+    }
+    final showDays = !user.lifetimeMember && user.isPaid && daysLeft <= 9;
+    final label = user.lifetimeMember
+        ? l.lifetime
+        : user.isPaid
+            ? l.paid
+            : l.unpaid;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color),
+      ),
+      child: Text(
+        showDays ? '$label · ${l.daysLeft(daysLeft)}' : label,
+        style: TextStyle(
+          color: color,
+          fontWeight: FontWeight.w700,
+          fontSize: 12,
+        ),
+      ),
+    );
+  }
+}
+
+/// Coach-key entry: validates via the rate-limited backend callable and pops
+/// `true` on promotion. Errors render inline so a typo doesn't lose the input.
+class _CoachKeyDialog extends ConsumerStatefulWidget {
+  const _CoachKeyDialog();
+
+  @override
+  ConsumerState<_CoachKeyDialog> createState() => _CoachKeyDialogState();
+}
+
+class _CoachKeyDialogState extends ConsumerState<_CoachKeyDialog> {
+  final _keyCtrl = TextEditingController();
+  bool _submitting = false;
+  String? _errorText;
+
+  @override
+  void dispose() {
+    _keyCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final l = AppLocalizations.of(context)!;
+    final key = _keyCtrl.text.trim();
+    if (key.isEmpty) {
+      setState(() => _errorText = l.requiredField);
+      return;
+    }
+    setState(() {
+      _submitting = true;
+      _errorText = null;
+    });
+    final result =
+        await ref.read(authRepositoryProvider).promoteToCoach(key);
+    if (!mounted) return;
+    switch (result) {
+      case CoachPromotion.promoted:
+        Navigator.of(context).pop(true);
+      case CoachPromotion.invalidKey:
+        setState(() {
+          _submitting = false;
+          _errorText = l.invalidCoachKey;
+        });
+      case CoachPromotion.networkError:
+        setState(() {
+          _submitting = false;
+          _errorText = l.networkError;
+        });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    return AlertDialog(
+      backgroundColor: AppColors.navyLight,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: Text(
+        l.coachKey,
+        style: const TextStyle(color: AppColors.white),
+      ),
+      content: TextField(
+        controller: _keyCtrl,
+        autofocus: true,
+        enabled: !_submitting,
+        onSubmitted: (_) => _submit(),
+        style: const TextStyle(color: AppColors.white),
+        decoration: InputDecoration(
+          hintText: l.coachKeyHint,
+          hintStyle: const TextStyle(color: AppColors.grey),
+          errorText: _errorText,
+          enabledBorder: const UnderlineInputBorder(
+            borderSide: BorderSide(color: AppColors.grey),
+          ),
+          focusedBorder: const UnderlineInputBorder(
+            borderSide: BorderSide(color: AppColors.gold),
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed:
+              _submitting ? null : () => Navigator.of(context).pop(false),
+          child: Text(l.cancel, style: const TextStyle(color: AppColors.grey)),
+        ),
+        TextButton(
+          onPressed: _submitting ? null : _submit,
+          child: _submitting
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.gold,
+                  ),
+                )
+              : Text(
+                  l.save,
+                  style: const TextStyle(
+                    color: AppColors.gold,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+        ),
+      ],
     );
   }
 }

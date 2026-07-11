@@ -44,6 +44,7 @@ void main() {
       {String gender = 'mixed',
       int minAge = 0,
       int maxAge = 99,
+      List<String> memberIds = const [],
       Duration startsIn = const Duration(hours: 1)}) async {
     final start = DateTime.now().add(startsIn);
     await db.collection('sessions').doc(id).set({
@@ -52,6 +53,7 @@ void main() {
       'gender': gender,
       'minAge': minAge,
       'maxAge': maxAge,
+      'memberIds': memberIds,
       'startTime': Timestamp.fromDate(start),
       'endTime': Timestamp.fromDate(start.add(const Duration(hours: 2))),
       'maxPlayers': 10,
@@ -119,6 +121,29 @@ void main() {
               emailVerified: true)
           .first;
       expect(list.length, 2);
+    });
+  });
+
+  group('custom (members-only) session visibility', () {
+    test('a listed member sees the custom session', () async {
+      await seedSession('custom-s', memberIds: ['u1']);
+      final list = await repo.watchUpcoming(user(), emailVerified: true).first;
+      expect(list.map((s) => s.title), ['custom-s']);
+    });
+
+    test('a non-member player does not see the custom session', () async {
+      await seedSession('public-mixed');
+      await seedSession('custom-s', memberIds: ['someone-else']);
+      final list = await repo.watchUpcoming(user(), emailVerified: true).first;
+      expect(list.map((s) => s.title), ['public-mixed']);
+    });
+
+    test('coaches see custom sessions they are not a member of', () async {
+      await seedSession('custom-s', memberIds: ['someone-else']);
+      final list = await repo
+          .watchUpcoming(user(role: 'coach', paid: false), emailVerified: true)
+          .first;
+      expect(list.map((s) => s.title), ['custom-s']);
     });
   });
 
@@ -352,6 +377,61 @@ void main() {
         repo.join('s1'),
         throwsA(isA<SessionActionException>()
             .having((e) => e.code, 'code', 'failed-precondition')),
+      );
+    });
+  });
+
+  group('custom-session mutations', () {
+    test('makeSessionPublic calls the callable with gender/age args',
+        () async {
+      final callable = _MockCallable();
+      Map<String, dynamic>? sent;
+      when(() => callable.call<dynamic>(any())).thenAnswer((invocation) async {
+        sent = invocation.positionalArguments.first as Map<String, dynamic>;
+        return _FakeResult({'success': true});
+      });
+      when(() => fns.httpsCallable('makeSessionPublic')).thenReturn(callable);
+
+      await repo.makeSessionPublic('s1', gender: 'female', minAge: 18, maxAge: 30);
+
+      expect(sent, {
+        'sessionId': 's1',
+        'gender': 'female',
+        'minAge': 18,
+        'maxAge': 30,
+      });
+    });
+
+    test('updateSessionMembers calls the callable with the member list',
+        () async {
+      final callable = _MockCallable();
+      Map<String, dynamic>? sent;
+      when(() => callable.call<dynamic>(any())).thenAnswer((invocation) async {
+        sent = invocation.positionalArguments.first as Map<String, dynamic>;
+        return _FakeResult({'success': true});
+      });
+      when(() => fns.httpsCallable('updateSessionMembers')).thenReturn(callable);
+
+      await repo.updateSessionMembers('s1', ['u2', 'u3']);
+
+      expect(sent, {
+        'sessionId': 's1',
+        'memberIds': ['u2', 'u3'],
+      });
+    });
+
+    test('wraps FirebaseFunctionsException into SessionActionException',
+        () async {
+      final callable = _MockCallable();
+      when(() => callable.call<dynamic>(any())).thenThrow(
+          FirebaseFunctionsException(
+              message: 'not your session', code: 'permission-denied'));
+      when(() => fns.httpsCallable('makeSessionPublic')).thenReturn(callable);
+
+      await expectLater(
+        repo.makeSessionPublic('s1', gender: 'mixed', minAge: 0, maxAge: 99),
+        throwsA(isA<SessionActionException>()
+            .having((e) => e.code, 'code', 'permission-denied')),
       );
     });
   });

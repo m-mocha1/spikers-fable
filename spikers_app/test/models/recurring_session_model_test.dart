@@ -27,6 +27,8 @@ void main() {
         maxAge: 30,
         maxPlayers: 14,
         waitlistSize: 4,
+        coachIds: ['co1', 'co2'],
+        memberIds: ['m1'],
         recurrenceDays: [2, 4],
         startHour: 18,
         startMinute: 30,
@@ -46,6 +48,8 @@ void main() {
       expect(parsed.maxAge, 30);
       expect(parsed.maxPlayers, 14);
       expect(parsed.waitlistSize, 4);
+      expect(parsed.coachIds, ['co1', 'co2']);
+      expect(parsed.memberIds, ['m1']);
       expect(parsed.recurrenceDays, [2, 4]);
       expect(parsed.startHour, 18);
       expect(parsed.startMinute, 30);
@@ -65,6 +69,8 @@ void main() {
       expect(parsed.minAge, 16);
       expect(parsed.maxAge, 40);
       expect(parsed.maxPlayers, 12);
+      expect(parsed.coachIds, isEmpty);
+      expect(parsed.memberIds, isEmpty);
       expect(parsed.recurrenceDays, isEmpty);
       expect(parsed.enabled, isTrue);
       expect(parsed.createdAt, isA<DateTime>());

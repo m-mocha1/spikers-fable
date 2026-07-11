@@ -306,33 +306,44 @@ class _PaidBadge extends StatelessWidget {
     }
     final showDays = !isLifetime && isPaid && daysLeft <= 9;
 
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: color),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              isLifetime ? l.lifetime : (isPaid ? l.paid : l.unpaid),
-              style: TextStyle(
-                color: color,
-                fontWeight: FontWeight.w700,
-                fontSize: 12,
-              ),
+    // InkWell + outer padding: a ripple on tap and a ≥44px hit area for what
+    // is the coach's most-tapped control, without growing the pill visually.
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(24),
+        child: Padding(
+          padding: const EdgeInsets.all(4),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            constraints: const BoxConstraints(minHeight: 36),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: color),
             ),
-            if (showDays)
-              Text(
-                l.daysLeft(daysLeft),
-                style: TextStyle(color: color, fontSize: 10),
-              ),
-          ],
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  isLifetime ? l.lifetime : (isPaid ? l.paid : l.unpaid),
+                  style: TextStyle(
+                    color: color,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
+                  ),
+                ),
+                if (showDays)
+                  Text(
+                    l.daysLeft(daysLeft),
+                    style: TextStyle(color: color, fontSize: 10),
+                  ),
+              ],
+            ),
+          ),
         ),
       ),
     );

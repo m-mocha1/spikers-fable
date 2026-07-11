@@ -67,6 +67,28 @@ class LeaderboardScreen extends ConsumerWidget {
               ],
             ),
           ),
+          // Players' boards are silently scoped to their own gender by the
+          // repository — say so, or the "missing" players read as a bug.
+          if (!isCoach)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: Text(
+                  switch (
+                      ref.watch(currentUserProvider).value?.gender) {
+                    'male' => l.leaderboardMensBoard,
+                    'female' => l.leaderboardWomensBoard,
+                    _ => l.leaderboardSubtitle,
+                  },
+                  style: const TextStyle(
+                    color: AppColors.grey,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
           // Players' boards are already gender-scoped by the repository, so
           // only coaches/admins get the tag filter.
           if (isCoach)

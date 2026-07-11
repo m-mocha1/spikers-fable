@@ -88,13 +88,14 @@ class _AnnouncementCard extends ConsumerWidget {
     required this.canDelete,
   });
 
-  /// Human label for a non-'all' audience, e.g. "Male" / "Female".
+  /// Human label for a non-'all' audience. Phrased as "For men"/"For women"
+  /// so the reader doesn't mistake it for a label of the author.
   String _audienceLabel(AppLocalizations l) {
     switch (announcement.audience) {
       case 'male':
-        return l.male;
+        return l.audienceMen;
       case 'female':
-        return l.female;
+        return l.audienceWomen;
       default:
         return l.allGenders;
     }

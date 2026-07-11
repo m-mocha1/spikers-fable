@@ -33,6 +33,25 @@
   "sessions": "Sessions",
   "profile": "Profile",
   "createSession": "Create Session",
+  "availableCoaches": "Available Coaches",
+  "customSession": "Custom session",
+  "customSessionSubtitle": "Only selected members can see this session",
+  "chooseMembers": "Choose members",
+  "membersSelected": "{count} selected",
+  "@membersSelected": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "selectMembersError": "Select at least one member",
+  "searchMembers": "Search members",
+  "membersOnly": "Members only",
+  "done": "Done",
+  "editMembers": "Edit members",
+  "membersUpdated": "Members updated",
+  "makePublic": "Make public",
+  "makePublicSubtitle": "Choose who can now see this session",
+  "sessionMadePublic": "Session is now public",
   "sessionTitle": "Session Title",
   "sessionTitleHint": "e.g. Morning Practice",
   "location": "Location",
@@ -223,6 +242,34 @@
   "leaveWaitlist": "Leave Waitlist",
   "waitlistFull": "Waitlist Full",
   "waitlistedSnack": "You've been added to the waitlist",
+  "waitlistedSnackPos": "You've been added to the waitlist — you're #{pos} in line",
+  "@waitlistedSnackPos": {
+    "placeholders": {
+      "pos": { "type": "int" }
+    }
+  },
+  "waitlistStanding": "You're #{pos} in line — we'll notify you the moment a spot opens.",
+  "@waitlistStanding": {
+    "placeholders": {
+      "pos": { "type": "int" }
+    }
+  },
+  "joinedBadge": "Joined",
+  "countdownDays": "{days}d",
+  "@countdownDays": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+  "sessionStartedLeaveBlocked": "The session has started — the roster is locked.",
+  "markAllAttended": "Mark all attended",
+  "haveCoachKey": "Have a coach key?",
+  "coachPromotedSnack": "You're a coach now!",
+  "leaderboardMensBoard": "Men's board — sessions attended",
+  "leaderboardWomensBoard": "Women's board — sessions attended",
+  "leaderboardSubtitle": "Sessions attended",
+  "audienceMen": "For men",
+  "audienceWomen": "For women",
   "increaseCapacity": "Increase Capacity",
   "newMaxPlayers": "New max players",
   "newWaitlistSize": "New waitlist size",

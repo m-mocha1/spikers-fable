@@ -14,6 +14,8 @@ import 'package:spikers_app/core/widgets/branded_button.dart';
 import 'package:spikers_app/core/widgets/branded_text_field.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../providers/sessions_providers.dart';
+import '../widgets/coach_select_chips.dart';
+import '../widgets/member_picker_sheet.dart';
 
 class CreateSessionScreen extends ConsumerStatefulWidget {
   const CreateSessionScreen({super.key});
@@ -38,6 +40,10 @@ class _CreateSessionScreenState extends ConsumerState<CreateSessionScreen> {
   DateTime? _startTime;
   DateTime? _endTime;
   bool _saveAsTemplate = false;
+
+  final Set<String> _selectedCoachIds = {};
+  bool _isCustom = false;
+  final Set<String> _selectedMemberIds = {};
 
   final _fmt = DateFormat('MMM d, yyyy  HH:mm');
 
@@ -88,6 +94,17 @@ class _CreateSessionScreenState extends ConsumerState<CreateSessionScreen> {
     });
   }
 
+  Future<void> _pickMembers() async {
+    final picked =
+        await showMemberPicker(context, initial: _selectedMemberIds);
+    if (picked == null || !mounted) return;
+    setState(() {
+      _selectedMemberIds
+        ..clear()
+        ..addAll(picked);
+    });
+  }
+
   Future<void> _submit() async {
     final l = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) return;
@@ -96,10 +113,21 @@ class _CreateSessionScreenState extends ConsumerState<CreateSessionScreen> {
       showAppSnackbar(l.endTimeError);
       return;
     }
+    if (_isCustom && _selectedMemberIds.isEmpty) {
+      showAppSnackbar(l.selectMembersError);
+      return;
+    }
 
     final user = ref.read(currentUserProvider).value;
     if (user == null) return;
     setState(() => _isSubmitting = true);
+
+    // Custom (members-only) sessions ignore gender/age; store a wide-open
+    // audience so they pass the server-side gender query + FCM validation,
+    // and rely on memberIds for visibility.
+    final gender = _isCustom ? 'mixed' : _gender;
+    final minAge = _isCustom ? 0 : (int.tryParse(_minAgeCtrl.text) ?? 0);
+    final maxAge = _isCustom ? 99 : (int.tryParse(_maxAgeCtrl.text) ?? 99);
 
     try {
       if (_saveAsTemplate) {
@@ -109,9 +137,9 @@ class _CreateSessionScreenState extends ConsumerState<CreateSessionScreen> {
               id: '',
               title: _titleCtrl.text.trim(),
               location: _locationCtrl.text.trim(),
-              gender: _gender,
-              minAge: int.tryParse(_minAgeCtrl.text) ?? 0,
-              maxAge: int.tryParse(_maxAgeCtrl.text) ?? 99,
+              gender: gender,
+              minAge: minAge,
+              maxAge: maxAge,
               maxPlayers: int.tryParse(_maxPlayersCtrl.text) ?? 10,
               waitlistSize: int.tryParse(_waitlistSizeCtrl.text) ?? 0,
               createdAt: DateTime.now(),
@@ -122,14 +150,16 @@ class _CreateSessionScreenState extends ConsumerState<CreateSessionScreen> {
         id: '',
         title: _titleCtrl.text.trim(),
         location: _locationCtrl.text.trim(),
-        gender: _gender,
-        minAge: int.tryParse(_minAgeCtrl.text) ?? 0,
-        maxAge: int.tryParse(_maxAgeCtrl.text) ?? 99,
+        gender: gender,
+        minAge: minAge,
+        maxAge: maxAge,
         startTime: _startTime!,
         endTime: _endTime!,
         maxPlayers: int.tryParse(_maxPlayersCtrl.text) ?? 10,
         waitlistSize: int.tryParse(_waitlistSizeCtrl.text) ?? 0,
         coachId: user.uid,
+        coachIds: _selectedCoachIds.toList(),
+        memberIds: _isCustom ? _selectedMemberIds.toList() : const [],
         attendeeIds: const [],
         createdAt: DateTime.now(),
       );
@@ -173,63 +203,112 @@ class _CreateSessionScreenState extends ConsumerState<CreateSessionScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Gender selector
-              Text(l.gender,
+              // Available coaches
+              Text(l.availableCoaches,
                   style: const TextStyle(
                       color: AppColors.gold, fontWeight: FontWeight.w600)),
               const SizedBox(height: 8),
-              Row(
-                children: [
-                  _GenderOption(
-                      label: l.male,
-                      value: 'male',
-                      selected: _gender == 'male',
-                      onTap: () => setState(() => _gender = 'male')),
-                  const SizedBox(width: 10),
-                  _GenderOption(
-                      label: l.female,
-                      value: 'female',
-                      selected: _gender == 'female',
-                      onTap: () => setState(() => _gender = 'female')),
-                  const SizedBox(width: 10),
-                  _GenderOption(
-                      label: l.genderMixed,
-                      value: 'mixed',
-                      selected: _gender == 'mixed',
-                      onTap: () => setState(() => _gender = 'mixed')),
-                ],
+              CoachSelectChips(
+                selectedIds: _selectedCoachIds,
+                onToggle: (uid) => setState(() {
+                  if (!_selectedCoachIds.add(uid)) {
+                    _selectedCoachIds.remove(uid);
+                  }
+                }),
               ),
               const SizedBox(height: 24),
 
-              // Age range
-              Text(l.ageRange,
-                  style: const TextStyle(
-                      color: AppColors.gold, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: BrandedTextField(
-                      label: l.minAge,
-                      controller: _minAgeCtrl,
-                      keyboardType: TextInputType.number,
-                      validator: (v) =>
-                          Validators.required(v, l.requiredField),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: BrandedTextField(
-                      label: l.maxAge,
-                      controller: _maxAgeCtrl,
-                      keyboardType: TextInputType.number,
-                      validator: (v) =>
-                          Validators.required(v, l.requiredField),
-                    ),
-                  ),
-                ],
+              // Custom (members-only) session
+              SwitchListTile(
+                value: _isCustom,
+                onChanged: (v) => setState(() => _isCustom = v),
+                title: Text(l.customSession,
+                    style: const TextStyle(fontWeight: FontWeight.w600)),
+                subtitle: Text(l.customSessionSubtitle,
+                    style:
+                        const TextStyle(color: AppColors.grey, fontSize: 12)),
+                activeThumbColor: AppColors.gold,
+                contentPadding: EdgeInsets.zero,
               ),
-              const SizedBox(height: 16),
+              if (_isCustom) ...[
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  onPressed: _pickMembers,
+                  icon: const Icon(Icons.group_add_outlined,
+                      color: AppColors.gold),
+                  label: Text(
+                    _selectedMemberIds.isEmpty
+                        ? l.chooseMembers
+                        : l.membersSelected(_selectedMemberIds.length),
+                    style: const TextStyle(color: AppColors.gold),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(48),
+                    side: const BorderSide(color: AppColors.gold),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 24),
+
+              if (!_isCustom) ...[
+                // Gender selector
+                Text(l.gender,
+                    style: const TextStyle(
+                        color: AppColors.gold, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    _GenderOption(
+                        label: l.male,
+                        value: 'male',
+                        selected: _gender == 'male',
+                        onTap: () => setState(() => _gender = 'male')),
+                    const SizedBox(width: 10),
+                    _GenderOption(
+                        label: l.female,
+                        value: 'female',
+                        selected: _gender == 'female',
+                        onTap: () => setState(() => _gender = 'female')),
+                    const SizedBox(width: 10),
+                    _GenderOption(
+                        label: l.genderMixed,
+                        value: 'mixed',
+                        selected: _gender == 'mixed',
+                        onTap: () => setState(() => _gender = 'mixed')),
+                  ],
+                ),
+                const SizedBox(height: 24),
+
+                // Age range
+                Text(l.ageRange,
+                    style: const TextStyle(
+                        color: AppColors.gold, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: BrandedTextField(
+                        label: l.minAge,
+                        controller: _minAgeCtrl,
+                        keyboardType: TextInputType.number,
+                        validator: (v) =>
+                            Validators.required(v, l.requiredField),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: BrandedTextField(
+                        label: l.maxAge,
+                        controller: _maxAgeCtrl,
+                        keyboardType: TextInputType.number,
+                        validator: (v) =>
+                            Validators.required(v, l.requiredField),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+              ],
 
               // Max players + waitlist size
               Row(
@@ -283,17 +362,20 @@ class _CreateSessionScreenState extends ConsumerState<CreateSessionScreen> {
               ),
               const SizedBox(height: 24),
 
-              CheckboxListTile(
-                value: _saveAsTemplate,
-                onChanged: (v) =>
-                    setState(() => _saveAsTemplate = v ?? false),
-                title: Text(l.saveAsTemplate,
-                    style: const TextStyle(fontWeight: FontWeight.w500)),
-                activeColor: AppColors.gold,
-                checkColor: AppColors.navyBlue,
-                controlAffinity: ListTileControlAffinity.leading,
-                contentPadding: EdgeInsets.zero,
-              ),
+              // Templates capture the gender/age audience, which a custom
+              // session overrides — so hide the option when custom.
+              if (!_isCustom)
+                CheckboxListTile(
+                  value: _saveAsTemplate,
+                  onChanged: (v) =>
+                      setState(() => _saveAsTemplate = v ?? false),
+                  title: Text(l.saveAsTemplate,
+                      style: const TextStyle(fontWeight: FontWeight.w500)),
+                  activeColor: AppColors.gold,
+                  checkColor: AppColors.navyBlue,
+                  controlAffinity: ListTileControlAffinity.leading,
+                  contentPadding: EdgeInsets.zero,
+                ),
               const SizedBox(height: 8),
 
               BrandedButton(

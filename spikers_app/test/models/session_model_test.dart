@@ -21,6 +21,8 @@ void main() {
     List<String> attendeeIds = const [],
     int waitlistSize = 0,
     List<String> waitlistIds = const [],
+    List<String> coachIds = const [],
+    List<String> memberIds = const [],
   }) =>
       SessionModel(
         id: 's1',
@@ -33,6 +35,8 @@ void main() {
         endTime: end ?? DateTime(2026, 6, 1, 20),
         maxPlayers: maxPlayers,
         coachId: 'c1',
+        coachIds: coachIds,
+        memberIds: memberIds,
         attendeeIds: attendeeIds,
         waitlistSize: waitlistSize,
         waitlistIds: waitlistIds,
@@ -45,6 +49,8 @@ void main() {
         attendeeIds: ['a', 'b'],
         waitlistSize: 3,
         waitlistIds: ['c'],
+        coachIds: ['co1', 'co2'],
+        memberIds: ['m1'],
       );
       final snap = await writeAndRead(session.toMap());
       final parsed = SessionModel.fromDoc(snap);
@@ -59,6 +65,9 @@ void main() {
       expect(parsed.endTime, session.endTime);
       expect(parsed.maxPlayers, 10);
       expect(parsed.coachId, 'c1');
+      expect(parsed.coachIds, ['co1', 'co2']);
+      expect(parsed.memberIds, ['m1']);
+      expect(parsed.isCustom, isTrue);
       expect(parsed.attendeeIds, ['a', 'b']);
       expect(parsed.waitlistSize, 3);
       expect(parsed.waitlistIds, ['c']);
@@ -80,6 +89,9 @@ void main() {
       expect(parsed.maxPlayers, 10);
       expect(parsed.attendeeIds, isEmpty);
       expect(parsed.waitlistIds, isEmpty);
+      expect(parsed.coachIds, isEmpty);
+      expect(parsed.memberIds, isEmpty);
+      expect(parsed.isCustom, isFalse);
     });
 
     test('capacity getters', () {

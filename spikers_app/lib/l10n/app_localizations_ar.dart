@@ -108,6 +108,51 @@ class AppLocalizationsAr extends AppLocalizations {
   String get createSession => 'إنشاء جلسة';
 
   @override
+  String get availableCoaches => 'المدربون المتاحون';
+
+  @override
+  String get customSession => 'جلسة مخصصة';
+
+  @override
+  String get customSessionSubtitle =>
+      'الأعضاء المحددون فقط يمكنهم رؤية هذه الجلسة';
+
+  @override
+  String get chooseMembers => 'اختيار الأعضاء';
+
+  @override
+  String membersSelected(int count) {
+    return '$count محدد';
+  }
+
+  @override
+  String get selectMembersError => 'اختر عضوًا واحدًا على الأقل';
+
+  @override
+  String get searchMembers => 'البحث عن الأعضاء';
+
+  @override
+  String get membersOnly => 'للأعضاء المحددين فقط';
+
+  @override
+  String get done => 'تم';
+
+  @override
+  String get editMembers => 'تعديل الأعضاء';
+
+  @override
+  String get membersUpdated => 'تم تحديث الأعضاء';
+
+  @override
+  String get makePublic => 'جعلها عامة';
+
+  @override
+  String get makePublicSubtitle => 'اختر من يمكنه رؤية هذه الجلسة الآن';
+
+  @override
+  String get sessionMadePublic => 'أصبحت الجلسة عامة الآن';
+
+  @override
   String get sessionTitle => 'عنوان الجلسة';
 
   @override
@@ -473,7 +518,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String confirmRemovePlayer(String name) {
-    return 'إزالة $name من هذه الجلسة؟';
+    return 'إزالة ⁨$name⁩ من هذه الجلسة؟';
   }
 
   @override
@@ -486,7 +531,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String verifyEmailBody(String email) {
-    return 'أرسلنا رابط تأكيد إلى $email. اضغط عليه، ثم عُد واضغط متابعة.';
+    return 'أرسلنا رابط تأكيد إلى ⁨$email⁩. اضغط عليه، ثم عُد واضغط متابعة.';
   }
 
   @override
@@ -549,6 +594,52 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get waitlistedSnack => 'تمت إضافتك إلى قائمة الانتظار';
+
+  @override
+  String waitlistedSnackPos(int pos) {
+    return 'تمت إضافتك إلى قائمة الانتظار — أنت في المركز $pos';
+  }
+
+  @override
+  String waitlistStanding(int pos) {
+    return 'أنت في المركز $pos بقائمة الانتظار — سنعلمك فور توفر مكان.';
+  }
+
+  @override
+  String get joinedBadge => 'منضم';
+
+  @override
+  String countdownDays(int days) {
+    return '$daysي';
+  }
+
+  @override
+  String get sessionStartedLeaveBlocked =>
+      'بدأت الجلسة — تم إغلاق قائمة المشاركين.';
+
+  @override
+  String get markAllAttended => 'تحديد حضور الجميع';
+
+  @override
+  String get haveCoachKey => 'لديك رمز مدرب؟';
+
+  @override
+  String get coachPromotedSnack => 'أصبحت مدرباً الآن!';
+
+  @override
+  String get leaderboardMensBoard => 'لوحة الرجال — عدد الحصص';
+
+  @override
+  String get leaderboardWomensBoard => 'لوحة السيدات — عدد الحصص';
+
+  @override
+  String get leaderboardSubtitle => 'عدد الحصص';
+
+  @override
+  String get audienceMen => 'للرجال';
+
+  @override
+  String get audienceWomen => 'للسيدات';
 
   @override
   String get increaseCapacity => 'زيادة السعة';
@@ -868,7 +959,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String endorsedPlayer(String name) {
-    return 'تم تأييد $name';
+    return 'تم تأييد ⁨$name⁩';
   }
 
   @override

@@ -9,6 +9,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_gradients.dart';
 import '../../core/constants/app_motion.dart';
 import '../../core/router/app_router.dart';
+import '../../features/auth/presentation/providers/auth_providers.dart';
 import '../../l10n/app_localizations.dart';
 import 'package:spikers_app/features/sessions/domain/entities/session_model.dart';
 import 'package:spikers_app/features/sessions/domain/repositories/sessions_repository.dart'
@@ -73,6 +74,7 @@ class _SessionCardState extends State<SessionCard> {
             Pulse(child: _Badge(l.live.toUpperCase(), AppColors.success)),
           if (session.isFull && !session.isOngoing)
             _Badge(l.full.toUpperCase(), AppColors.errorRed),
+          _MembershipBadge(session),
         ],
       ),
       const SizedBox(height: 10),
@@ -220,7 +222,8 @@ class _SessionCardState extends State<SessionCard> {
 class _Badge extends StatelessWidget {
   final String label;
   final Color color;
-  const _Badge(this.label, this.color);
+  final Color textColor;
+  const _Badge(this.label, this.color, {this.textColor = AppColors.white});
 
   @override
   Widget build(BuildContext context) {
@@ -229,9 +232,42 @@ class _Badge extends StatelessWidget {
       decoration:
           BoxDecoration(color: color, borderRadius: BorderRadius.circular(8)),
       child: Text(label,
-          style: const TextStyle(
-              fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.white)),
+          style: TextStyle(
+              fontSize: 12, fontWeight: FontWeight.w700, color: textColor)),
     );
+  }
+}
+
+/// The viewer's own relationship to the session, visible without opening it:
+/// a green "JOINED" badge, or their gold "#N" waitlist position. Renders
+/// nothing for sessions they're not part of.
+class _MembershipBadge extends ConsumerWidget {
+  final SessionModel session;
+  const _MembershipBadge(this.session);
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final uid = ref.watch(currentUserProvider).value?.uid ?? '';
+    if (uid.isEmpty) return const SizedBox.shrink();
+    final l = AppLocalizations.of(context)!;
+    if (session.isJoinedBy(uid)) {
+      return Padding(
+        padding: const EdgeInsetsDirectional.only(start: 6),
+        child: _Badge(l.joinedBadge.toUpperCase(), AppColors.success),
+      );
+    }
+    final idx = session.waitlistIds.indexOf(uid);
+    if (idx >= 0) {
+      return Padding(
+        padding: const EdgeInsetsDirectional.only(start: 6),
+        child: _Badge(
+          '#${idx + 1}',
+          AppColors.gold,
+          textColor: AppColors.navyBlue,
+        ),
+      );
+    }
+    return const SizedBox.shrink();
   }
 }
 
