@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/widgets/gender_filter_chips.dart' show AppFilterChip;
+import '../../../../core/widgets/app_choice_chips.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../coaches/presentation/providers/coaches_providers.dart';
 
@@ -50,9 +50,9 @@ class CoachSelectChips extends ConsumerWidget {
           runSpacing: 8,
           children: [
             for (final c in coaches)
-              AppFilterChip(
+              AppChoiceChip(
                 label: c.name.isEmpty ? '?' : c.name,
-                active: selectedIds.contains(c.uid),
+                selected: selectedIds.contains(c.uid),
                 onTap: () => onToggle(c.uid),
               ),
           ],

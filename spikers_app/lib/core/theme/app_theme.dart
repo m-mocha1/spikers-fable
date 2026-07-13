@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../constants/app_colors.dart';
+import 'app_semantic_colors.dart';
 
 class AppTheme {
   static final _cairo = GoogleFonts.cairoTextTheme();
@@ -15,6 +16,7 @@ class AppTheme {
       TargetPlatform.android: FadeForwardsPageTransitionsBuilder(),
       TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
     }),
+    extensions: [AppSemanticColors.dark],
     colorScheme: const ColorScheme.dark(
       primary: AppColors.gold,
       secondary: AppColors.gold,
@@ -73,6 +75,18 @@ class AppTheme {
         borderSide: const BorderSide(color: AppColors.errorRed, width: 1.5),
       ),
       hintStyle: const TextStyle(color: AppColors.grey),
+      helperStyle: const TextStyle(color: AppColors.grey),
+      // Field labels float persistently above the fill (BrandedTextField sets
+      // FloatingLabelBehavior.always): quiet grey at rest, gold on focus.
+      labelStyle: const TextStyle(color: AppColors.grey),
+      floatingLabelStyle: WidgetStateTextStyle.resolveWith((states) {
+        final color = states.contains(WidgetState.error)
+            ? AppColors.errorRed
+            : states.contains(WidgetState.focused)
+                ? AppColors.gold
+                : AppColors.grey;
+        return TextStyle(color: color, fontWeight: FontWeight.w600);
+      }),
     ),
     cardTheme: CardThemeData(
       color: AppColors.navyLight,
@@ -90,6 +104,11 @@ class AppTheme {
     floatingActionButtonTheme: const FloatingActionButtonThemeData(
       backgroundColor: AppColors.gold,
       foregroundColor: AppColors.navyBlue,
+    ),
+    // Spinners default to brand gold so a bare CircularProgressIndicator can
+    // never fall back to an off-brand color.
+    progressIndicatorTheme: const ProgressIndicatorThemeData(
+      color: AppColors.gold,
     ),
     dividerTheme: const DividerThemeData(color: AppColors.navyLight),
     snackBarTheme: SnackBarThemeData(

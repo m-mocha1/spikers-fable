@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/app_snackbar.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'package:spikers_app/features/sessions/domain/entities/recurring_session_model.dart';
 import 'package:spikers_app/core/widgets/animations.dart';
+import 'package:spikers_app/core/widgets/app_choice_chips.dart';
 import 'package:spikers_app/core/widgets/branded_button.dart';
 import 'package:spikers_app/core/widgets/branded_text_field.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
@@ -208,7 +211,9 @@ class _CreateRecurringSessionScreenState
     return Scaffold(
       appBar:
           AppBar(title: Text(isEditing ? l.editRecurring : l.createRecurring)),
-      body: SingleChildScrollView(
+      // SafeArea keeps the bottom CTA above the Android gesture bar.
+      body: SafeArea(
+        child: SingleChildScrollView(
         padding: const EdgeInsetsDirectional.fromSTEB(24, 24, 24, 40),
         child: AppFadeIn(
           child: Form(
@@ -232,9 +237,8 @@ class _CreateRecurringSessionScreenState
               const SizedBox(height: 24),
 
               // Available coaches
-              Text(l.availableCoaches,
-                  style: const TextStyle(
-                      color: AppColors.gold, fontWeight: FontWeight.w600)),
+              Text(l.availableCoaches.toUpperCase(),
+                  style: AppTextStyles.eyebrow),
               const SizedBox(height: 8),
               CoachSelectChips(
                 selectedIds: _selectedCoachIds,
@@ -280,34 +284,22 @@ class _CreateRecurringSessionScreenState
 
               if (!_isCustom) ...[
                 // Gender selector
-                Text(l.gender,
-                    style: const TextStyle(
-                        color: AppColors.gold, fontWeight: FontWeight.w600)),
+                Text(l.gender.toUpperCase(), style: AppTextStyles.eyebrow),
                 const SizedBox(height: 8),
-                Row(
-                  children: [
-                    _GenderOption(
-                        label: l.male,
-                        selected: _gender == 'male',
-                        onTap: () => setState(() => _gender = 'male')),
-                    const SizedBox(width: 10),
-                    _GenderOption(
-                        label: l.female,
-                        selected: _gender == 'female',
-                        onTap: () => setState(() => _gender = 'female')),
-                    const SizedBox(width: 10),
-                    _GenderOption(
-                        label: l.genderMixed,
-                        selected: _gender == 'mixed',
-                        onTap: () => setState(() => _gender = 'mixed')),
+                AppChoiceChips<String>(
+                  value: _gender,
+                  expanded: true,
+                  onSelected: (v) => setState(() => _gender = v),
+                  options: [
+                    AppChoiceChipOption(value: 'male', label: l.male),
+                    AppChoiceChipOption(value: 'female', label: l.female),
+                    AppChoiceChipOption(value: 'mixed', label: l.genderMixed),
                   ],
                 ),
                 const SizedBox(height: 24),
 
                 // Age range
-                Text(l.ageRange,
-                    style: const TextStyle(
-                        color: AppColors.gold, fontWeight: FontWeight.w600)),
+                Text(l.ageRange.toUpperCase(), style: AppTextStyles.eyebrow),
                 const SizedBox(height: 8),
                 Row(
                   children: [
@@ -362,16 +354,17 @@ class _CreateRecurringSessionScreenState
               const SizedBox(height: 24),
 
               // Day-of-week multi-select
-              Text(l.recurrenceDays,
-                  style: const TextStyle(
-                      color: AppColors.gold, fontWeight: FontWeight.w600)),
+              Text(l.recurrenceDays.toUpperCase(),
+                  style: AppTextStyles.eyebrow),
               const SizedBox(height: 8),
               Wrap(
-                spacing: 8,
-                runSpacing: 8,
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.sm,
                 children: List.generate(7, (d) {
                   final active = _selectedDays.contains(d);
-                  return GestureDetector(
+                  return AppChoiceChip(
+                    label: dayLabels[d],
+                    selected: active,
                     onTap: () => setState(() {
                       if (active) {
                         _selectedDays.remove(d);
@@ -379,39 +372,13 @@ class _CreateRecurringSessionScreenState
                         _selectedDays.add(d);
                       }
                     }),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      width: 44,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: active ? AppColors.gold : AppColors.navyLight,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                            color: active ? AppColors.gold : AppColors.grey),
-                      ),
-                      child: Center(
-                        child: Text(
-                          dayLabels[d],
-                          style: TextStyle(
-                            color: active
-                                ? AppColors.navyBlue
-                                : AppColors.white,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                    ),
                   );
                 }),
               ),
               const SizedBox(height: 24),
 
-              // Time pickers
-              Text(l.startTime,
-                  style: const TextStyle(
-                      color: AppColors.gold, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 8),
+              // Time pickers — the two fields carry their own persistent
+              // labels, so no section header is needed.
               Row(
                 children: [
                   Expanded(
@@ -448,43 +415,6 @@ class _CreateRecurringSessionScreenState
           ),
         ),
         ),
-      ),
-    );
-  }
-}
-
-class _GenderOption extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-  const _GenderOption(
-      {required this.label, required this.selected, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          decoration: BoxDecoration(
-            color: selected ? AppColors.gold : AppColors.navyLight,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: selected ? AppColors.gold : AppColors.grey,
-            ),
-          ),
-          child: Center(
-            child: Text(
-              label,
-              style: TextStyle(
-                color: selected ? AppColors.navyBlue : AppColors.white,
-                fontWeight: FontWeight.w600,
-                fontSize: 13,
-              ),
-            ),
-          ),
         ),
       ),
     );

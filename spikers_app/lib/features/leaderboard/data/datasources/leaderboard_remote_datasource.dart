@@ -35,6 +35,33 @@ class LeaderboardRemoteDataSource {
     return entries;
   }
 
+  Future<List<LeaderboardEntry>> fetchEndorsements() async {
+    // Top players by lifetime endorsements received. Only the aggregate
+    // endorsementCount is public (users_public, maintained server-side by
+    // endorsePlayer + mirrorUserPublic) — individual endorsement docs are
+    // private, which is also why this board has no monthly slice.
+    final snap = await _db
+        .collection('users_public')
+        .orderBy('endorsementCount', descending: true)
+        .limit(200)
+        .get();
+    final entries = <LeaderboardEntry>[];
+    for (final doc in snap.docs) {
+      final data = doc.data();
+      final count = ((data['endorsementCount'] ?? 0) as num).toInt();
+      if (count <= 0) continue;
+      entries.add(LeaderboardEntry(
+        uid: doc.id,
+        name: (data['name'] ?? '') as String,
+        photoUrl: (data['photoUrl'] ?? '') as String,
+        gender: (data['gender'] ?? '') as String,
+        count: count,
+      ));
+    }
+    entries.sort((a, b) => b.count.compareTo(a.count));
+    return entries;
+  }
+
   Future<List<LeaderboardEntry>> fetchMonthly() async {
     final now = DateTime.now();
     final cutoff = Timestamp.fromDate(DateTime(now.year, now.month));

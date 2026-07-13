@@ -118,6 +118,7 @@ class _MemberPickerSheetState extends ConsumerState<_MemberPickerSheet> {
                   suffixIcon: _query.isEmpty
                       ? null
                       : IconButton(
+                          tooltip: l.clearSearch,
                           visualDensity: VisualDensity.compact,
                           icon: const Icon(Icons.close,
                               color: AppColors.grey, size: 18),

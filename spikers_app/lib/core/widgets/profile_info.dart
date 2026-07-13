@@ -3,6 +3,9 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_motion.dart';
 import '../../l10n/app_localizations.dart';
 import 'package:spikers_app/features/auth/domain/entities/user_model.dart';
+import 'package:spikers_app/features/home/presentation/widgets/profile_stat_cards.dart'
+    show profileCardChrome;
+import 'membership_chip.dart';
 
 class ProfileRoleBadge extends StatelessWidget {
   final bool isCoach;
@@ -54,10 +57,7 @@ class ProfileInfoCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.navyLight,
-        borderRadius: BorderRadius.circular(16),
-      ),
+      decoration: profileCardChrome(),
       child: Column(
         children: [
           _InfoRow(
@@ -82,6 +82,9 @@ class ProfileInfoCard extends StatelessWidget {
   }
 }
 
+/// Body-metric stat strip: height / weight / age as icon-topped cells sharing
+/// the profile card chrome. When [onEdit] is given the whole card is tappable
+/// and carries a quiet pencil affordance in its corner.
 class ProfileStatsRow extends StatelessWidget {
   final UserModel user;
   final AppLocalizations l;
@@ -103,17 +106,46 @@ class ProfileStatsRow extends StatelessWidget {
     final card = Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-      decoration: BoxDecoration(
-        color: AppColors.navyLight,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
+      decoration: profileCardChrome(),
+      child: Stack(
         children: [
-          Expanded(child: _StatCell(value: height, unit: l.heightHint)),
-          const _StatDivider(),
-          Expanded(child: _StatCell(value: weight, unit: l.weightHint)),
-          const _StatDivider(),
-          Expanded(child: _StatCell(value: ageText, unit: l.years)),
+          Row(
+            children: [
+              Expanded(
+                child: _StatCell(
+                  icon: Icons.height,
+                  value: height,
+                  unit: l.heightHint,
+                ),
+              ),
+              const _StatDivider(),
+              Expanded(
+                child: _StatCell(
+                  icon: Icons.monitor_weight_outlined,
+                  value: weight,
+                  unit: l.weightHint,
+                ),
+              ),
+              const _StatDivider(),
+              Expanded(
+                child: _StatCell(
+                  icon: Icons.cake_outlined,
+                  value: ageText,
+                  unit: l.years,
+                ),
+              ),
+            ],
+          ),
+          if (onEdit != null)
+            PositionedDirectional(
+              top: 0,
+              end: 8,
+              child: Icon(
+                Icons.edit_outlined,
+                size: 14,
+                color: AppColors.white.withValues(alpha: 0.35),
+              ),
+            ),
         ],
       ),
     );
@@ -121,7 +153,7 @@ class ProfileStatsRow extends StatelessWidget {
     if (onEdit == null) return card;
     return Material(
       color: Colors.transparent,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(18),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onEdit,
@@ -132,9 +164,10 @@ class ProfileStatsRow extends StatelessWidget {
 }
 
 class _StatCell extends StatelessWidget {
+  final IconData icon;
   final String value;
   final String unit;
-  const _StatCell({required this.value, required this.unit});
+  const _StatCell({required this.icon, required this.value, required this.unit});
 
   @override
   Widget build(BuildContext context) {
@@ -143,12 +176,14 @@ class _StatCell extends StatelessWidget {
     final numeric = int.tryParse(value);
     const style = TextStyle(
       color: AppColors.white,
-      fontSize: 26,
+      fontSize: 24,
       fontWeight: FontWeight.w800,
     );
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
+        Icon(icon, size: 16, color: AppColors.gold.withValues(alpha: 0.8)),
+        const SizedBox(height: 6),
         numeric == null
             ? Text(value, style: style)
             : TweenAnimationBuilder<int>(
@@ -162,7 +197,7 @@ class _StatCell extends StatelessWidget {
           unit,
           style: const TextStyle(
             color: AppColors.grey,
-            fontSize: 12,
+            fontSize: 11,
           ),
         ),
       ],
@@ -177,7 +212,7 @@ class _StatDivider extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: 1,
-      height: 32,
+      height: 44,
       color: AppColors.grey.withValues(alpha: 0.25),
     );
   }
@@ -196,44 +231,18 @@ class _PaymentRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final safeDays = daysLeft < 0 ? 0 : daysLeft;
-    final Color color;
-    final String label;
-    if (isLifetime) {
-      color = AppColors.gold;
-      label = l.lifetime;
-    } else if (!isPaid || safeDays == 0) {
-      color = AppColors.errorRed;
-      label = isPaid ? l.daysLeft(0) : l.unpaid;
-    } else if (safeDays <= 10) {
-      color = AppColors.warning;
-      label = '${l.paid} · ${l.daysLeft(safeDays)}';
-    } else {
-      color = AppColors.success;
-      label = '${l.paid} · ${l.daysLeft(safeDays)}';
-    }
-
     return Row(
       children: [
         const Icon(Icons.payments_outlined, size: 18, color: AppColors.gold),
         const SizedBox(width: 10),
         Text(l.payment, style: const TextStyle(color: AppColors.grey)),
         const Spacer(),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: color),
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              color: color,
-              fontWeight: FontWeight.w700,
-              fontSize: 12,
-            ),
-          ),
+        // The one membership chip (Phase 6) — same pill everywhere a
+        // membership status is shown.
+        MembershipChip(
+          isPaid: isPaid,
+          daysLeft: daysLeft < 0 ? 0 : daysLeft,
+          isLifetime: isLifetime,
         ),
       ],
     );

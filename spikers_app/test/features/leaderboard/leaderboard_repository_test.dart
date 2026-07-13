@@ -57,6 +57,66 @@ void main() {
     });
   });
 
+  group('fetchEndorsements', () {
+    test('orders by endorsementCount and skips non-positive counts', () async {
+      await db.collection('users_public').doc('a').set({
+        'name': 'Aya',
+        'photoUrl': '',
+        'endorsementCount': 4,
+      });
+      await db.collection('users_public').doc('b').set({
+        'name': 'Badr',
+        'photoUrl': 'http://x/p.jpg',
+        'endorsementCount': 11,
+      });
+      await db.collection('users_public').doc('c').set({
+        'name': 'Zero',
+        'photoUrl': '',
+        'endorsementCount': 0,
+      });
+      // No endorsementCount field at all — excluded like a zero.
+      await db.collection('users_public').doc('d').set({
+        'name': 'None',
+        'photoUrl': '',
+      });
+
+      final entries = await repo.fetchEndorsements(viewer(role: 'coach'));
+
+      expect(entries.map((e) => e.uid), ['b', 'a']);
+      expect(entries.first.count, 11);
+      expect(entries.first.photoUrl, 'http://x/p.jpg');
+    });
+
+    test('returns empty when nobody has endorsements', () async {
+      await db
+          .collection('users_public')
+          .doc('a')
+          .set({'name': 'Aya', 'endorsementCount': 0});
+      expect(await repo.fetchEndorsements(viewer(role: 'coach')), isEmpty);
+    });
+
+    test('applies the same gender visibility rule as attendance', () async {
+      await db.collection('users_public').doc('m1').set({
+        'name': 'MaleOne',
+        'photoUrl': '',
+        'gender': 'male',
+        'endorsementCount': 3,
+      });
+      await db.collection('users_public').doc('f1').set({
+        'name': 'FemaleOne',
+        'photoUrl': '',
+        'gender': 'female',
+        'endorsementCount': 8,
+      });
+
+      final male = await repo.fetchEndorsements(viewer(gender: 'male'));
+      expect(male.map((e) => e.uid), ['m1']);
+
+      final all = await repo.fetchEndorsements(viewer(role: 'coach'));
+      expect(all.map((e) => e.uid), ['f1', 'm1']);
+    });
+  });
+
   group('fetchMonthly', () {
     test('merges live and archived sessions and joins profiles', () async {
       final thisMonth = Timestamp.fromDate(

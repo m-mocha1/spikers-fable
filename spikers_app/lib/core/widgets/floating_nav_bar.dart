@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_motion.dart';
 
 class FloatingNavItem {
   final IconData icon;
@@ -13,6 +14,14 @@ class FloatingNavItem {
 }
 
 class FloatingNavBar extends StatelessWidget {
+  /// Height of the bar itself, excluding the bottom safe-area inset.
+  static const double height = 56;
+
+  /// Bottom padding for any scrollable that slides under this bar and/or a
+  /// floating action button ([height] + FAB clearance): the last row can
+  /// always scroll fully clear instead of ending occluded.
+  static const double scrollClearance = 96;
+
   final int currentIndex;
   final ValueChanged<int> onTap;
   final List<FloatingNavItem> items;
@@ -33,7 +42,7 @@ class FloatingNavBar extends StatelessWidget {
       child: SafeArea(
         top: false,
         child: Container(
-          height: 56,
+          height: height,
           decoration: BoxDecoration(
             border: Border(
               top: BorderSide(color: AppColors.white.withValues(alpha: 0.08)),
@@ -71,7 +80,7 @@ class _NavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = selected ? AppColors.gold : AppColors.grey;
-    const duration = Duration(milliseconds: 120);
+    const duration = AppMotion.fast;
     return InkWell(
       onTap: onTap,
       splashColor: Colors.transparent,
@@ -84,7 +93,7 @@ class _NavItem extends StatelessWidget {
           AnimatedScale(
             scale: selected ? 1.08 : 1.0,
             duration: duration,
-            curve: Curves.easeOut,
+            curve: AppMotion.press,
             child: TweenAnimationBuilder<Color?>(
               tween: ColorTween(end: color),
               duration: duration,

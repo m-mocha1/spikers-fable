@@ -65,7 +65,7 @@
   "leaveSession": "Leave",
   "cancelSession": "Cancel Session",
   "sessionFull": "Session Full",
-  "spotsLeft": "{count} spots left",
+  "spotsLeft": "{count, plural, one{1 spot left} other{{count} spots left}}",
   "@spotsLeft": {
     "placeholders": {
       "count": { "type": "int" }
@@ -104,6 +104,12 @@
   "myAccount": "My Account",
   "age": "Age",
   "years": "years",
+  "ageYears": "{count, plural, one{1 year} other{{count} years}}",
+  "@ageYears": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "upcoming": "Upcoming",
   "ongoing": "Ongoing",
   "startsIn": "Starts in",
@@ -138,7 +144,19 @@
   "confirmCancelSession": "Cancel Session",
   "confirmCancelMessage": "Are you sure you want to cancel this session? Attendees will be notified.",
   "ageRange": "Age Range",
-  "players": "players",
+  "ageRangeYears": "{min} – {max} years",
+  "@ageRangeYears": {
+    "placeholders": {
+      "min": { "type": "int" },
+      "max": { "type": "int" }
+    }
+  },
+  "players": "{count, plural, one{player} other{players}}",
+  "@players": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "full": "Full",
   "live": "Live",
   "sessionInfo": "Session Info",
@@ -167,7 +185,18 @@
   "chatEmpty": "No messages yet. Say something!",
   "attended": "Attended",
   "notAttended": "Absent",
-  "sessionsAttended": "sessions attended",
+  "attendedCount": "{count, plural, one{1 attended} other{{count} attended}}",
+  "@attendedCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "sessionsAttended": "{count, plural, one{1 session attended} other{{count} sessions attended}}",
+  "@sessionsAttended": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "exportAttendance": "Export attendance",
   "sessionsAttendedTitle": "Sessions Attended",
   "registrationDate": "Registration Date",
@@ -184,6 +213,13 @@
   "noPlayersMatch": "No players match your search",
   "searchPlayers": "Search players",
   "noCoaches": "No coaches found",
+  "coachesCount": "{count, plural, one{{count} coach} other{{count} coaches}}",
+  "@coachesCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "viewProfile": "View profile",
   "paid": "Active",
   "unpaid": "Inactive",
   "lifetime": "LIFETIME",
@@ -287,6 +323,17 @@
   },
   "sessionStartedLeaveBlocked": "The session has started — the roster is locked.",
   "markAllAttended": "Mark all attended",
+  "markAll": "Mark all",
+  "editRoster": "Edit roster",
+  "editCapacity": "Edit capacity",
+  "gamesThisMonth": "Games this month",
+  "gamesAllTime": "Games all time",
+  "games": "Games",
+  "endorsementsAllTime": "Endorsements all time",
+  "clearSearch": "Clear search",
+  "sendMessage": "Send message",
+  "showPassword": "Show password",
+  "hidePassword": "Hide password",
   "haveCoachKey": "Have a coach key?",
   "coachPromotedSnack": "You're a coach now!",
   "leaderboardMensBoard": "Men's board — sessions attended",
@@ -316,6 +363,7 @@
   "invalidWeight": "Enter a valid weight (20–200 kg)",
   "editBodyMetrics": "Edit height & weight",
   "save": "Save",
+  "post": "Post",
   "announcements": "Announcements",
   "noAnnouncements": "No announcements yet",
   "justNow": "just now",
@@ -353,7 +401,7 @@
   "confirmDeleteAnnouncement": "Delete announcement?",
   "confirmDeleteAnnouncementBody": "This cannot be undone.",
   "delete": "Delete",
-  "sessionsHistory": "Sessions History",
+  "sessionsHistory": "Session History",
   "noSessionsHistory": "No past sessions yet",
   "paymentHistory": "Membership History",
   "noPaymentHistory": "No membership records yet",
@@ -375,7 +423,7 @@
   "thisMonth": "This Month",
   "allTime": "All Time",
   "noLeaderboardData": "No attendance data yet",
-  "sessionsCount": "{count} sessions",
+  "sessionsCount": "{count, plural, one{1 session} other{{count} sessions}}",
   "@sessionsCount": {
     "placeholders": {
       "count": { "type": "int" }
@@ -492,5 +540,21 @@
       "count": { "type": "int" },
       "label": { "type": "String" }
     }
-  }
+  },
+  "achievements": "Achievements",
+  "sectionDetails": "Details",
+  "sectionAccount": "Account",
+  "memberSince": "Member since {year}",
+  "@memberSince": {
+    "placeholders": {
+      "year": { "type": "String" }
+    }
+  },
+  "unlocksAt": "Unlocks at {count}",
+  "@unlocksAt": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "topTierReached": "Top tier reached"
 }

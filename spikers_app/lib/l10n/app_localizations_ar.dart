@@ -122,7 +122,17 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String membersSelected(int count) {
-    return '$count محدد';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count محدد',
+      many: '$count محدداً',
+      few: '$count محددين',
+      two: '$count محددان',
+      one: '$count محدد',
+      zero: '$count محدد',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -193,7 +203,17 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String spotsLeft(int count) {
-    return '$count مكان متبقي';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count مكان متبقي',
+      many: '$count مكاناً متبقياً',
+      few: '$count أماكن متبقية',
+      two: 'مكانان متبقيان',
+      one: 'مكان واحد متبقٍ',
+      zero: 'لا أماكن متبقية',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -299,6 +319,21 @@ class AppLocalizationsAr extends AppLocalizations {
   String get years => 'سنة';
 
   @override
+  String ageYears(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count سنة',
+      many: '$count سنة',
+      few: '$count سنوات',
+      two: 'سنتان',
+      one: 'سنة واحدة',
+      zero: '$count سنة',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get upcoming => 'قادم';
 
   @override
@@ -360,7 +395,24 @@ class AppLocalizationsAr extends AppLocalizations {
   String get ageRange => 'الفئة العمرية';
 
   @override
-  String get players => 'لاعبون';
+  String ageRangeYears(int min, int max) {
+    return '$min – $max سنة';
+  }
+
+  @override
+  String players(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'لاعب',
+      many: 'لاعباً',
+      few: 'لاعبين',
+      two: 'لاعبان',
+      one: 'لاعب',
+      zero: 'لاعبين',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get full => 'ممتلئة';
@@ -432,7 +484,34 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notAttended => 'غائب';
 
   @override
-  String get sessionsAttended => 'جلسة حضرها';
+  String attendedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'حضر $count',
+      many: 'حضر $count',
+      few: 'حضر $count',
+      two: 'حضر اثنان',
+      one: 'حضر واحد',
+      zero: 'لم يحضر أحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String sessionsAttended(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'حضر $count جلسة',
+      many: 'حضر $count جلسة',
+      few: 'حضر $count جلسات',
+      two: 'حضر جلستين',
+      one: 'حضر جلسة واحدة',
+      zero: 'لم يحضر أي جلسة',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get exportAttendance => 'تصدير قائمة الحضور';
@@ -481,6 +560,24 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get noCoaches => 'لا يوجد مدربون';
+
+  @override
+  String coachesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count مدرب',
+      many: '$count مدربًا',
+      few: '$count مدربين',
+      two: 'مدربان',
+      one: 'مدرب واحد',
+      zero: 'لا مدربين',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get viewProfile => 'عرض الملف الشخصي';
 
   @override
   String get paid => 'نشط';
@@ -647,6 +744,39 @@ class AppLocalizationsAr extends AppLocalizations {
   String get markAllAttended => 'تحديد حضور الجميع';
 
   @override
+  String get markAll => 'تحديد الكل';
+
+  @override
+  String get editRoster => 'تعديل القائمة';
+
+  @override
+  String get editCapacity => 'تعديل السعة';
+
+  @override
+  String get gamesThisMonth => 'مباريات هذا الشهر';
+
+  @override
+  String get gamesAllTime => 'المباريات الكلية';
+
+  @override
+  String get games => 'المباريات';
+
+  @override
+  String get endorsementsAllTime => 'التأييدات الكلية';
+
+  @override
+  String get clearSearch => 'مسح البحث';
+
+  @override
+  String get sendMessage => 'إرسال الرسالة';
+
+  @override
+  String get showPassword => 'إظهار كلمة المرور';
+
+  @override
+  String get hidePassword => 'إخفاء كلمة المرور';
+
+  @override
   String get haveCoachKey => 'لديك رمز مدرب؟';
 
   @override
@@ -719,6 +849,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get save => 'حفظ';
+
+  @override
+  String get post => 'نشر';
 
   @override
   String get announcements => 'الإعلانات';
@@ -807,7 +940,17 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String sessionsCount(int count) {
-    return '$count جلسة';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count جلسة',
+      many: '$count جلسة',
+      few: '$count جلسات',
+      two: 'جلستان',
+      one: 'جلسة واحدة',
+      zero: 'لا جلسات',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -1015,4 +1158,26 @@ class AppLocalizationsAr extends AppLocalizations {
   String endorsementMilestoneUnlocked(int count, String label) {
     return '$count تأييد — وصلت إلى $label!';
   }
+
+  @override
+  String get achievements => 'الإنجازات';
+
+  @override
+  String get sectionDetails => 'التفاصيل';
+
+  @override
+  String get sectionAccount => 'الحساب';
+
+  @override
+  String memberSince(String year) {
+    return 'عضو منذ $year';
+  }
+
+  @override
+  String unlocksAt(int count) {
+    return 'يُفتح عند $count';
+  }
+
+  @override
+  String get topTierReached => 'تم بلوغ أعلى مستوى';
 }

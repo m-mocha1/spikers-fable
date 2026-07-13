@@ -11,6 +11,7 @@ import '../../../../core/utils/validators.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'package:spikers_app/core/widgets/animations.dart';
 import 'package:spikers_app/core/widgets/branded_button.dart';
+import 'package:spikers_app/core/widgets/branded_text_field.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../providers/auth_providers.dart';
 import '../utils/auth_error_l10n.dart';
@@ -269,19 +270,15 @@ class _ChangeEmailDialogState extends State<_ChangeEmailDialog> {
           style: const TextStyle(color: AppColors.white)),
       content: Form(
         key: _formKey,
-        child: TextFormField(
+        child: BrandedTextField(
+          label: l.email,
+          hint: l.changeEmailHint,
           controller: _ctrl,
           keyboardType: TextInputType.emailAddress,
           autofocus: true,
-          style: const TextStyle(color: AppColors.white),
-          decoration: InputDecoration(
-            hintText: l.changeEmailHint,
-            hintStyle: const TextStyle(color: AppColors.grey),
-            enabledBorder: const UnderlineInputBorder(
-                borderSide: BorderSide(color: AppColors.grey)),
-            focusedBorder: const UnderlineInputBorder(
-                borderSide: BorderSide(color: AppColors.gold)),
-          ),
+          // The dialog surface is navyLight — use the darker navy fill so
+          // the field stays visible.
+          fillColor: AppColors.navyBlue,
           validator: (v) => Validators.email(v,
               emptyMsg: l.requiredField, invalidMsg: l.invalidEmail),
         ),

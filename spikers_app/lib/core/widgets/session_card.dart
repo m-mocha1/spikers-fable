@@ -8,6 +8,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_gradients.dart';
 import '../../core/constants/app_motion.dart';
 import '../../core/router/app_router.dart';
+import '../../core/utils/title_case.dart';
 import '../../features/auth/presentation/providers/auth_providers.dart';
 import '../../l10n/app_localizations.dart';
 import 'package:spikers_app/features/sessions/domain/entities/session_model.dart';
@@ -102,7 +103,7 @@ class _SessionCardState extends State<SessionCard> {
                 Text(
                   session.title,
                   style: const TextStyle(
-                      fontSize: 21, fontWeight: FontWeight.w800, height: 1.15),
+                      fontSize: 20, fontWeight: FontWeight.w800, height: 1.15),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -111,7 +112,7 @@ class _SessionCardState extends State<SessionCard> {
           ),
         ],
       ),
-      const SizedBox(height: 16),
+      const SizedBox(height: 12),
       Row(
         children: [
           const Icon(Icons.location_on_outlined,
@@ -119,7 +120,7 @@ class _SessionCardState extends State<SessionCard> {
           const SizedBox(width: 5),
           Expanded(
             child: Text(
-              session.location,
+              session.location.toTitleCase(),
               style: const TextStyle(color: AppColors.grey, fontSize: 14.5),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -129,20 +130,38 @@ class _SessionCardState extends State<SessionCard> {
           AttendeeFacepile(session.attendeeIds),
         ],
       ),
-      const SizedBox(height: 14),
+      const SizedBox(height: 10),
       Row(
         children: [
           _GenderBadge(session.gender),
-          if (session.hasWaitlist) ...[
-            const SizedBox(width: 12),
-            _WaitlistIndicator(session),
+          // The waitlist earns a mention only when someone is actually on it —
+          // an ever-present "0/6" was a second unlabeled ratio competing with
+          // the capacity count.
+          if (session.waitlistIds.isNotEmpty) ...[
+            const SizedBox(width: 8),
+            Flexible(child: _WaitlistPill(session)),
           ],
-          const Spacer(),
-          _SpotsIndicator(session),
         ],
       ),
       const SizedBox(height: 10),
-      _CapacityBar(ratio: ratio, color: statusColor),
+      // The card's single ratio: a labeled head-count and the capacity bar it
+      // measures, reading as one assembly.
+      Row(
+        children: [
+          Icon(Icons.group_outlined, size: 17, color: statusColor),
+          const SizedBox(width: 5),
+          Text(
+            l.joinedCount(filled, session.maxPlayers),
+            style: TextStyle(
+              fontSize: 13.5,
+              color: statusColor,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(child: _CapacityBar(ratio: ratio, color: statusColor)),
+        ],
+      ),
     ];
 
     // Left status stripe — revealed with the content: after the art settles
@@ -193,7 +212,7 @@ class _SessionCardState extends State<SessionCard> {
     return Pressable(
       onTap: _openDetail,
       child: Container(
-        margin: const EdgeInsets.only(bottom: 22),
+        margin: const EdgeInsets.only(bottom: 14),
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
           color: AppColors.navyLight,
@@ -257,7 +276,7 @@ class _SessionCardState extends State<SessionCard> {
               child: animatedStripe,
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
               child: content,
             ),
           ],
@@ -410,50 +429,40 @@ class _GenderBadge extends StatelessWidget {
   }
 }
 
-class _SpotsIndicator extends StatelessWidget {
+/// Compact labeled pill for a non-empty waitlist ("Waitlist · 2") — named, so
+/// it can't be mistaken for the capacity count. Turns red once the waitlist
+/// itself is full.
+class _WaitlistPill extends StatelessWidget {
   final SessionModel session;
-  const _SpotsIndicator(this.session);
+  const _WaitlistPill(this.session);
 
   @override
   Widget build(BuildContext context) {
-    final filled = session.attendeeIds.length;
-    final max = session.maxPlayers;
-    final ratio = max > 0 ? filled / max : 1.0;
-    final color =
-        ratio >= 1.0 ? AppColors.errorRed : ratio >= 0.8 ? Colors.orange : AppColors.success;
-
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(Icons.group_outlined, size: 17, color: color),
-        const SizedBox(width: 5),
-        Text('$filled/$max',
-            style: TextStyle(
-                fontSize: 14, color: color, fontWeight: FontWeight.w700)),
-      ],
-    );
-  }
-}
-
-class _WaitlistIndicator extends StatelessWidget {
-  final SessionModel session;
-  const _WaitlistIndicator(this.session);
-
-  @override
-  Widget build(BuildContext context) {
-    final filled = session.waitlistIds.length;
-    final size = session.waitlistSize;
-    final color =
-        session.isWaitlistFull ? AppColors.errorRed : AppColors.gold;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(Icons.hourglass_bottom, size: 16, color: color),
-        const SizedBox(width: 4),
-        Text('$filled/$size',
-            style: TextStyle(
-                fontSize: 14, color: color, fontWeight: FontWeight.w600)),
-      ],
+    final l = AppLocalizations.of(context)!;
+    final color = session.isWaitlistFull ? AppColors.errorRed : AppColors.gold;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.hourglass_bottom, size: 14, color: color),
+          const SizedBox(width: 4),
+          Flexible(
+            child: Text(
+              '${l.waitlist} · ${session.waitlistIds.length}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                  fontSize: 12.5, color: color, fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

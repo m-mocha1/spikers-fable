@@ -3,12 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/app_gradients.dart';
 import '../../../../core/constants/app_motion.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/utils/age_calculator.dart';
 import '../../../../core/widgets/animations.dart';
+import '../../../../core/widgets/floating_nav_bar.dart';
 import '../../../../core/widgets/gender_filter_chips.dart';
+import '../../../../core/widgets/membership_chip.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../providers/players_providers.dart';
@@ -76,12 +77,15 @@ class _PlayersTabState extends ConsumerState<PlayersTab> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 children: [
-                  GenderFilterChips(
-                    value: genderFilter,
-                    onChanged: (v) =>
-                        ref.read(_genderFilterProvider.notifier).state = v,
+                  // Expanded gives the chips bounded width (AppChoiceChips
+                  // requirement) and pushes the count pill to the end.
+                  Expanded(
+                    child: GenderFilterChips(
+                      value: genderFilter,
+                      onChanged: (v) =>
+                          ref.read(_genderFilterProvider.notifier).state = v,
+                    ),
                   ),
-                  const Spacer(),
                   _ResultCountPill(count: filtered.length, l: l),
                 ],
               ),
@@ -93,7 +97,8 @@ class _PlayersTabState extends ConsumerState<PlayersTab> {
                       title: q.isEmpty ? l.noPlayers : l.noPlayersMatch,
                     )
                   : ListView.builder(
-                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
+                      padding: const EdgeInsets.fromLTRB(
+                          16, 20, 16, FloatingNavBar.scrollClearance),
                       itemCount: filtered.length,
                       itemBuilder: (_, i) {
                         final p = filtered[i];
@@ -112,11 +117,12 @@ class _PlayersTabState extends ConsumerState<PlayersTab> {
                               Routes.playerProfile,
                               extra: p.uid,
                             ),
-                            trailing: _PaidBadge(
+                            trailing: MembershipChip(
                               isPaid: p.isPaid,
                               daysLeft: p.paymentDaysLeft,
                               isLifetime: p.lifetimeMember,
-                              l: l,
+                              // LIFETIME is this screen's one glowing element.
+                              emphasized: true,
                               onTap: () => confirmTogglePayment(
                                 context,
                                 ref,
@@ -179,6 +185,7 @@ class _SearchField extends StatelessWidget {
         suffixIcon: query.isEmpty
             ? null
             : IconButton(
+                tooltip: AppLocalizations.of(context)!.clearSearch,
                 visualDensity: VisualDensity.compact,
                 icon: const Icon(
                   Icons.close,
@@ -235,7 +242,7 @@ class _ResultCountPill extends StatelessWidget {
           ),
           const SizedBox(width: 4),
           Text(
-            l.players,
+            l.players(count),
             style: const TextStyle(
               color: AppColors.grey,
               fontSize: 11.5,
@@ -248,98 +255,3 @@ class _ResultCountPill extends StatelessWidget {
   }
 }
 
-class _PaidBadge extends StatelessWidget {
-  final bool isPaid;
-  final int daysLeft;
-  final bool isLifetime;
-  final VoidCallback onTap;
-  final AppLocalizations l;
-  const _PaidBadge({
-    required this.isPaid,
-    required this.daysLeft,
-    required this.isLifetime,
-    required this.onTap,
-    required this.l,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final Color color;
-    final IconData icon;
-    if (isLifetime) {
-      color = AppColors.gold;
-      icon = Icons.workspace_premium;
-    } else if (!isPaid || daysLeft == 0) {
-      color = AppColors.errorRed;
-      icon = Icons.error_outline;
-    } else if (daysLeft <= 9) {
-      color = AppColors.warning;
-      icon = Icons.schedule;
-    } else {
-      color = AppColors.success;
-      icon = Icons.check_circle_outline;
-    }
-    final showDays = !isLifetime && isPaid && daysLeft <= 9;
-    // Lifetime members get the solid gold-gradient treatment; everyone else
-    // stays on the tinted-outline pill so lifetime reads as the special case.
-    final fg = isLifetime ? AppColors.navyBlue : color;
-
-    // InkWell + outer padding: a ripple on tap and a ≥44px hit area for what
-    // is the coach's most-tapped control, without growing the pill visually.
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(24),
-        child: Padding(
-          padding: const EdgeInsets.all(4),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            constraints: const BoxConstraints(minHeight: 34),
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              gradient: isLifetime ? AppGradients.goldCta : null,
-              color: isLifetime ? null : color.withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(20),
-              border: isLifetime ? null : Border.all(color: color),
-              boxShadow: isLifetime
-                  ? [
-                      BoxShadow(
-                        color: AppColors.gold.withValues(alpha: 0.35),
-                        blurRadius: 10,
-                      ),
-                    ]
-                  : const [],
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(icon, size: 14, color: fg),
-                const SizedBox(width: 5),
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      isLifetime ? l.lifetime : (isPaid ? l.paid : l.unpaid),
-                      style: TextStyle(
-                        color: fg,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 11.5,
-                      ),
-                    ),
-                    if (showDays)
-                      Text(
-                        l.daysLeft(daysLeft),
-                        style: TextStyle(color: fg, fontSize: 9.5),
-                      ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}

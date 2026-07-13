@@ -17,6 +17,10 @@ final leaderboardRepositoryProvider = Provider<LeaderboardRepository>(
 /// is left, matching the old per-visit GetX binding.
 final leaderboardTabProvider = StateProvider.autoDispose<int>((ref) => 0);
 
+/// Which board is shown: 0 = games (attendance), 1 = endorsements. Same
+/// per-visit reset as [leaderboardTabProvider].
+final leaderboardBoardProvider = StateProvider.autoDispose<int>((ref) => 0);
+
 /// Boards are viewer-aware: players only see their own gender; coaches and
 /// admins see everyone. Empty while signed out.
 final allTimeLeaderboardProvider =
@@ -31,4 +35,11 @@ final monthlyLeaderboardProvider =
   final viewer = ref.watch(currentUserProvider).value;
   if (viewer == null) return Future.value(const []);
   return ref.watch(leaderboardRepositoryProvider).fetchMonthly(viewer);
+});
+
+final endorsementLeaderboardProvider =
+    FutureProvider.autoDispose<List<LeaderboardEntry>>((ref) {
+  final viewer = ref.watch(currentUserProvider).value;
+  if (viewer == null) return Future.value(const []);
+  return ref.watch(leaderboardRepositoryProvider).fetchEndorsements(viewer);
 });

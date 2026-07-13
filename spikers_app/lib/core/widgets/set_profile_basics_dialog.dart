@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_motion.dart';
+import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/app_snackbar.dart';
 import '../../features/auth/presentation/providers/auth_providers.dart';
 import '../../l10n/app_localizations.dart';
@@ -136,9 +138,7 @@ class _SetProfileBasicsDialogState
             ),
             const SizedBox(height: 18),
             if (_needGender) ...[
-              Text(l.gender,
-                  style: const TextStyle(
-                      color: AppColors.gold, fontWeight: FontWeight.w600)),
+              Text(l.gender.toUpperCase(), style: AppTextStyles.eyebrow),
               const SizedBox(height: 8),
               Row(
                 children: [
@@ -164,6 +164,9 @@ class _SetProfileBasicsDialogState
                 controller: _dobCtrl,
                 readOnly: true,
                 onTap: _pickDate,
+                // The dialog surface is navyLight — use the darker navy fill
+                // so the field stays visible.
+                fillColor: AppColors.navyBlue,
                 suffixIcon: const Icon(Icons.calendar_today_outlined,
                     color: AppColors.grey),
               ),
@@ -235,7 +238,7 @@ class _GenderChip extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(20),
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
+          duration: AppMotion.fast,
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
           decoration: BoxDecoration(
             color: selected ? AppColors.gold : AppColors.navyBlue,

@@ -1,21 +1,24 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/constants/app_assets.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_motion.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/utils/app_snackbar.dart';
+import '../../../../core/utils/attendance_tiers.dart';
 import '../../../../core/widgets/confirm_dialog.dart';
 import '../../../../core/widgets/injured_icon.dart';
+import '../../../../core/widgets/ringed_avatar.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'package:spikers_app/features/auth/domain/entities/user_model.dart';
 import 'package:spikers_app/core/widgets/profile_info.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../home/presentation/providers/profile_providers.dart';
+import '../../../home/presentation/widgets/achievements_card.dart';
 import '../../../home/presentation/widgets/profile_stat_cards.dart';
 import '../widgets/payment_confirm_dialog.dart';
 import '../providers/players_providers.dart';
@@ -94,6 +97,13 @@ class PlayerProfileScreen extends ConsumerWidget {
 
         final isCoach = ref.watch(isCoachProvider);
 
+        // Tier badge for the hero avatar — same source and coach-with-zero
+        // hiding rule as the games-played card below.
+        final attendance = ref.watch(myAttendanceCountProvider(user.uid)).value;
+        final showTierBadge =
+            attendance != null && !(user.isCoach && attendance == 0);
+        final tier = AttendanceTiers.tierIndex(attendance ?? 0);
+
         return Scaffold(
           appBar: AppBar(
             title: Text(
@@ -120,11 +130,16 @@ class PlayerProfileScreen extends ConsumerWidget {
               children:
                   [
                         const SizedBox(height: 16),
-                        _ReadOnlyAvatar(
+                        RingedAvatar(
                           name: user.name,
                           photoUrl: user.photoUrl,
+                          badgeAsset: showTierBadge
+                              ? AppAssets.gamesPlayedBadges[tier]
+                              : null,
+                          badgeLabel:
+                              showTierBadge ? tierLabel(l, tier) : null,
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 14),
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -133,8 +148,9 @@ class PlayerProfileScreen extends ConsumerWidget {
                                 user.name,
                                 textAlign: TextAlign.center,
                                 style: const TextStyle(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w700,
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 0.2,
                                 ),
                               ),
                             ),
@@ -157,6 +173,8 @@ class PlayerProfileScreen extends ConsumerWidget {
                           isCoach: user.isCoach,
                           l: l,
                         ),
+                        AchievementsCard(uid: user.uid, l: l),
+                        const SizedBox(height: 16),
                         ProfileStatsRow(user: user, l: l),
                         const SizedBox(height: 16),
                         ProfileInfoCard(user: user, l: l),
@@ -208,37 +226,6 @@ class PlayerProfileScreen extends ConsumerWidget {
   }
 }
 
-class _ReadOnlyAvatar extends StatelessWidget {
-  final String name;
-  final String? photoUrl;
-  const _ReadOnlyAvatar({required this.name, this.photoUrl});
-
-  @override
-  Widget build(BuildContext context) {
-    final initials = name.trim().isEmpty
-        ? '?'
-        : name.trim().split(' ').map((w) => w[0]).take(2).join().toUpperCase();
-
-    return CircleAvatar(
-      radius: 80,
-      backgroundColor: AppColors.gold,
-      backgroundImage: (photoUrl != null && photoUrl!.isNotEmpty)
-          ? CachedNetworkImageProvider(photoUrl!)
-          : null,
-      child: (photoUrl == null || photoUrl!.isEmpty)
-          ? Text(
-              initials,
-              style: const TextStyle(
-                fontSize: 44,
-                fontWeight: FontWeight.w700,
-                color: AppColors.navyBlue,
-              ),
-            )
-          : null,
-    );
-  }
-}
-
 /// The view a non-staff player sees when opening another player's profile:
 /// avatar + name plus only the Games Played and Endorsements cards. All other
 /// profile information stays hidden, and — critically — the private /users doc
@@ -273,23 +260,27 @@ class _PublicPlayerView extends ConsumerWidget {
               title: l.noPlayers,
             );
           }
+          final tier = AttendanceTiers.tierIndex(profile.attendanceCount);
           return SingleChildScrollView(
             padding: const EdgeInsets.all(24),
             child: Column(
               children:
                   [
                         const SizedBox(height: 16),
-                        _ReadOnlyAvatar(
+                        RingedAvatar(
                           name: profile.name,
                           photoUrl: profile.photoUrl,
+                          badgeAsset: AppAssets.gamesPlayedBadges[tier],
+                          badgeLabel: tierLabel(l, tier),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 14),
                         Text(
                           profile.name,
                           textAlign: TextAlign.center,
                           style: const TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w700,
+                            fontSize: 24,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.2,
                           ),
                         ),
                         const SizedBox(height: 24),
@@ -297,6 +288,7 @@ class _PublicPlayerView extends ConsumerWidget {
                         // player (the coach-with-zero hiding rule doesn't apply here).
                         GamesPlayedCard(uid: userId, isCoach: false, l: l),
                         EndorsementsCard(uid: userId, isCoach: false, l: l),
+                        AchievementsCard(uid: userId, l: l),
                         const SizedBox(height: 16),
                       ]
                       .animate(interval: AppMotion.stagger)

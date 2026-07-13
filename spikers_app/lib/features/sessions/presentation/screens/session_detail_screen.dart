@@ -15,7 +15,11 @@ import '../../../../core/constants/app_gradients.dart';
 import '../../../../core/constants/app_motion.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/utils/app_snackbar.dart';
+import '../../../../core/utils/bidi.dart';
+import '../../../../core/utils/title_case.dart';
 import '../../../../core/widgets/animations.dart';
+import '../../../../core/widgets/app_choice_chips.dart';
+import '../../../../core/widgets/branded_text_field.dart';
 import '../../../../core/widgets/celebration.dart';
 import '../../../../core/widgets/confirm_dialog.dart';
 import '../../../../core/widgets/date_block.dart';
@@ -68,17 +72,36 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
   bool _actionInFlight = false;
   bool _isCancelling = false;
 
+  // Roster edit mode (Premium Pass Phase 5): destructive controls (remove
+  // player) and capacity editing only appear while the coach has explicitly
+  // toggled the roster into its edit state via the header pencil.
+  bool _rosterEdit = false;
+
   // Optimistic overrides for coach attendance toggles (keyed by attendee uid)
   // and peer endorsements — applied the instant the icon is tapped, then
   // reconciled by the live snapshot / endorsements stream.
   final Map<String, bool> _optimisticAttended = {};
   final Set<String> _optimisticEndorsed = {};
 
+  // The pop flight launches from wherever the hero art currently sits. Once
+  // the art has scrolled (half) out of view, that would be an offscreen streak
+  // down the whole screen — so the flight is disabled until scrolled back up.
+  final ScrollController _scrollCtrl = ScrollController();
+  bool _heroFlightEnabled = true;
+
   SessionsRepository get _repo => ref.read(sessionsRepositoryProvider);
+
+  void _onScroll() {
+    final enabled = _scrollCtrl.offset < _CountdownCard.height / 2;
+    if (enabled != _heroFlightEnabled) {
+      setState(() => _heroFlightEnabled = enabled);
+    }
+  }
 
   @override
   void initState() {
     super.initState();
+    _scrollCtrl.addListener(_onScroll);
     final arg = widget.session;
     if (arg != null) {
       _session = arg;
@@ -226,6 +249,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
   void dispose() {
     _sub?.cancel();
     _archiveTimer?.cancel();
+    _scrollCtrl.dispose();
     super.dispose();
   }
 
@@ -432,36 +456,14 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
 
   Future<void> _confirmCancel(AppLocalizations l) async {
     if (_isCancelling) return;
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: AppColors.navyLight,
-        title: Text(l.confirmCancelSession),
-        content: Text(l.confirmCancelMessage),
-        actions: [
-          Builder(
-            builder: (dialogCtx) {
-              return TextButton(
-                onPressed: () => Navigator.of(dialogCtx).pop(false),
-                child: Text(l.no),
-              );
-            },
-          ),
-          Builder(
-            builder: (dialogCtx) {
-              return TextButton(
-                onPressed: () => Navigator.of(dialogCtx).pop(true),
-                child: Text(
-                  l.yes,
-                  style: const TextStyle(color: AppColors.errorRed),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
+    final confirm = await showDeleteConfirm(
+      context,
+      title: l.confirmCancelSession,
+      message: l.confirmCancelMessage,
+      confirmLabel: l.yes,
+      cancelLabel: l.no,
     );
-    if (confirm != true) return;
+    if (!confirm) return;
 
     setState(() => _isCancelling = true);
     try {
@@ -647,35 +649,23 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
                 extra: {'id': session.id, 'title': session.title},
               ),
             ),
-          if (isCoach && !session.isOngoing && !_isArchived)
-            TextButton(
-              onPressed: _isCancelling ? null : () => _confirmCancel(l),
-              child: _isCancelling
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                        color: AppColors.gold,
-                        strokeWidth: 2,
-                      ),
-                    )
-                  : Text(
-                      l.cancel,
-                      style: const TextStyle(color: AppColors.errorRed),
-                    ),
-            ),
         ],
       ),
       body: GradientBackground(
         child: SingleChildScrollView(
+          controller: _scrollCtrl,
           padding: const EdgeInsets.all(20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // The countdown clock sits on the session art and IS the Hero
               // landing pad — kept OUTSIDE the staggered fade below so the flight
-              // lands cleanly.
-              _CountdownCard(session: session, l: l),
+              // lands cleanly. HeroMode kills the pop flight once the art is
+              // scrolled away (see [_onScroll]).
+              HeroMode(
+                enabled: _heroFlightEnabled,
+                child: _CountdownCard(session: session, l: l),
+              ),
               const SizedBox(height: 18),
               ...[
                     _InfoSection(
@@ -736,6 +726,9 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
                       attendedIds: attendedIds,
                       isCoach: isCoach,
                       canManage: isCoach,
+                      editMode: _rosterEdit,
+                      onToggleEditMode: () =>
+                          setState(() => _rosterEdit = !_rosterEdit),
                       viewerUid: uid,
                       viewerCanEndorse: viewerCanEndorse,
                       endorsedIds: endorsedIds,
@@ -761,6 +754,43 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
                       onLeave: () => _leave(l),
                       l: l,
                     ),
+                    // Cancelling the whole session is a deliberate, page-level
+                    // decision — an explicit red-outline button in the body
+                    // (Sign Out style), not an app-bar action that reads as
+                    // navigation. Only before kick-off; an ended session is a
+                    // celebration, not something to cancel.
+                    if (isCoach && session.isUpcoming && !_isArchived) ...[
+                      const SizedBox(height: 12),
+                      OutlinedButton.icon(
+                        onPressed:
+                            _isCancelling ? null : () => _confirmCancel(l),
+                        icon: _isCancelling
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  color: AppColors.errorRed,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(
+                                Icons.event_busy_outlined,
+                                color: AppColors.errorRed,
+                                size: 20,
+                              ),
+                        label: Text(
+                          l.cancelSession,
+                          style: const TextStyle(color: AppColors.errorRed),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size.fromHeight(50),
+                          side: const BorderSide(color: AppColors.errorRed),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                      ),
+                    ],
                   ]
                   // Image first: let the hero banner land (heroSettle), then
                   // reveal each section with a fade + small upward drift.
@@ -788,6 +818,10 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
 /// centered on the art like a scoreboard. An ambient gloss sweep (matching the
 /// Next-Up spotlight) keeps the panel alive without demanding attention.
 class _CountdownCard extends StatelessWidget {
+  /// Fixed panel height — also the yardstick for when the screen's scroll
+  /// position has pushed the hero art far enough away to drop the pop flight.
+  static const double height = 190;
+
   final SessionModel session;
   final AppLocalizations l;
   const _CountdownCard({required this.session, required this.l});
@@ -797,7 +831,7 @@ class _CountdownCard extends StatelessWidget {
     final asset = AppAssets
         .cardDesigns[session.designIndex % AppAssets.cardDesigns.length];
     return SizedBox(
-      height: 190,
+      height: height,
       width: double.infinity,
       // Clip the whole panel so the veil / frame follow the rounded image
       // corners instead of squaring them off.
@@ -1000,49 +1034,80 @@ class _HeroStatusChip extends StatelessWidget {
 }
 
 /// Scoreboard-style countdown: one translucent tile per time unit (the days
-/// tile appears only when needed), each with a small unit caption. Ticks every
-/// second; each value change slides in with a subtle flip-clock feel.
-class _SegmentedCountdown extends StatelessWidget {
+/// tile appears only when needed), each with a small unit caption. The seconds
+/// tile only appears inside the final hour — beyond that it's noise, so the
+/// clock ticks coarsely (no per-second rebuilds) until the flip-clock finale.
+class _SegmentedCountdown extends StatefulWidget {
   final SessionModel session;
   const _SegmentedCountdown({required this.session});
 
   @override
+  State<_SegmentedCountdown> createState() => _SegmentedCountdownState();
+}
+
+class _SegmentedCountdownState extends State<_SegmentedCountdown> {
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _schedule();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  Duration _remaining() {
+    final now = DateTime.now();
+    final session = widget.session;
+    if (session.isUpcoming) return session.startTime.difference(now);
+    if (session.isOngoing) return session.endTime.difference(now);
+    return Duration.zero;
+  }
+
+  /// One-shot timer rescheduled after every tick, so the cadence adapts:
+  /// a lazy 30s while the seconds tile is hidden, 1s once it shows.
+  void _schedule() {
+    final period = _remaining() > const Duration(hours: 1)
+        ? const Duration(seconds: 30)
+        : const Duration(seconds: 1);
+    _timer = Timer(period, () {
+      if (!mounted) return;
+      setState(() {});
+      _schedule();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return StreamBuilder<int>(
-      stream: Stream.periodic(const Duration(seconds: 1), (i) => i),
-      builder: (ctx, _) {
-        final now = DateTime.now();
-        Duration diff;
-        if (session.isUpcoming) {
-          diff = session.startTime.difference(now);
-        } else if (session.isOngoing) {
-          diff = session.endTime.difference(now);
-        } else {
-          diff = Duration.zero;
-        }
-        final days = diff.inDays;
-        final h = (diff.inHours % 24).toString().padLeft(2, '0');
-        final m = (diff.inMinutes % 60).toString().padLeft(2, '0');
-        final s = (diff.inSeconds % 60).toString().padLeft(2, '0');
-        final l = AppLocalizations.of(ctx)!;
-        return FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (days > 0) ...[
-                _TimeTile(value: '$days', label: l.unitDays),
-                const SizedBox(width: 8),
-              ],
-              _TimeTile(value: h, label: l.unitHours),
-              const SizedBox(width: 8),
-              _TimeTile(value: m, label: l.unitMinutes),
-              const SizedBox(width: 8),
-              _TimeTile(value: s, label: l.unitSeconds),
-            ],
-          ),
-        );
-      },
+    final diff = _remaining();
+    final showSeconds = diff <= const Duration(hours: 1);
+    final days = diff.inDays;
+    final h = (diff.inHours % 24).toString().padLeft(2, '0');
+    final m = (diff.inMinutes % 60).toString().padLeft(2, '0');
+    final s = (diff.inSeconds % 60).toString().padLeft(2, '0');
+    final l = AppLocalizations.of(context)!;
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (days > 0) ...[
+            _TimeTile(value: '$days', label: l.unitDays),
+            const SizedBox(width: 8),
+          ],
+          _TimeTile(value: h, label: l.unitHours),
+          const SizedBox(width: 8),
+          _TimeTile(value: m, label: l.unitMinutes),
+          if (showSeconds) ...[
+            const SizedBox(width: 8),
+            _TimeTile(value: s, label: l.unitSeconds),
+          ],
+        ],
+      ),
     );
   }
 }
@@ -1100,8 +1165,8 @@ class _TimeTile extends StatelessWidget {
           Text(
             label.toUpperCase(),
             style: TextStyle(
-              color: AppColors.white.withValues(alpha: 0.65),
-              fontSize: 9,
+              color: AppColors.white.withValues(alpha: 0.75),
+              fontSize: 11,
               fontWeight: FontWeight.w700,
               letterSpacing: 1,
             ),
@@ -1236,7 +1301,7 @@ class _InfoSection extends ConsumerWidget {
           _InfoTileRow(
             icon: Icons.location_on_outlined,
             label: l.location,
-            value: session.location,
+            value: session.location.toTitleCase(),
           ),
           const SizedBox(height: 14),
           _CoachTileRow(label: l.coachLabel, name: coachName, coach: coach),
@@ -1272,7 +1337,7 @@ class _InfoSection extends ConsumerWidget {
                 ),
                 _AudiencePill(
                   icon: Icons.cake_outlined,
-                  label: '${session.minAge} – ${session.maxAge} ${l.years}',
+                  label: l.ageRangeYears(session.minAge, session.maxAge),
                 ),
               ],
             ],
@@ -1318,7 +1383,7 @@ class _InfoTileRow extends StatelessWidget {
                 label.toUpperCase(),
                 style: const TextStyle(
                   color: AppColors.grey,
-                  fontSize: 10,
+                  fontSize: 11,
                   fontWeight: FontWeight.w800,
                   letterSpacing: 1.2,
                 ),
@@ -1397,7 +1462,7 @@ class _CoachTileRow extends StatelessWidget {
                 label.toUpperCase(),
                 style: const TextStyle(
                   color: AppColors.grey,
-                  fontSize: 10,
+                  fontSize: 11,
                   fontWeight: FontWeight.w800,
                   letterSpacing: 1.2,
                 ),
@@ -1457,6 +1522,8 @@ class _AttendeesSection extends StatelessWidget {
   final Set<String> attendedIds;
   final bool isCoach;
   final bool canManage;
+  final bool editMode;
+  final VoidCallback onToggleEditMode;
   final String viewerUid;
   final bool viewerCanEndorse;
   final Set<String> endorsedIds;
@@ -1472,6 +1539,8 @@ class _AttendeesSection extends StatelessWidget {
     required this.attendedIds,
     required this.isCoach,
     required this.canManage,
+    required this.editMode,
+    required this.onToggleEditMode,
     required this.viewerUid,
     required this.viewerCanEndorse,
     required this.endorsedIds,
@@ -1487,13 +1556,28 @@ class _AttendeesSection extends StatelessWidget {
     final filled = session.attendeeIds.length;
     final max = session.maxPlayers;
     final ratio = max > 0 ? filled / max : 0.0;
-    final barColor = ratio >= 1.0
+    final isEnded = session.isExpired;
+    // A finished session is a result, not an alarm: the meter turns success
+    // green regardless of how full it got. Live/upcoming keeps the
+    // traffic-light readout.
+    final barColor = isEnded
+        ? AppColors.success
+        : ratio >= 1.0
         ? AppColors.errorRed
         : ratio >= 0.8
         ? Colors.orange
         : AppColors.success;
     final attendedCount = attendedIds.length;
-    final canEditCapacity = isCoach && !session.isExpired;
+    // Courtside attendance stays one tap away while the session is live or
+    // upcoming; once it has ended the per-row toggles retreat behind edit
+    // mode (corrections stay possible — markAttended works on history).
+    final showMarkControls = isCoach && (!isEnded || editMode);
+    final showMarkAll = showMarkControls &&
+        session.attendeeIds.isNotEmpty &&
+        attendedCount < session.attendeeIds.length;
+    // Destructive controls only ever exist in edit mode, and never on a
+    // session that already happened.
+    final showRemove = canManage && editMode && !isEnded;
 
     return Container(
       padding: const EdgeInsets.all(18),
@@ -1518,36 +1602,58 @@ class _AttendeesSection extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: Text(
-                  l.attendees,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 15.5,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l.attendees,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15.5,
+                      ),
+                    ),
+                    // Endorsement budget lives with the roster header it
+                    // applies to, instead of floating under the meter.
+                    if (viewerCanEndorse)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          l.endorseRemaining(
+                            (2 - endorsedIds.length).clamp(0, 2),
+                          ),
+                          style: const TextStyle(
+                            color: AppColors.gold,
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
-              // One-tap courtside shortcut: check off everyone still
-              // unmarked. Individual toggles undo any mistakes.
-              if (isCoach &&
-                  session.attendeeIds.isNotEmpty &&
-                  attendedCount < session.attendeeIds.length)
-                IconButton(
-                  visualDensity: VisualDensity.compact,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(
-                    minWidth: 32,
-                    minHeight: 32,
-                  ),
-                  splashRadius: 18,
-                  tooltip: l.markAllAttended,
-                  onPressed: onMarkAllAttended,
-                  icon: const Icon(
-                    Icons.done_all,
-                    color: AppColors.success,
-                    size: 18,
-                  ),
+              // Edit mode surfaces capacity editing (live sessions); the
+              // normal courtside state — and ended-session edit mode, where
+              // capacity no longer applies — offers the labeled one-tap
+              // "Mark all" shortcut instead of the old unlabeled double-check.
+              if (editMode && isCoach && !isEnded) ...[
+                const SizedBox(width: 6),
+                AppChoiceChip(
+                  label: l.editCapacity,
+                  icon: Icons.tune,
+                  selected: false,
+                  onTap: onEditCapacity,
                 ),
-              if (canEditCapacity)
+              ] else if (showMarkAll && (!editMode || isEnded)) ...[
+                const SizedBox(width: 6),
+                AppChoiceChip(
+                  label: l.markAll,
+                  icon: Icons.done_all,
+                  selected: false,
+                  onTap: onMarkAllAttended,
+                ),
+              ],
+              if (isCoach) ...[
+                const SizedBox(width: 2),
                 IconButton(
                   visualDensity: VisualDensity.compact,
                   padding: EdgeInsets.zero,
@@ -1556,14 +1662,15 @@ class _AttendeesSection extends StatelessWidget {
                     minHeight: 32,
                   ),
                   splashRadius: 18,
-                  tooltip: l.increaseCapacity,
-                  onPressed: onEditCapacity,
-                  icon: const Icon(
-                    Icons.edit_outlined,
+                  tooltip: editMode ? l.done : l.editRoster,
+                  onPressed: onToggleEditMode,
+                  icon: Icon(
+                    editMode ? Icons.done : Icons.edit_outlined,
                     color: AppColors.gold,
                     size: 18,
                   ),
                 ),
+              ],
             ],
           ),
           const SizedBox(height: 14),
@@ -1593,26 +1700,29 @@ class _AttendeesSection extends StatelessWidget {
               if (isCoach && attendedCount > 0) ...[
                 _StatPill(
                   icon: Icons.check,
-                  label: '$attendedCount ${l.attended}',
+                  label: l.attendedCount(attendedCount),
                   color: AppColors.success,
                 ),
                 const SizedBox(width: 6),
               ],
-              _StatPill(
-                icon: session.isFull
-                    ? Icons.block
-                    : Icons.local_fire_department_outlined,
-                label: session.isFull
-                    ? l.sessionFull
-                    : l.spotsLeft(session.spotsLeft),
-                color: barColor,
-              ),
+              // Urgency pills only make sense while joining is still possible;
+              // an ended session hides "Session Full" instead of alarming.
+              if (!isEnded)
+                _StatPill(
+                  icon: session.isFull
+                      ? Icons.block
+                      : Icons.local_fire_department_outlined,
+                  label: session.isFull
+                      ? l.sessionFull
+                      : l.spotsLeft(session.spotsLeft),
+                  color: barColor,
+                ),
             ],
           ),
           const SizedBox(height: 10),
 
-          // Glowing capacity meter — the same treatment as the list card's
-          // bottom edge, restating the pill colour as *how full*.
+          // Capacity meter — the same treatment as the list card's bottom
+          // edge, restating the pill colour as *how full*.
           TweenAnimationBuilder<double>(
             tween: Tween(begin: 0, end: ratio.clamp(0.0, 1.0)),
             duration: AppMotion.slow,
@@ -1633,42 +1743,11 @@ class _AttendeesSection extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: barColor,
                           borderRadius: BorderRadius.circular(3),
-                          boxShadow: [
-                            BoxShadow(
-                              color: barColor.withValues(alpha: 0.45),
-                              blurRadius: 6,
-                            ),
-                          ],
                         ),
                       ),
                     ),
             ),
           ),
-
-          // "You have N endorsements left" — shown only when the viewer is
-          // actually allowed to endorse (session ended + attended/staff).
-          if (viewerCanEndorse)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.thumb_up_outlined,
-                    size: 14,
-                    color: AppColors.gold,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    l.endorseRemaining((2 - endorsedIds.length).clamp(0, 2)),
-                    style: const TextStyle(
-                      color: AppColors.gold,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
 
           if (session.attendeeIds.isNotEmpty) ...[
             const SizedBox(height: 16),
@@ -1684,9 +1763,12 @@ class _AttendeesSection extends StatelessWidget {
               }
               final isAttended = attendedIds.contains(uid);
               // You can only endorse someone who actually attended, isn't you,
-              // and only if you're eligible (attended too, or staff).
-              final canEndorse =
-                  viewerCanEndorse && isAttended && uid != viewerUid;
+              // and only if you're eligible (attended too, or staff). Edit
+              // mode swaps the celebration controls out for admin ones.
+              final canEndorse = viewerCanEndorse &&
+                  isAttended &&
+                  uid != viewerUid &&
+                  !editMode;
               return _AttendeeItem(
                 key: ValueKey('att_$uid'),
                 uid: uid,
@@ -1696,8 +1778,8 @@ class _AttendeesSection extends StatelessWidget {
                 injured: a.injured,
                 isAttended: isAttended,
                 isViewer: uid == viewerUid,
-                canMark: isCoach,
-                canRemove: canManage,
+                canMark: showMarkControls,
+                canRemove: showRemove,
                 canViewProfile: true,
                 canEndorse: canEndorse,
                 alreadyEndorsed: endorsedIds.contains(uid),
@@ -1763,7 +1845,7 @@ class _AttendeesSection extends StatelessWidget {
                   name: u.name,
                   photoUrl: u.photoUrl,
                   injured: u.injured,
-                  canRemove: canManage,
+                  canRemove: showRemove,
                   canViewProfile: true,
                   onRemove: onRemove,
                 );
@@ -1954,8 +2036,10 @@ class _AttendeeItem extends StatelessWidget {
                 children: [
                   Flexible(
                     child: Text(
-                      name,
-                      maxLines: 1,
+                      bidiIsolate(name),
+                      // Two lines before ellipsis — long names share the row
+                      // with up to three trailing action icons.
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: 15,
@@ -1979,7 +2063,7 @@ class _AttendeeItem extends StatelessWidget {
                         l.youLabel.toUpperCase(),
                         style: const TextStyle(
                           color: AppColors.gold,
-                          fontSize: 9,
+                          fontSize: 10.5,
                           fontWeight: FontWeight.w800,
                           letterSpacing: 0.5,
                         ),
@@ -1998,7 +2082,7 @@ class _AttendeeItem extends StatelessWidget {
                   ),
                   const SizedBox(width: 3),
                   Text(
-                    '$attendanceCount ${l.sessionsAttended}',
+                    l.sessionsAttended(attendanceCount),
                     style: const TextStyle(fontSize: 11, color: AppColors.grey),
                   ),
                 ],
@@ -2064,8 +2148,10 @@ class _AttendeeItem extends StatelessWidget {
               splashRadius: 20,
               tooltip: isAttended ? l.attended : l.notAttended,
               onPressed: () => onToggle(uid, !isAttended),
+              // Outlined check (not a bare circle) so the idle state reads as
+              // "tap to check in", not a radio button.
               icon: Icon(
-                isAttended ? Icons.check_circle : Icons.radio_button_unchecked,
+                isAttended ? Icons.check_circle : Icons.check_circle_outline,
                 size: 24,
                 color: isAttended ? AppColors.success : AppColors.grey,
               ),
@@ -2142,7 +2228,7 @@ class _WaitlistItem extends StatelessWidget {
         const SizedBox(width: 10),
         Expanded(
           child: Text(
-            name,
+            bidiIsolate(name),
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,
@@ -2462,20 +2548,13 @@ class _EditCapacityDialogState extends State<_EditCapacityDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextFormField(
+            BrandedTextField(
+              label: l.newMaxPlayers,
               controller: _maxCtrl,
               keyboardType: TextInputType.number,
-              style: const TextStyle(color: AppColors.white),
-              decoration: InputDecoration(
-                labelText: l.newMaxPlayers,
-                labelStyle: const TextStyle(color: AppColors.grey),
-                enabledBorder: const UnderlineInputBorder(
-                  borderSide: BorderSide(color: AppColors.grey),
-                ),
-                focusedBorder: const UnderlineInputBorder(
-                  borderSide: BorderSide(color: AppColors.gold),
-                ),
-              ),
+              // The dialog surface is navyLight — use the darker navy fill
+              // so the fields stay visible.
+              fillColor: AppColors.navyBlue,
               validator: (v) {
                 final n = int.tryParse(v ?? '');
                 if (n == null) return l.requiredField;
@@ -2485,21 +2564,12 @@ class _EditCapacityDialogState extends State<_EditCapacityDialog> {
                 return null;
               },
             ),
-            const SizedBox(height: 8),
-            TextFormField(
+            const SizedBox(height: 16),
+            BrandedTextField(
+              label: l.newWaitlistSize,
               controller: _waitCtrl,
               keyboardType: TextInputType.number,
-              style: const TextStyle(color: AppColors.white),
-              decoration: InputDecoration(
-                labelText: l.newWaitlistSize,
-                labelStyle: const TextStyle(color: AppColors.grey),
-                enabledBorder: const UnderlineInputBorder(
-                  borderSide: BorderSide(color: AppColors.grey),
-                ),
-                focusedBorder: const UnderlineInputBorder(
-                  borderSide: BorderSide(color: AppColors.gold),
-                ),
-              ),
+              fillColor: AppColors.navyBlue,
               validator: (v) {
                 final n = int.tryParse(v ?? '');
                 if (n == null) return l.requiredField;
@@ -2583,41 +2653,40 @@ class _MakePublicDialogState extends State<_MakePublicDialog> {
             Text(l.makePublicSubtitle,
                 style: const TextStyle(color: AppColors.grey, fontSize: 13)),
             const SizedBox(height: 12),
-            SegmentedButton<String>(
-              segments: [
-                ButtonSegment(value: 'male', label: Text(l.male)),
-                ButtonSegment(value: 'female', label: Text(l.female)),
-                ButtonSegment(value: 'mixed', label: Text(l.genderMixed)),
+            AppChoiceChips<String>(
+              value: _gender,
+              expanded: true,
+              // The dialog surface is navyLight — use the darker navy fill
+              // so the idle chips stay visible (same as the fields below).
+              fillColor: AppColors.navyBlue,
+              onSelected: (v) => setState(() => _gender = v),
+              options: [
+                AppChoiceChipOption(value: 'male', label: l.male),
+                AppChoiceChipOption(value: 'female', label: l.female),
+                AppChoiceChipOption(value: 'mixed', label: l.genderMixed),
               ],
-              selected: {_gender},
-              showSelectedIcon: false,
-              onSelectionChanged: (s) => setState(() => _gender = s.first),
             ),
             const SizedBox(height: 12),
             Row(
               children: [
                 Expanded(
-                  child: TextFormField(
+                  child: BrandedTextField(
+                    label: l.minAge,
                     controller: _minCtrl,
                     keyboardType: TextInputType.number,
-                    style: const TextStyle(color: AppColors.white),
-                    decoration: InputDecoration(
-                      labelText: l.minAge,
-                      labelStyle: const TextStyle(color: AppColors.grey),
-                    ),
+                    // The dialog surface is navyLight — use the darker navy
+                    // fill so the fields stay visible.
+                    fillColor: AppColors.navyBlue,
                     validator: _validateAge,
                   ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: TextFormField(
+                  child: BrandedTextField(
+                    label: l.maxAge,
                     controller: _maxCtrl,
                     keyboardType: TextInputType.number,
-                    style: const TextStyle(color: AppColors.white),
-                    decoration: InputDecoration(
-                      labelText: l.maxAge,
-                      labelStyle: const TextStyle(color: AppColors.grey),
-                    ),
+                    fillColor: AppColors.navyBlue,
                     validator: _validateAge,
                   ),
                 ),

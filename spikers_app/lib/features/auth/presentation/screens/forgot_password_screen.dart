@@ -57,7 +57,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     final l = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(title: Text(l.forgotPassword)),
-      body: Padding(
+      // SafeArea keeps the form clear of the Android gesture bar.
+      body: SafeArea(
+        child: Padding(
         padding: const EdgeInsetsDirectional.fromSTEB(24, 40, 24, 24),
         child: Form(
           key: _formKey,
@@ -94,6 +96,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 .fadeIn(duration: AppMotion.normal, curve: AppMotion.enter)
                 .slideY(begin: 0.18, end: 0, curve: AppMotion.enter),
           ),
+        ),
         ),
       ),
     );

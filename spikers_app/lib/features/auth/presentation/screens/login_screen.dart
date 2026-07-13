@@ -61,7 +61,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         children: [
           const _Header(),
           Expanded(
-            child: SingleChildScrollView(
+            // top: false — the header already owns the status-bar area; the
+            // bottom inset keeps the form clear of the Android gesture bar.
+            child: SafeArea(
+              top: false,
+              child: SingleChildScrollView(
               padding: const EdgeInsetsDirectional.fromSTEB(24, 32, 24, 32),
               child: Form(
                 key: _formKey,
@@ -84,6 +88,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       controller: _passCtrl,
                       obscureText: !_showPass,
                       suffixIcon: IconButton(
+                        tooltip:
+                            _showPass ? l.hidePassword : l.showPassword,
                         icon: Icon(
                           _showPass ? Icons.visibility_off : Icons.visibility,
                           color: AppColors.grey,
@@ -126,6 +132,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       .slideY(begin: 0.18, end: 0, curve: AppMotion.enter),
                 ),
               ),
+            ),
             ),
           ),
         ],

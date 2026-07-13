@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../../core/utils/title_case.dart';
 import '../../../../core/widgets/animations.dart';
 import '../../../../core/widgets/gender_filter_chips.dart';
 import '../../../../core/widgets/state_views.dart';
@@ -181,7 +182,7 @@ class _HistoryCardState extends ConsumerState<_HistoryCard> {
                     size: 13, color: AppColors.grey),
                 const SizedBox(width: 4),
                 Flexible(
-                  child: Text(session.location,
+                  child: Text(session.location.toTitleCase(),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(

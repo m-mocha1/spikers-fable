@@ -193,7 +193,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String spotsLeft(int count) {
-    return '$count spots left';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count spots left',
+      one: '1 spot left',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -301,6 +307,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get years => 'years';
 
   @override
+  String ageYears(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count years',
+      one: '1 year',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get upcoming => 'Upcoming';
 
   @override
@@ -362,7 +379,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ageRange => 'Age Range';
 
   @override
-  String get players => 'players';
+  String ageRangeYears(int min, int max) {
+    return '$min – $max years';
+  }
+
+  @override
+  String players(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'players',
+      one: 'player',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get full => 'Full';
@@ -434,7 +464,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notAttended => 'Absent';
 
   @override
-  String get sessionsAttended => 'sessions attended';
+  String attendedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count attended',
+      one: '1 attended',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String sessionsAttended(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count sessions attended',
+      one: '1 session attended',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get exportAttendance => 'Export attendance';
@@ -483,6 +532,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noCoaches => 'No coaches found';
+
+  @override
+  String coachesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count coaches',
+      one: '$count coach',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get viewProfile => 'View profile';
 
   @override
   String get paid => 'Active';
@@ -650,6 +713,39 @@ class AppLocalizationsEn extends AppLocalizations {
   String get markAllAttended => 'Mark all attended';
 
   @override
+  String get markAll => 'Mark all';
+
+  @override
+  String get editRoster => 'Edit roster';
+
+  @override
+  String get editCapacity => 'Edit capacity';
+
+  @override
+  String get gamesThisMonth => 'Games this month';
+
+  @override
+  String get gamesAllTime => 'Games all time';
+
+  @override
+  String get games => 'Games';
+
+  @override
+  String get endorsementsAllTime => 'Endorsements all time';
+
+  @override
+  String get clearSearch => 'Clear search';
+
+  @override
+  String get sendMessage => 'Send message';
+
+  @override
+  String get showPassword => 'Show password';
+
+  @override
+  String get hidePassword => 'Hide password';
+
+  @override
   String get haveCoachKey => 'Have a coach key?';
 
   @override
@@ -724,6 +820,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get save => 'Save';
 
   @override
+  String get post => 'Post';
+
+  @override
   String get announcements => 'Announcements';
 
   @override
@@ -775,7 +874,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get confirmDeleteAnnouncementBody => 'This cannot be undone.';
 
   @override
-  String get sessionsHistory => 'Sessions History';
+  String get sessionsHistory => 'Session History';
 
   @override
   String get noSessionsHistory => 'No past sessions yet';
@@ -810,7 +909,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String sessionsCount(int count) {
-    return '$count sessions';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count sessions',
+      one: '1 session',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -1012,4 +1117,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String endorsementMilestoneUnlocked(int count, String label) {
     return '$count endorsements — you reached $label!';
   }
+
+  @override
+  String get achievements => 'Achievements';
+
+  @override
+  String get sectionDetails => 'Details';
+
+  @override
+  String get sectionAccount => 'Account';
+
+  @override
+  String memberSince(String year) {
+    return 'Member since $year';
+  }
+
+  @override
+  String unlocksAt(int count) {
+    return 'Unlocks at $count';
+  }
+
+  @override
+  String get topTierReached => 'Top tier reached';
 }

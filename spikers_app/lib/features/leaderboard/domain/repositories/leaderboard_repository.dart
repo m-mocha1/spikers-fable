@@ -13,4 +13,10 @@ abstract class LeaderboardRepository {
   /// first. Counts both live and archived sessions. Same gender visibility
   /// rule as [fetchAllTime].
   Future<List<LeaderboardEntry>> fetchMonthly(UserModel viewer);
+
+  /// Top players by lifetime endorsements received, highest first. All-time
+  /// only: individual endorsement docs are private, so the only public
+  /// signal is the aggregate count. Same gender visibility rule as
+  /// [fetchAllTime].
+  Future<List<LeaderboardEntry>> fetchEndorsements(UserModel viewer);
 }

@@ -109,6 +109,9 @@ class _EditBodyMetricsDialogState
                 hint: l.heightHint,
                 controller: _heightCtrl,
                 keyboardType: TextInputType.number,
+                // The dialog surface is navyLight — use the darker navy fill
+                // so the field stays visible.
+                fillColor: AppColors.navyBlue,
                 validator: (v) => Validators.intInRange(v,
                     min: 100,
                     max: 250,
@@ -121,6 +124,7 @@ class _EditBodyMetricsDialogState
                 hint: l.weightHint,
                 controller: _weightCtrl,
                 keyboardType: TextInputType.number,
+                fillColor: AppColors.navyBlue,
                 validator: (v) => Validators.intInRange(v,
                     min: 20,
                     max: 200,

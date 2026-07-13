@@ -25,4 +25,8 @@ class LeaderboardRepositoryImpl implements LeaderboardRepository {
   @override
   Future<List<LeaderboardEntry>> fetchMonthly(UserModel viewer) async =>
       _visibleTo(viewer, await _remote.fetchMonthly());
+
+  @override
+  Future<List<LeaderboardEntry>> fetchEndorsements(UserModel viewer) async =>
+      _visibleTo(viewer, await _remote.fetchEndorsements());
 }

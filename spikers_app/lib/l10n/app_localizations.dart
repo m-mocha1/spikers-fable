@@ -461,7 +461,7 @@ abstract class AppLocalizations {
   /// No description provided for @spotsLeft.
   ///
   /// In en, this message translates to:
-  /// **'{count} spots left'**
+  /// **'{count, plural, one{1 spot left} other{{count} spots left}}'**
   String spotsLeft(int count);
 
   /// No description provided for @attendees.
@@ -662,6 +662,12 @@ abstract class AppLocalizations {
   /// **'years'**
   String get years;
 
+  /// No description provided for @ageYears.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 year} other{{count} years}}'**
+  String ageYears(int count);
+
   /// No description provided for @upcoming.
   ///
   /// In en, this message translates to:
@@ -770,11 +776,17 @@ abstract class AppLocalizations {
   /// **'Age Range'**
   String get ageRange;
 
+  /// No description provided for @ageRangeYears.
+  ///
+  /// In en, this message translates to:
+  /// **'{min} – {max} years'**
+  String ageRangeYears(int min, int max);
+
   /// No description provided for @players.
   ///
   /// In en, this message translates to:
-  /// **'players'**
-  String get players;
+  /// **'{count, plural, one{player} other{players}}'**
+  String players(int count);
 
   /// No description provided for @full.
   ///
@@ -908,11 +920,17 @@ abstract class AppLocalizations {
   /// **'Absent'**
   String get notAttended;
 
+  /// No description provided for @attendedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 attended} other{{count} attended}}'**
+  String attendedCount(int count);
+
   /// No description provided for @sessionsAttended.
   ///
   /// In en, this message translates to:
-  /// **'sessions attended'**
-  String get sessionsAttended;
+  /// **'{count, plural, one{1 session attended} other{{count} sessions attended}}'**
+  String sessionsAttended(int count);
 
   /// No description provided for @exportAttendance.
   ///
@@ -1009,6 +1027,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No coaches found'**
   String get noCoaches;
+
+  /// No description provided for @coachesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} coach} other{{count} coaches}}'**
+  String coachesCount(int count);
+
+  /// No description provided for @viewProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'View profile'**
+  String get viewProfile;
 
   /// No description provided for @paid.
   ///
@@ -1292,6 +1322,72 @@ abstract class AppLocalizations {
   /// **'Mark all attended'**
   String get markAllAttended;
 
+  /// No description provided for @markAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all'**
+  String get markAll;
+
+  /// No description provided for @editRoster.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit roster'**
+  String get editRoster;
+
+  /// No description provided for @editCapacity.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit capacity'**
+  String get editCapacity;
+
+  /// No description provided for @gamesThisMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Games this month'**
+  String get gamesThisMonth;
+
+  /// No description provided for @gamesAllTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Games all time'**
+  String get gamesAllTime;
+
+  /// No description provided for @games.
+  ///
+  /// In en, this message translates to:
+  /// **'Games'**
+  String get games;
+
+  /// No description provided for @endorsementsAllTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Endorsements all time'**
+  String get endorsementsAllTime;
+
+  /// No description provided for @clearSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear search'**
+  String get clearSearch;
+
+  /// No description provided for @sendMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Send message'**
+  String get sendMessage;
+
+  /// No description provided for @showPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Show password'**
+  String get showPassword;
+
+  /// No description provided for @hidePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide password'**
+  String get hidePassword;
+
   /// No description provided for @haveCoachKey.
   ///
   /// In en, this message translates to:
@@ -1436,6 +1532,12 @@ abstract class AppLocalizations {
   /// **'Save'**
   String get save;
 
+  /// No description provided for @post.
+  ///
+  /// In en, this message translates to:
+  /// **'Post'**
+  String get post;
+
   /// No description provided for @announcements.
   ///
   /// In en, this message translates to:
@@ -1529,7 +1631,7 @@ abstract class AppLocalizations {
   /// No description provided for @sessionsHistory.
   ///
   /// In en, this message translates to:
-  /// **'Sessions History'**
+  /// **'Session History'**
   String get sessionsHistory;
 
   /// No description provided for @noSessionsHistory.
@@ -1589,7 +1691,7 @@ abstract class AppLocalizations {
   /// No description provided for @sessionsCount.
   ///
   /// In en, this message translates to:
-  /// **'{count} sessions'**
+  /// **'{count, plural, one{1 session} other{{count} sessions}}'**
   String sessionsCount(int count);
 
   /// No description provided for @recurringSessions.
@@ -1885,6 +1987,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} endorsements — you reached {label}!'**
   String endorsementMilestoneUnlocked(int count, String label);
+
+  /// No description provided for @achievements.
+  ///
+  /// In en, this message translates to:
+  /// **'Achievements'**
+  String get achievements;
+
+  /// No description provided for @sectionDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get sectionDetails;
+
+  /// No description provided for @sectionAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get sectionAccount;
+
+  /// No description provided for @memberSince.
+  ///
+  /// In en, this message translates to:
+  /// **'Member since {year}'**
+  String memberSince(String year);
+
+  /// No description provided for @unlocksAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlocks at {count}'**
+  String unlocksAt(int count);
+
+  /// No description provided for @topTierReached.
+  ///
+  /// In en, this message translates to:
+  /// **'Top tier reached'**
+  String get topTierReached;
 }
 
 class _AppLocalizationsDelegate

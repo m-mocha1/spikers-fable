@@ -1,0 +1,263 @@
+# Coding Rules
+
+Always reuse widgets.
+
+Never duplicate code.
+
+Use ThemeExtensions.
+
+Keep widgets small.
+
+Refactor shared components first.
+
+No magic numbers.
+
+Document complex logic.
+
+Leave code cleaner than you found it.
+
+Preserve functionality.
+
+Do not continue to the next phase without approval.
+
+---
+
+# Before finishing a phase verify:
+
+- No overflow
+- No clipped text
+- No duplicated components
+- No inconsistent padding
+- Accessibility
+- Localization
+- RTL
+
+# These rules apply to every phase.
+
+• Never redesign the app.
+• Preserve the navy and gold branding.
+• Preserve all existing functionality.
+• Reuse shared components.
+• Refactor instead of duplicating.
+• Do not introduce temporary fixes.
+• Do not continue to the next phase without my approval.
+• If a change belongs in a shared widget, update the shared widget instead of individual screens.
+• Leave the codebase cleaner than you found it.
+• Prioritize readability, maintainability, and consistency.
+
+# UI POLISH ROADMAP — "Premium Pass"
+
+Source: App Store reviewer audit of `app-ui-screenshots/` (2026-07-12).
+Goal: remove every "unfinished" tell WITHOUT redesigning the app. The navy/gold
+identity, pill silhouettes, rounded cards, tier gamification, rings, and
+facepiles all stay. This roadmap only enforces discipline and consistency.
+
+Companion docs (apply to every phase):
+- `docs/Rules.md` — global phase rules (never redesign, preserve functionality)
+- `docs/before-finishing-phase.md` — exit checklist (overflow, clipping, a11y, RTL, l10n)
+- Verification for each phase: `flutter analyze` clean, `flutter test` green,
+  `flutter gen-l10n` after any `.arb` change, manual device check of touched screens.
+
+**Gate: each phase ends with a review + explicit approval before the next begins.**
+
+---
+
+## Phase 0 — Design tokens groundwork
+
+**Goal:** later phases must not hardcode values, so tokens come first.
+**Why:** rules say "Use ThemeExtensions" and "No magic numbers", but
+`core/theme/app_theme.dart` currently has no spacing/radius/semantic-color tokens.
+
+Tasks:
+- [ ] Add `AppSpacing` (xs/sm/md/lg/xl) and `AppRadius` (chip/card/sheet) constants in `core/theme/`.
+- [ ] Add a `ThemeExtension` for semantic colors: success (green), warning (amber), danger (red), surface tints for chips/fills — pulled from the values already used in screens.
+- [ ] Add text-style tokens for the two recurring micro-styles: amber caps eyebrow, gray caps section header (min 11sp, reduced letter-spacing).
+- [ ] No screen changes in this phase beyond compiling.
+
+Files: `lib/core/theme/app_theme.dart` (+ new `spacing.dart` if cleaner).
+Accept when: tokens exist, `flutter analyze` clean, zero visual diff.
+
+---
+
+## Phase 1 — Text integrity (highest leverage — kills the loudest "unfinished" tells)
+
+**Why:** "1 sessions attended" appears on every roster row and player card;
+Register ships truncated placeholders ("Height (Optio…"). These are the fastest
+signals of low quality in the whole app.
+
+Tasks:
+- [ ] Convert `sessionsAttended` in `lib/l10n/app_en.arb` + `app_ar.arb` from a bare suffix string to an ICU plural taking `count` (`{count, plural, one{1 session attended} other{{count} sessions attended}}`; Arabic gets full zero/one/two/few/many/other forms). Update all call sites; run `flutter gen-l10n`.
+- [ ] Same treatment for "spots left", waitlist counts, and any other `"$n $suffix"` concatenations (grep for string interpolation next to l10n getters).
+- [ ] Fix truncation: player-card subtitle ("1 sessions at…") — shorten the string or give the name/subtitle column priority over the trailing chip; roster names get 2-line wrap or tighter trailing icons.
+- [ ] Copy fixes: announcement composer button "Save" → "Post"; "Sessions History" → "Session History"; title-case location names at render time (util in `core/utils/`).
+- [ ] Register screen: stop relying on placeholders for "Height (Optional)" / "Weight (Optional)" — interim fix here, full field system in Phase 2.
+
+Files: `lib/l10n/app_en.arb`, `app_ar.arb`, regenerated `app_localizations*.dart`,
+`core/widgets/session_card.dart`, `features/players/presentation/screens/players_tab.dart`,
+session detail screens, `features/auth/presentation/screens/register_screen.dart`,
+announcements screens, `features/sessions/.../recurring_sessions_screen.dart` (history title).
+Accept when: no English/Arabic string ever renders a wrong plural; nothing truncates
+on a 360dp-wide device; both locales checked.
+
+---
+
+## Phase 2 — One form-field system + safe areas
+
+**Why:** four labeling systems coexist (placeholder-only, amber headers, white bold,
+floating labels). Placeholder-as-label also fails accessibility — the label
+disappears while typing. Register's CTA sits under the Android gesture bar.
+
+Tasks:
+- [ ] Extend `core/widgets/branded_text_field.dart`: persistent small label ABOVE the filled navy field (the Min Age/Max Age pattern already in Create Session — promote it app-wide). Placeholder becomes a hint only ("cm", "kg", "you@email.com").
+- [ ] Multiline variant: hint text top-left aligned, not vertically centered (announcement Message box).
+- [ ] Migrate every form: Sign In, Register, Create Session, Quick Session, Recurring Session, New Announcement, dialogs (`set_profile_basics_dialog.dart`, `edit_body_metrics_dialog.dart`).
+- [ ] One label style rule: field labels from the shared widget; section headers use the amber caps eyebrow token from Phase 0. Kill the white-bold/amber alternation in Create Session.
+- [ ] `SafeArea`/padding on bottom CTAs (Register button vs gesture bar).
+
+Files: `core/widgets/branded_text_field.dart`, all form screens above.
+Accept when: every text field in the app is the same component with a visible label
+while typing; Register CTA fully above the gesture bar; RTL checked.
+
+---
+
+## Phase 3 — One selector component (chips)
+
+**Why:** three patterns for single-choice: detached pills (Leaderboard/History/Players),
+attached segmented control (announcement Audience), assorted outline chips of varying
+heights (Register gender, Create Session gender/coaches). Same interaction, three languages.
+
+Tasks:
+- [ ] Generalize `core/widgets/gender_filter_chips.dart` into an `AppChoiceChips` component (fixed height, amber fill = selected, navy outline = idle, optional icon + label — never icon-only: ♂/♀ get text labels or semantic labels).
+- [ ] Replace: announcement Audience segmented control; Register Male/Female; Create Session Male/Female/Mixed; coach selector (give it a REAL selected state — currently invisible); This Month/All Time on Leaderboard.
+- [ ] Keep `gender_filter_chips` API as a thin wrapper so existing call sites stay small.
+
+Files: `core/widgets/gender_filter_chips.dart` (→ generalized), announcement composer,
+`register_screen.dart`, `create_session_screen.dart`, leaderboard screen.
+Accept when: exactly one chip silhouette exists app-wide; selected state visible on
+every selector including coaches; all chips have text or semantic labels.
+
+---
+
+## Phase 4 — Layout collisions & session-card hierarchy
+
+**Why:** the FAB covers the second session card's capacity number; lists end flush
+under FAB/nav; the home screen says "2 upcoming sessions" twice; joined sessions
+render twice (hero + list); two unlabeled ratios per card (waitlist 0/6 vs capacity 7/12).
+
+Tasks:
+- [ ] Global: bottom padding (~96dp token) on every scrollable that sits under the FAB or `floating_nav_bar.dart`.
+- [ ] `session_card.dart`: one labeled primary ratio (people icon + "7/12" + thin capacity bar); waitlist collapses to a small pill shown ONLY when non-empty; drop the hourglass mystery ratio.
+- [ ] Fade decorative art (volleyballs/cat) to ~15% opacity behind text/facepile zones via a navy gradient scrim inside the card.
+- [ ] Sessions tab: delete the "2 upcoming sessions" summary card (the greeting + UPCOMING header already carry it); when the Next-Up hero shows a session, compress its list entry (slim "JOINED ✓" row) or drop it.
+- [ ] Countdown: hide the SEC cell when >1h remains ("Starts in 4h 31m" chip style already exists on the hero) — also stops per-second rebuilds.
+
+Files: `core/widgets/session_card.dart`, `sessions_tab.dart`, session detail screens,
+`core/widgets/floating_nav_bar.dart` (exposes its height for padding).
+Accept when: nothing is ever occluded by FAB/nav; each card has exactly one ratio
+with a label; no duplicate representation of the same session on one screen.
+
+---
+
+## Phase 5 — Roster UX & session lifecycle states
+
+**Why:** red remove-attendee icons sit on every row permanently (even on ended
+sessions); empty attendance circles look like radio buttons; "Cancel" in red at the
+app-bar reads as navigation; a finished session shows an alarming red "Session Full"
+chip and red bar; attendance is signaled twice per row.
+
+Tasks:
+- [ ] Edit mode: the existing pencil toggles the roster into edit state; red person-minus icons render ONLY in edit mode. Ended sessions: no remove icons at all.
+- [ ] Replace the unlabeled double-check icon with a labeled outline-chip button ("Mark all") using the Phase 3 component style.
+- [ ] Move "Cancel" out of the app bar → explicit "Cancel session" red-outline button (Sign Out style) in the detail body, behind `confirm_dialog.dart`.
+- [ ] Completed sessions: "Session Full" chip hidden once ended; capacity bar switches to success green; ONE attendance indicator per row (keep avatar badge, drop trailing check); anchor "No endorsements left" text inside the attendees header, not floating.
+- [ ] Attendance circles hidden for player viewers (viewer-aware, coach-only affordance).
+
+Files: session detail / completed session screens, roster row widget,
+`core/widgets/confirm_dialog.dart`, `attendee_facepile.dart` if rings change.
+Accept when: no destructive control visible outside edit mode; ended sessions read
+as celebration (green), not alarm (red); players never see coach-only controls.
+
+---
+
+## Phase 6 — Status system & glow budget
+
+**Why:** membership status wears three costumes on Players (amber outline 2-line,
+solid glowing LIFETIME, green outline Active) and shouts louder than the player's
+name. Glow is everywhere (hero, LIFETIME, milestone thumb, Rookie badge, rings),
+so nothing feels special.
+
+Tasks:
+- [ ] One membership chip: same pill geometry always; color = state (green outline active, amber outline expiring w/ "2d left" second line, solid amber lifetime). Quieter than the player name.
+- [ ] Glow budget — ONE glowing element per screen: keep Next-Up hero (Sessions) and LIFETIME (Players). Flatten milestone-track thumb, Rookie/achievement badge glows, avatar-ring glows to plain amber strokes (`ringed_avatar.dart`, `level_badge.dart`).
+- [ ] Profile milestone track: remove the slider-thumb look — filled progress line with tick dots at 5/20/50/100 (progress, not a draggable).
+- [ ] Verify & fix the duplicated Details/Gender/Account block on the profile screen (reproduce on device; screenshot may be a stitch artifact — if real, it's the first fix of the phase).
+- [ ] Add Photo circle (Register): amber dashed ring + camera icon so it reads as tappable.
+
+Files: `players_tab.dart` + player card widget, `ringed_avatar.dart`, `level_badge.dart`,
+`profile_tab.dart`, `profile_stat_cards.dart`, `register_screen.dart`.
+Accept when: one chip system for membership; ≤1 glow per screen; profile renders
+each section exactly once.
+
+---
+
+## Phase 7 — Leaderboard clarity, accessibility & RTL final pass
+
+**Why:** the podium shows five large numerals whose meanings alternate (rank vs
+score) and never names the metric; ties (2,2,2 → ranks 1,2,3) look arbitrary.
+Secondary gray-on-navy text sits at/below WCAG 4.5:1; micro-labels are ~10sp caps;
+mixed AR/EN announcement text renders scrambled (missing bidi isolation).
+
+Tasks:
+- [ ] Leaderboard: amber caps eyebrow naming the metric ("GAMES THIS MONTH"); score pills get the small volleyball icon so score ≠ rank at a glance; ties share a rank ("=1"); current user's row ringed with the amber stroke; list avatars get the same ring treatment as the rest of the app.
+- [ ] Contrast pass using Phase 0 tokens: secondary text ≥ ~75% white; micro caps labels ≥ 11sp; verify amber-on-navy and green-over-art spots.
+- [ ] Bidi: wrap user-generated content (announcement title/body, names) in Unicode isolates / resolved `Directionality` so embedded English stops shredding Arabic sentences.
+- [ ] Semantics: labels/tooltips on every icon-only button (toolbar download/whistle/trophy/bell, edit, delete); move coach-only toolbar extras into a labeled overflow menu if crowded.
+- [ ] Announcement card: quarantine the trash icon (overflow menu or edit-mode reveal) instead of exposed low-contrast destructive icon next to the title.
+- [ ] Final sweep: run `docs/before-finishing-phase.md` checklist against EVERY screen in `app-ui-screenshots/`, both locales, RTL, small device (360dp).
+
+Files: leaderboard screen, announcements screens, `core/theme/app_theme.dart` tokens,
+toolbar rows in `sessions_tab.dart` / `players_tab.dart`.
+Accept when: metric named on leaderboard; ties honest; WCAG AA for text; VoiceOver/
+TalkBack can name every control; mixed-direction text renders correctly.
+
+---
+
+## Phase 8 — Coaches screen alignment
+
+Source: `app-ui-screenshots/coaches-screen.png` (added 2026-07-12 — missed the original audit).
+
+**Why:** the Coaches screen never got the premium pass and is now the last list
+screen on the old visual language. Each row is an oversized bare pill — 72dp
+avatar, name, kebab, and nothing else — with a hand-rolled initials avatar
+whose gold-at-20%-over-navy disc renders muddy grey-brown. The initials logic
+is duplicated (it already lives in `RingedAvatar` and `PlayerCard`'s avatar),
+and the kebab menu's ONLY item is destructive account deletion, exposed on
+every row a coach can see. Note: `CoachSummary` carries only uid/name/photoUrl
+— no attendance data — so coach rows must not assume tier art.
+
+Tasks:
+- [ ] One avatar fallback app-wide: extract the initials-avatar (photo → gold-on-navy initials) into a shared `core/widgets/` component and use it from `RingedAvatar`, `PlayerCard`, and the coach card — refactor the shared widgets, don't fork a fourth copy. Kills the muddy disc.
+- [ ] Rebuild the coach row on the `PlayerCard` silhouette (same padding, radius, border, shadow, name-first hierarchy) — either reuse `PlayerCard` with its tier/attendance elements optional, or a sibling card built from the same extracted pieces. No 72dp-avatar empty pill.
+- [ ] Give the card content beside the bare name: "COACH" role eyebrow (Phase 0 `AppTextStyles.eyebrow`) as the quiet meta line; count eyebrow above the list ("3 COACHES") to match the Players header discipline. New strings → EN+AR `.arb` + `gen-l10n`.
+- [ ] Destructive hygiene (Phase 5/7 rule): a menu must not contain ONLY a destructive item. Add "View profile" (→ existing viewer-aware `player_profile_screen.dart`) as the first menu item and/or make the row tappable to the profile; "Delete account" stays last, red, behind `confirm_dialog.dart` (already is). Player viewers see no kebab at all (already true — keep it).
+- [ ] Tokens: spacing/radius from `AppSpacing`/`AppRadius`, semantic colors from the Phase 0 extension; RTL + 360dp checked.
+
+Files: `features/coaches/presentation/screens/coaches_tab.dart`,
+`features/players/presentation/widgets/player_card.dart` (generalize),
+`core/widgets/ringed_avatar.dart`, new shared avatar widget in `core/widgets/`,
+`lib/l10n/app_en.arb` + `app_ar.arb`.
+Accept when: the coaches list speaks the same visual language as the Players list
+(card silhouette, avatar treatment, header discipline); initials logic exists exactly
+once; no row exposes a destructive-only menu; both locales + RTL pass.
+
+---
+
+## Phase order rationale
+
+0→1→2→3 are the "unfinished tells" (tokens, plurals, truncation, one field, one chip)
+— roughly 60% of audit findings, near-zero redesign risk. 4→5 fix layout collisions
+and destructive-action hygiene. 6→7 are refinement: status system, glow restraint,
+leaderboard, accessibility. 8 (coaches screen, added 2026-07-12) is an independent
+screen-level pass — it only needs Phase 0 tokens, so it can be pulled earlier if the
+coaches screen becomes a priority. Each phase is independently shippable and reviewed
+against `docs/Rules.md` before approval.

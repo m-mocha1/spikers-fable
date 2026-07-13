@@ -4,7 +4,9 @@ import 'package:intl/intl.dart';
 import 'package:omni_datetime_picker/omni_datetime_picker.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_motion.dart';
 import '../../../../core/utils/app_snackbar.dart';
+import '../../../../core/utils/title_case.dart';
 import '../../../../core/widgets/animations.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -164,12 +166,17 @@ class _QuickSessionScreenState extends ConsumerState<QuickSessionScreen> {
     final canCreate =
         _selected != null && _startTime != null && _endTime != null;
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
       decoration: const BoxDecoration(
         color: AppColors.navyLight,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      child: Column(
+      // SafeArea keeps the Create CTA above the Android gesture bar while the
+      // panel background still reaches the screen edge.
+      child: SafeArea(
+        top: false,
+        child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
+        child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
@@ -214,6 +221,8 @@ class _QuickSessionScreenState extends ConsumerState<QuickSessionScreen> {
           ),
         ],
       ),
+      ),
+      ),
     );
   }
 }
@@ -233,10 +242,10 @@ class _TemplateCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return Pressable(
       onTap: onTap,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
+        duration: AppMotion.fast,
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsetsDirectional.fromSTEB(16, 14, 8, 14),
         decoration: BoxDecoration(
@@ -265,7 +274,7 @@ class _TemplateCard extends StatelessWidget {
                           size: 13, color: AppColors.grey),
                       const SizedBox(width: 3),
                       Expanded(
-                        child: Text(template.location,
+                        child: Text(template.location.toTitleCase(),
                             style: const TextStyle(
                                 color: AppColors.grey, fontSize: 13),
                             maxLines: 1,
@@ -289,6 +298,7 @@ class _TemplateCard extends StatelessWidget {
                     Icon(Icons.check_circle, color: AppColors.gold, size: 20),
               ),
             IconButton(
+              tooltip: AppLocalizations.of(context)!.delete,
               icon: const Icon(Icons.delete_outline,
                   color: AppColors.grey, size: 20),
               onPressed: onDelete,

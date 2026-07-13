@@ -5,7 +5,9 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/utils/app_snackbar.dart';
+import '../../../../core/utils/bidi.dart';
 import '../../../../core/widgets/animations.dart';
+import '../../../../core/widgets/floating_nav_bar.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
@@ -40,6 +42,7 @@ class _AnnouncementsScreenState extends ConsumerState<AnnouncementsScreen> {
       appBar: AppBar(title: Text(l.announcements)),
       floatingActionButton: isCoach
           ? FloatingActionButton(
+              tooltip: l.newAnnouncement,
               onPressed: () async {
                 await context.push(Routes.createAnnouncement);
                 await markAnnouncementsRead(ref);
@@ -59,7 +62,8 @@ class _AnnouncementsScreenState extends ConsumerState<AnnouncementsScreen> {
             );
           }
           return ListView.builder(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
+            padding: const EdgeInsets.fromLTRB(
+                16, 16, 16, FloatingNavBar.scrollClearance),
             itemCount: announcements.length,
             itemBuilder: (_, i) => AppStaggeredItem(
               index: i,
@@ -159,30 +163,65 @@ class _AnnouncementCard extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: Text(announcement.title,
+                // Bidi isolation: mixed AR/EN titles keep their own reading
+                // order instead of shredding around the surrounding layout.
+                child: Text(bidiIsolate(announcement.title),
                     style: const TextStyle(
                         fontWeight: FontWeight.w700, fontSize: 16)),
               ),
-              if (isAuthor)
-                _CardIconButton(
-                  icon: Icons.edit_outlined,
-                  tooltip: l.editAnnouncement,
-                  onTap: () async {
-                    await context.push(Routes.createAnnouncement,
-                        extra: announcement);
-                    await markAnnouncementsRead(ref);
+              // Destructive action quarantined behind an overflow menu
+              // instead of an always-exposed trash icon next to the title
+              // (Premium Pass Phase 7).
+              if (isAuthor || canDelete)
+                PopupMenuButton<String>(
+                  icon: const Icon(Icons.more_vert,
+                      size: 20, color: AppColors.grey),
+                  color: AppColors.navyLight,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 160),
+                  onSelected: (action) async {
+                    switch (action) {
+                      case 'edit':
+                        await context.push(Routes.createAnnouncement,
+                            extra: announcement);
+                        await markAnnouncementsRead(ref);
+                      case 'delete':
+                        await _confirmDelete(context, ref);
+                    }
                   },
-                ),
-              if (canDelete)
-                _CardIconButton(
-                  icon: Icons.delete_outline,
-                  tooltip: l.delete,
-                  onTap: () => _confirmDelete(context, ref),
+                  itemBuilder: (_) => [
+                    if (isAuthor)
+                      PopupMenuItem(
+                        value: 'edit',
+                        child: Row(
+                          children: [
+                            const Icon(Icons.edit_outlined,
+                                size: 18, color: AppColors.gold),
+                            const SizedBox(width: 10),
+                            Text(l.editAnnouncement),
+                          ],
+                        ),
+                      ),
+                    if (canDelete)
+                      PopupMenuItem(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            const Icon(Icons.delete_outline,
+                                size: 18, color: AppColors.errorRed),
+                            const SizedBox(width: 10),
+                            Text(l.delete,
+                                style: const TextStyle(
+                                    color: AppColors.errorRed)),
+                          ],
+                        ),
+                      ),
+                  ],
                 ),
             ],
           ),
           const SizedBox(height: 6),
-          Text(announcement.body,
+          Text(bidiIsolate(announcement.body),
               style: const TextStyle(fontSize: 14, height: 1.4)),
           const SizedBox(height: 10),
           Row(
@@ -202,7 +241,7 @@ class _AnnouncementCard extends ConsumerWidget {
                           size: 14, color: AppColors.gold),
                       const SizedBox(width: 6),
                       Flexible(
-                        child: Text(announcement.authorName,
+                        child: Text(bidiIsolate(announcement.authorName),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
@@ -250,25 +289,3 @@ class _AnnouncementCard extends ConsumerWidget {
   }
 }
 
-class _CardIconButton extends StatelessWidget {
-  final IconData icon;
-  final String tooltip;
-  final VoidCallback onTap;
-  const _CardIconButton({
-    required this.icon,
-    required this.tooltip,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return IconButton(
-      icon: Icon(icon, size: 20, color: AppColors.grey),
-      tooltip: tooltip,
-      onPressed: onTap,
-      visualDensity: VisualDensity.compact,
-      padding: EdgeInsets.zero,
-      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-    );
-  }
-}

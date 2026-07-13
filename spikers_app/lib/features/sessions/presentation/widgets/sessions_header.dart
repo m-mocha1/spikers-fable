@@ -30,6 +30,20 @@ class SessionsHeader extends StatelessWidget {
     required this.sessions,
   });
 
+  /// The viewer's own next commitment (attendee or waitlist), earliest first —
+  /// the session the Next-Up hero spotlights. Exposed so the list below can
+  /// compress that session's entry instead of rendering it twice on one screen.
+  static SessionModel? nextUpFor(UserModel user, List<SessionModel> sessions) {
+    final now = DateTime.now();
+    final mine = sessions
+        .where((s) =>
+            (s.isJoinedBy(user.uid) || s.isWaitlistedBy(user.uid)) &&
+            s.endTime.isAfter(now))
+        .toList()
+      ..sort((a, b) => a.startTime.compareTo(b.startTime));
+    return mine.isEmpty ? null : mine.first;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
@@ -39,14 +53,7 @@ class SessionsHeader extends StatelessWidget {
         ? ''
         : user.name.trim().split(' ').first;
 
-    // The viewer's own next commitment (attendee or waitlist), earliest first.
-    final mine = sessions
-        .where((s) =>
-            (s.isJoinedBy(user.uid) || s.isWaitlistedBy(user.uid)) &&
-            s.endTime.isAfter(now))
-        .toList()
-      ..sort((a, b) => a.startTime.compareTo(b.startTime));
-    final next = mine.isEmpty ? null : mine.first;
+    final next = nextUpFor(user, sessions);
 
     final weekCount = sessions
         .where((s) =>
@@ -88,20 +95,20 @@ class SessionsHeader extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 18),
-            if (next != null)
+            if (next != null) ...[
               _NextUpHero(
                 session: next,
                 l: l,
                 isWaitlisted: next.isWaitlistedBy(user.uid),
-              )
-            else
-              _NudgeCard(
-                l: l,
-                isCoach: user.isCoach,
-                weekCount: weekCount,
-                totalUpcoming: sessions.length,
               ),
-            const SizedBox(height: 26),
+              const SizedBox(height: 26),
+            ] else if (!user.isCoach) ...[
+              // Players with nothing booked get a nudge; coaches get nothing
+              // here — the UPCOMING count pill below already summarizes the
+              // schedule, so a "N upcoming sessions" card would say it twice.
+              _NudgeCard(l: l, weekCount: weekCount),
+              const SizedBox(height: 26),
+            ],
             _SectionLabel(label: l.upcoming, count: sessions.length),
           ],
         ),
@@ -164,14 +171,26 @@ class _NextUpHero extends StatelessWidget {
           borderRadius: BorderRadius.circular(22),
           child: Stack(
             children: [
-              // NOTE: deliberately not a Hero — the same session also renders
-              // in the list below, and duplicate in-flight hero tags throw.
+              // The spotlighted session appears in the list below only as a
+              // slim art-less stub, so this tag is unique on screen and the
+              // art can fly to the detail banner. The Hero carries its own
+              // rounded clip because the flight renders outside this ClipRRect.
               Positioned.fill(
-                child: Image.asset(designAsset, fit: BoxFit.cover),
-              ),
-              const Positioned.fill(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(gradient: AppGradients.heroScrim),
+                child: Hero(
+                  tag: 'session_art_${session.id}',
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(22),
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        Image.asset(designAsset, fit: BoxFit.cover),
+                        const DecoratedBox(
+                          decoration:
+                              BoxDecoration(gradient: AppGradients.heroScrim),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
               Padding(
@@ -378,28 +397,18 @@ class _CountdownChipState extends State<_CountdownChip> {
   }
 }
 
-/// Shown when the viewer has nothing booked: a coach sees an upcoming-count
-/// summary; a player gets a nudge toward this week's sessions.
+/// Shown when a player has nothing booked: a nudge toward this week's
+/// sessions (coaches skip this card entirely — see [SessionsHeader.build]).
 class _NudgeCard extends StatelessWidget {
   final AppLocalizations l;
-  final bool isCoach;
   final int weekCount;
-  final int totalUpcoming;
-  const _NudgeCard({
-    required this.l,
-    required this.isCoach,
-    required this.weekCount,
-    required this.totalUpcoming,
-  });
+  const _NudgeCard({required this.l, required this.weekCount});
 
   @override
   Widget build(BuildContext context) {
     final String text;
     final IconData icon;
-    if (isCoach) {
-      text = l.upcomingSessionsCount(totalUpcoming);
-      icon = Icons.event_available_outlined;
-    } else if (weekCount > 0) {
+    if (weekCount > 0) {
       text = l.sessionsThisWeek(weekCount);
       icon = Icons.local_fire_department_outlined;
     } else {

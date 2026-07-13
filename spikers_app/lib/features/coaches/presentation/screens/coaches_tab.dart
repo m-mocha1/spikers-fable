@@ -1,14 +1,18 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/router/app_router.dart';
+import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/app_snackbar.dart';
 import '../../../../core/widgets/animations.dart';
 import '../../../../core/widgets/confirm_dialog.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
+import '../../../players/presentation/widgets/player_card.dart';
 import '../../domain/entities/coach_summary.dart';
 import '../providers/coaches_providers.dart';
 
@@ -21,7 +25,7 @@ class CoachesTab extends ConsumerWidget {
     final coachesAsync = ref.watch(coachesProvider);
 
     return coachesAsync.when(
-      loading: () => const ListShimmer(itemHeight: 112),
+      loading: () => const ListShimmer(itemHeight: 76),
       error: (e, _) =>
           ErrorView(onRetry: () => ref.invalidate(coachesProvider)),
       data: (coaches) {
@@ -30,21 +34,49 @@ class CoachesTab extends ConsumerWidget {
               icon: Icons.sports_outlined, title: l.noCoaches);
         }
         return ListView.builder(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-          itemCount: coaches.length,
-          itemBuilder: (_, i) => AppStaggeredItem(
-            index: i,
-            child: _CoachCard(coach: coaches[i]),
-          ),
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          // +1 for the count header at index 0.
+          itemCount: coaches.length + 1,
+          itemBuilder: (_, i) {
+            if (i == 0) {
+              // Quiet count line, matching the header discipline of the
+              // players list.
+              return Padding(
+                padding: const EdgeInsetsDirectional.only(
+                  start: AppSpacing.xs,
+                  bottom: AppSpacing.md,
+                ),
+                child: Text(
+                  l.coachesCount(coaches.length).toUpperCase(),
+                  style: AppTextStyles.sectionHeader,
+                ),
+              );
+            }
+            final coach = coaches[i - 1];
+            return AppStaggeredItem(
+              key: ValueKey(coach.uid),
+              index: i - 1,
+              child: _CoachCard(coach: coach),
+            );
+          },
         );
       },
     );
   }
 }
 
+/// Coach row on the shared [PlayerCard] silhouette — same card, avatar ring
+/// and name-first hierarchy as the players list, with a quiet COACH eyebrow
+/// instead of the attendance story (`CoachSummary` carries no attendance
+/// data). The whole row opens the viewer-aware profile; the staff-only menu
+/// leads with that same non-destructive action so deletion is never the only
+/// item.
 class _CoachCard extends ConsumerWidget {
   final CoachSummary coach;
   const _CoachCard({required this.coach});
+
+  void _openProfile(BuildContext context) =>
+      context.push(Routes.playerProfile, extra: coach.uid);
 
   Future<void> _confirmDelete(
       BuildContext context, WidgetRef ref, AppLocalizations l) async {
@@ -69,73 +101,51 @@ class _CoachCard extends ConsumerWidget {
     final l = AppLocalizations.of(context)!;
     final isCoach = ref.watch(isCoachProvider);
     final myUid = ref.watch(currentUserProvider).value?.uid;
+    // Staff manage coach accounts, but nobody may delete their own account
+    // (mirrors the server-side guard). Players see no menu at all.
     final canDelete = isCoach && coach.uid != myUid;
-    final initials = coach.name.trim().isEmpty
-        ? '?'
-        : coach.name
-            .trim()
-            .split(' ')
-            .map((w) => w[0])
-            .take(2)
-            .join()
-            .toUpperCase();
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 14),
-      decoration: BoxDecoration(
-        color: AppColors.navyLight,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
-        child: Row(
-          children: [
-            CircleAvatar(
-              radius: 36,
-              backgroundColor: AppColors.gold.withValues(alpha: 0.2),
-              backgroundImage: coach.photoUrl.isNotEmpty
-                  ? CachedNetworkImageProvider(coach.photoUrl)
-                  : null,
-              child: coach.photoUrl.isEmpty
-                  ? Text(initials,
-                      style: const TextStyle(
-                          color: AppColors.gold,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 22))
-                  : null,
-            ),
-            const SizedBox(width: 18),
-            Expanded(
-              child: Text(coach.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.w600, fontSize: 19)),
-            ),
-            if (canDelete)
-              PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert, color: AppColors.grey),
-                color: AppColors.navyLight,
-                onSelected: (_) => _confirmDelete(context, ref, l),
-                itemBuilder: (_) => [
-                  PopupMenuItem<String>(
-                    value: 'delete',
-                    child: Row(
-                      children: [
-                        const Icon(Icons.delete_outline,
-                            color: AppColors.errorRed, size: 20),
-                        const SizedBox(width: 10),
-                        Text(l.delete,
-                            style: const TextStyle(color: AppColors.white)),
-                      ],
-                    ),
+    return PlayerCard(
+      name: coach.name,
+      photoUrl: coach.photoUrl,
+      roleLabel: l.coachLabel,
+      onTap: () => _openProfile(context),
+      trailing: canDelete
+          ? PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert, color: AppColors.grey),
+              color: AppColors.navyLight,
+              onSelected: (action) => switch (action) {
+                'profile' => _openProfile(context),
+                _ => _confirmDelete(context, ref, l),
+              },
+              itemBuilder: (_) => [
+                PopupMenuItem<String>(
+                  value: 'profile',
+                  child: Row(
+                    children: [
+                      const Icon(Icons.person_outline,
+                          color: AppColors.grey, size: 20),
+                      const SizedBox(width: AppSpacing.sm + 2),
+                      Text(l.viewProfile,
+                          style: const TextStyle(color: AppColors.white)),
+                    ],
                   ),
-                ],
-              ),
-          ],
-        ),
-      ),
+                ),
+                PopupMenuItem<String>(
+                  value: 'delete',
+                  child: Row(
+                    children: [
+                      const Icon(Icons.delete_outline,
+                          color: AppColors.errorRed, size: 20),
+                      const SizedBox(width: AppSpacing.sm + 2),
+                      Text(l.delete,
+                          style: const TextStyle(color: AppColors.white)),
+                    ],
+                  ),
+                ),
+              ],
+            )
+          : null,
     );
   }
 }

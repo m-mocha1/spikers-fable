@@ -5,7 +5,9 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/utils/app_snackbar.dart';
+import '../../../../core/utils/title_case.dart';
 import '../../../../core/widgets/animations.dart';
+import '../../../../core/widgets/floating_nav_bar.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'package:spikers_app/features/sessions/domain/entities/recurring_session_model.dart';
@@ -39,7 +41,8 @@ class RecurringSessionsScreen extends ConsumerWidget {
             );
           }
           return ListView.builder(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
+            padding: const EdgeInsets.fromLTRB(
+                16, 16, 16, FloatingNavBar.scrollClearance),
             itemCount: items.length,
             itemBuilder: (_, i) => AppStaggeredItem(
               index: i,
@@ -103,7 +106,7 @@ class _RecurringCard extends ConsumerWidget {
     final timeStr =
         '${_fmtTime(model.startHour, model.startMinute)} – ${_fmtTime(model.endHour, model.endMinute)}';
 
-    return GestureDetector(
+    return Pressable(
       onTap: () => context.push(Routes.createRecurring, extra: model),
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
@@ -139,7 +142,7 @@ class _RecurringCard extends ConsumerWidget {
                     size: 13, color: AppColors.grey),
                 const SizedBox(width: 3),
                 Flexible(
-                  child: Text(model.location,
+                  child: Text(model.location.toTitleCase(),
                       style:
                           const TextStyle(color: AppColors.grey, fontSize: 13),
                       maxLines: 1,
@@ -190,6 +193,7 @@ class _RecurringCard extends ConsumerWidget {
                   ),
                 ),
                 IconButton(
+                  tooltip: AppLocalizations.of(context)!.delete,
                   icon: const Icon(Icons.delete_outline,
                       size: 20, color: AppColors.grey),
                   onPressed: () => _confirmDelete(context, ref),

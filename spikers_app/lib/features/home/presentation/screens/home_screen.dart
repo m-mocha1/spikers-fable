@@ -173,6 +173,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
       floatingActionButton: (isCoach && _index == 0)
           ? FloatingActionButton.small(
+              tooltip: l.newSession,
               onPressed: () => _showSessionOptions(context, l),
               child: const Icon(Icons.add),
             ).animate().scale(

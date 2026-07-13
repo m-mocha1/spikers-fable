@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -12,6 +11,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_motion.dart';
 import '../../../../core/utils/attendance_tiers.dart';
 import '../../../../core/utils/endorsement_level.dart';
+import '../../../../core/widgets/animations.dart';
 import '../../../../core/widgets/celebration.dart';
 import '../../../../core/widgets/injured_icon.dart';
 import '../../../../core/providers/locale_provider.dart';
@@ -19,14 +19,19 @@ import '../../../../core/router/app_router.dart';
 import '../../../../core/utils/app_snackbar.dart';
 import '../../../../core/utils/media_permissions.dart';
 import '../../../../l10n/app_localizations.dart';
+import 'package:spikers_app/core/widgets/branded_text_field.dart';
 import 'package:spikers_app/core/widgets/confirm_dialog.dart';
 import 'package:spikers_app/core/widgets/edit_body_metrics_dialog.dart';
+import 'package:spikers_app/core/widgets/floating_nav_bar.dart';
+import 'package:spikers_app/core/widgets/membership_chip.dart';
 import 'package:spikers_app/core/widgets/profile_info.dart';
+import 'package:spikers_app/core/widgets/ringed_avatar.dart';
 import 'package:spikers_app/core/widgets/set_profile_basics_dialog.dart';
 import '../../../auth/domain/entities/user_model.dart';
 import '../../../auth/domain/repositories/auth_repository.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../providers/profile_providers.dart';
+import '../widgets/achievements_card.dart';
 import '../widgets/profile_stat_cards.dart';
 
 class ProfileTab extends ConsumerStatefulWidget {
@@ -215,21 +220,32 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
       if (count != null) _checkEndorsementMilestone(user.uid, count, l);
     });
 
+    // The hero avatar docks the tier badge once the attendance count lands
+    // (mirroring the games-played card's coach-with-zero hiding rule).
+    final attendance = ref.watch(myAttendanceCountProvider(user.uid)).value;
+    final showTierBadge =
+        attendance != null && !(user.isCoach && attendance == 0);
+    final tier = AttendanceTiers.tierIndex(attendance ?? 0);
+
     return KeyedSubtree(
       key: ValueKey(widget.revealGeneration),
       child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(24, 24, 24, 100),
+        padding: const EdgeInsets.fromLTRB(
+            24, 24, 24, FloatingNavBar.scrollClearance),
         child: Column(
           children:
               [
-                    const SizedBox(height: 16),
-                    _Avatar(
-                      name: user.name,
-                      photoUrl: user.photoUrl,
+                    const SizedBox(height: 8),
+                    _HeroAvatar(
+                      user: user,
+                      badgeAsset: showTierBadge
+                          ? AppAssets.gamesPlayedBadges[tier]
+                          : null,
+                      badgeLabel: showTierBadge ? tierLabel(l, tier) : null,
                       isUploading: _uploading,
                       onTap: () => _showAvatarPicker(l),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 14),
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -238,8 +254,9 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
                             user.name,
                             textAlign: TextAlign.center,
                             style: const TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w700,
+                              fontSize: 24,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.2,
                             ),
                           ),
                         ),
@@ -249,16 +266,25 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
                         ],
                       ],
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 3),
                     Text(
                       email,
                       style: const TextStyle(
                         color: AppColors.grey,
-                        fontSize: 14,
+                        fontSize: 13,
                       ),
                     ),
                     const SizedBox(height: 12),
-                    ProfileRoleBadge(isCoach: user.isCoach, l: l),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      alignment: WrapAlignment.center,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        ProfileRoleBadge(isCoach: user.isCoach, l: l),
+                        _MemberSinceChip(year: user.createdAt.year, l: l),
+                      ],
+                    ),
                     const SizedBox(height: 24),
                     GamesPlayedCard(
                       uid: user.uid,
@@ -270,12 +296,16 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
                       isCoach: user.isCoach,
                       l: l,
                     ),
+                    AchievementsCard(uid: user.uid, l: l),
+                    const SizedBox(height: 24),
+                    _SectionHeader(label: l.sectionDetails),
+                    const SizedBox(height: 10),
                     ProfileStatsRow(
                       user: user,
                       l: l,
                       onEdit: () => showEditBodyMetricsDialog(context, user),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
                     ProfileInfoCard(user: user, l: l),
                     if (user.gender == null || user.dateOfBirth == null) ...[
                       const SizedBox(height: 12),
@@ -285,10 +315,10 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
                       ),
                     ],
                     const SizedBox(height: 24),
-                    _PaymentHistoryRow(l: l, user: user),
-                    const SizedBox(height: 16),
-                    _LanguageToggle(l: l),
-                    const SizedBox(height: 16),
+                    _SectionHeader(label: l.sectionAccount),
+                    const SizedBox(height: 10),
+                    _AccountCard(l: l, user: user),
+                    const SizedBox(height: 20),
                     SizedBox(
                       width: double.infinity,
                       child: OutlinedButton.icon(
@@ -354,6 +384,144 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
   }
 }
 
+/// Quiet uppercase divider between the profile's zones — gamified cards above,
+/// personal details and account plumbing below.
+class _SectionHeader extends StatelessWidget {
+  final String label;
+  const _SectionHeader({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: AlignmentDirectional.centerStart,
+      child: Padding(
+        padding: const EdgeInsetsDirectional.only(start: 4),
+        child: Text(
+          label.toUpperCase(),
+          // ≥75% white keeps this quiet header above WCAG AA on the navy
+          // gradient (Premium Pass Phase 7 contrast pass).
+          style: TextStyle(
+            color: AppColors.white.withValues(alpha: 0.75),
+            fontSize: 11.5,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1.4,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The owner's hero avatar: ringed tier avatar plus the photo-upload
+/// affordances (camera chip docked bottom-start so it never collides with the
+/// tier badge on the bottom-end corner, and a dimming spinner while a new
+/// photo uploads).
+class _HeroAvatar extends StatelessWidget {
+  final UserModel user;
+  final String? badgeAsset;
+  final String? badgeLabel;
+  final bool isUploading;
+  final VoidCallback? onTap;
+  const _HeroAvatar({
+    required this.user,
+    this.badgeAsset,
+    this.badgeLabel,
+    this.isUploading = false,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Pressable(
+      onTap: isUploading ? null : onTap,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          RingedAvatar(
+            name: user.name,
+            photoUrl: user.photoUrl,
+            radius: 64,
+            badgeAsset: badgeAsset,
+            badgeLabel: badgeLabel,
+          ),
+          if (isUploading)
+            // 140 = inner avatar (128) + ring and gap padding (2 × 6).
+            Container(
+              width: 140,
+              height: 140,
+              decoration: const BoxDecoration(
+                color: Colors.black45,
+                shape: BoxShape.circle,
+              ),
+              child: const Center(
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColors.gold,
+                ),
+              ),
+            ),
+          if (!isUploading)
+            PositionedDirectional(
+              bottom: 2,
+              start: 2,
+              child: Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: AppColors.navyLight,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppColors.navyBlue, width: 2),
+                ),
+                child: const Icon(
+                  Icons.camera_alt,
+                  size: 14,
+                  color: AppColors.gold,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Quiet "member since {year}" chip next to the role badge.
+class _MemberSinceChip extends StatelessWidget {
+  final int year;
+  final AppLocalizations l;
+  const _MemberSinceChip({required this.year, required this.l});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.navyLight,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.white.withValues(alpha: 0.10)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.calendar_month_outlined,
+            size: 14,
+            color: AppColors.grey,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            l.memberSince('$year'),
+            style: const TextStyle(
+              color: AppColors.grey,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// Shown on the owner's profile when gender and/or date of birth are not set
 /// yet. Opens the set-once dialog. Disappears once both are filled in.
 class _CompleteProfileCard extends StatelessWidget {
@@ -404,173 +572,100 @@ class _CompleteProfileCard extends StatelessWidget {
   }
 }
 
-class _Avatar extends StatelessWidget {
-  final String name;
-  final String? photoUrl;
-  final bool isUploading;
-  final VoidCallback? onTap;
-  const _Avatar({
-    required this.name,
-    this.photoUrl,
-    this.isUploading = false,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final initials = name.trim().isEmpty
-        ? '?'
-        : name.trim().split(' ').map((w) => w[0]).take(2).join().toUpperCase();
-
-    return GestureDetector(
-      onTap: isUploading ? null : onTap,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          CircleAvatar(
-            radius: 80,
-            backgroundColor: AppColors.gold,
-            backgroundImage: (photoUrl != null && photoUrl!.isNotEmpty)
-                ? CachedNetworkImageProvider(photoUrl!)
-                : null,
-            child: (photoUrl == null || photoUrl!.isEmpty)
-                ? Text(
-                    initials,
-                    style: const TextStyle(
-                      fontSize: 44,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.navyBlue,
-                    ),
-                  )
-                : null,
-          ),
-          if (isUploading)
-            Container(
-              width: 160,
-              height: 160,
-              decoration: const BoxDecoration(
-                color: Colors.black45,
-                shape: BoxShape.circle,
-              ),
-              child: const Center(
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: AppColors.gold,
-                ),
-              ),
-            ),
-          if (!isUploading)
-            Positioned(
-              bottom: 0,
-              right: 0,
-              child: Container(
-                padding: const EdgeInsets.all(5),
-                decoration: BoxDecoration(
-                  color: AppColors.navyLight,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.navyBlue, width: 2),
-                ),
-                child: const Icon(
-                  Icons.camera_alt,
-                  size: 14,
-                  color: AppColors.gold,
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-/// The signed-in user's own membership row: current status at a glance
-/// (players only — coaches don't pay dues) and a tap-through to the payment
-/// history log.
-class _PaymentHistoryRow extends StatelessWidget {
+/// Account plumbing grouped into one card: payment history (with the member's
+/// live membership status) and the language toggle, separated by a hairline —
+/// so utility rows stop competing with the stat cards above for attention.
+class _AccountCard extends ConsumerWidget {
   final AppLocalizations l;
   final UserModel user;
-  const _PaymentHistoryRow({required this.l, required this.user});
+  const _AccountCard({required this.l, required this.user});
 
   @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () => context.push('${Routes.paymentHistory}?uid=${user.uid}'),
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: AppColors.navyLight,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.receipt_long_outlined, color: AppColors.gold),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                l.paymentHistory,
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-            ),
-            if (!user.isCoach) ...[
-              _MembershipStatusPill(user: user, l: l),
-              const SizedBox(width: 8),
-            ],
-            Icon(
-              Directionality.of(context) == TextDirection.rtl
-                  ? Icons.arrow_back_ios_new
-                  : Icons.arrow_forward_ios,
-              size: 16,
-              color: AppColors.grey,
-            ),
-          ],
-        ),
-      ),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isArabic = ref.watch(localeProvider).languageCode == 'ar';
+    final chevron = Icon(
+      Directionality.of(context) == TextDirection.rtl
+          ? Icons.chevron_left
+          : Icons.chevron_right,
+      size: 20,
+      color: AppColors.white.withValues(alpha: 0.30),
     );
-  }
-}
-
-/// Mirrors the coach-view paid badge so a player sees the same status the
-/// coach does: gold lifetime, red expired, amber when ≤9 days remain,
-/// green otherwise.
-class _MembershipStatusPill extends StatelessWidget {
-  final UserModel user;
-  final AppLocalizations l;
-  const _MembershipStatusPill({required this.user, required this.l});
-
-  @override
-  Widget build(BuildContext context) {
-    final daysLeft = user.paymentDaysLeft;
-    final Color color;
-    if (user.lifetimeMember) {
-      color = AppColors.gold;
-    } else if (!user.isPaid || daysLeft == 0) {
-      color = AppColors.errorRed;
-    } else if (daysLeft <= 9) {
-      color = AppColors.warning;
-    } else {
-      color = AppColors.success;
-    }
-    final showDays = !user.lifetimeMember && user.isPaid && daysLeft <= 9;
-    final label = user.lifetimeMember
-        ? l.lifetime
-        : user.isPaid
-            ? l.paid
-            : l.unpaid;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color),
-      ),
-      child: Text(
-        showDays ? '$label · ${l.daysLeft(daysLeft)}' : label,
-        style: TextStyle(
-          color: color,
-          fontWeight: FontWeight.w700,
-          fontSize: 12,
+      clipBehavior: Clip.antiAlias,
+      decoration: profileCardChrome(),
+      child: Material(
+        color: Colors.transparent,
+        child: Column(
+          children: [
+            InkWell(
+              onTap: () =>
+                  context.push('${Routes.paymentHistory}?uid=${user.uid}'),
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.receipt_long_outlined,
+                      color: AppColors.gold,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        l.paymentHistory,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    if (!user.isCoach) ...[
+                      MembershipChip(
+                        isPaid: user.isPaid,
+                        daysLeft: user.paymentDaysLeft,
+                        isLifetime: user.lifetimeMember,
+                      ),
+                      const SizedBox(width: 8),
+                    ],
+                    chevron,
+                  ],
+                ),
+              ),
+            ),
+            Container(
+              height: 1,
+              margin: const EdgeInsetsDirectional.only(start: 52, end: 16),
+              color: AppColors.white.withValues(alpha: 0.06),
+            ),
+            InkWell(
+              onTap: () => ref.read(localeProvider.notifier).toggle(),
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                child: Row(
+                  children: [
+                    const Icon(Icons.language_outlined, color: AppColors.gold),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        l.switchLanguage,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    // The language you'd switch TO — clearer than an arrow.
+                    Text(
+                      isArabic ? 'English' : 'العربية',
+                      style: const TextStyle(
+                        color: AppColors.gold,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    chevron,
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -637,23 +732,17 @@ class _CoachKeyDialogState extends ConsumerState<_CoachKeyDialog> {
         l.coachKey,
         style: const TextStyle(color: AppColors.white),
       ),
-      content: TextField(
+      content: BrandedTextField(
+        label: l.coachKey,
+        hint: l.coachKeyHint,
         controller: _keyCtrl,
         autofocus: true,
         enabled: !_submitting,
         onSubmitted: (_) => _submit(),
-        style: const TextStyle(color: AppColors.white),
-        decoration: InputDecoration(
-          hintText: l.coachKeyHint,
-          hintStyle: const TextStyle(color: AppColors.grey),
-          errorText: _errorText,
-          enabledBorder: const UnderlineInputBorder(
-            borderSide: BorderSide(color: AppColors.grey),
-          ),
-          focusedBorder: const UnderlineInputBorder(
-            borderSide: BorderSide(color: AppColors.gold),
-          ),
-        ),
+        errorText: _errorText,
+        // The dialog surface is navyLight — use the darker navy fill so the
+        // field stays visible.
+        fillColor: AppColors.navyBlue,
       ),
       actions: [
         TextButton(
@@ -681,44 +770,6 @@ class _CoachKeyDialogState extends ConsumerState<_CoachKeyDialog> {
                 ),
         ),
       ],
-    );
-  }
-}
-
-class _LanguageToggle extends ConsumerWidget {
-  final AppLocalizations l;
-  const _LanguageToggle({required this.l});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final isArabic = ref.watch(localeProvider).languageCode == 'ar';
-    return InkWell(
-      onTap: () => ref.read(localeProvider.notifier).toggle(),
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: AppColors.navyLight,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.language_outlined, color: AppColors.gold),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                l.switchLanguage,
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-            ),
-            Icon(
-              isArabic ? Icons.arrow_forward_ios : Icons.arrow_back_ios,
-              size: 16,
-              color: AppColors.grey,
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

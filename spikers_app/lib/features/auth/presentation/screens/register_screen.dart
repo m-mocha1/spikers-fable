@@ -8,11 +8,13 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/app_snackbar.dart';
 import '../../../../core/utils/media_permissions.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'package:spikers_app/core/widgets/animations.dart';
+import 'package:spikers_app/core/widgets/app_choice_chips.dart';
 import 'package:spikers_app/core/widgets/branded_button.dart';
 import 'package:spikers_app/core/widgets/branded_text_field.dart';
 import '../../domain/repositories/auth_repository.dart';
@@ -175,7 +177,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final l = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(title: Text(l.register)),
-      body: SingleChildScrollView(
+      // SafeArea keeps the Register CTA above the Android gesture bar.
+      body: SafeArea(
+        child: SingleChildScrollView(
         padding: const EdgeInsetsDirectional.fromSTEB(24, 24, 24, 40),
         child: AppFadeIn(
           child: Form(
@@ -184,48 +188,68 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // --- Photo picker ---
+              // Amber dashed ring around the empty state so the circle reads
+              // as a tappable "add" affordance, not a placeholder avatar
+              // (Premium Pass Phase 6).
               Center(
-                child: GestureDetector(
-                  onTap: () => _showPhotoPicker(l),
-                  child: Stack(
-                    alignment: Alignment.bottomRight,
-                    children: [
-                      CircleAvatar(
-                        radius: 50,
-                        backgroundColor: AppColors.navyLight,
-                        backgroundImage: _photoFile != null
-                            ? FileImage(File(_photoFile!.path))
-                                as ImageProvider
-                            : null,
-                        child: _photoFile == null
-                            ? Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Icon(Icons.camera_alt_outlined,
-                                      color: AppColors.gold, size: 28),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    l.addPhoto,
-                                    style: const TextStyle(
-                                        color: AppColors.grey, fontSize: 10),
-                                  ),
-                                ],
-                              )
-                            : null,
-                      ),
-                      if (_photoFile != null)
-                        Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            color: AppColors.gold,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                                color: AppColors.navyBlue, width: 2),
+                child: Semantics(
+                  button: true,
+                  label: l.addPhoto,
+                  child: Pressable(
+                    onTap: () => _showPhotoPicker(l),
+                    child: Stack(
+                      alignment: Alignment.bottomRight,
+                      children: [
+                        CustomPaint(
+                          painter: _photoFile == null
+                              ? _DashedRingPainter(
+                                  color: AppColors.gold,
+                                  strokeWidth: 1.6,
+                                )
+                              : null,
+                          child: Padding(
+                            padding: const EdgeInsets.all(4),
+                            child: CircleAvatar(
+                              radius: 50,
+                              backgroundColor: AppColors.navyLight,
+                              backgroundImage: _photoFile != null
+                                  ? FileImage(File(_photoFile!.path))
+                                      as ImageProvider
+                                  : null,
+                              child: _photoFile == null
+                                  ? Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        const Icon(Icons.camera_alt_outlined,
+                                            color: AppColors.gold, size: 28),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          l.addPhoto,
+                                          style: const TextStyle(
+                                              color: AppColors.grey,
+                                              fontSize: 11),
+                                        ),
+                                      ],
+                                    )
+                                  : null,
+                            ),
                           ),
-                          child: const Icon(Icons.edit,
-                              size: 12, color: AppColors.navyBlue),
                         ),
-                    ],
+                        if (_photoFile != null)
+                          Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: AppColors.gold,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                  color: AppColors.navyBlue, width: 2),
+                            ),
+                            child: const Icon(Icons.edit,
+                                size: 12, color: AppColors.navyBlue),
+                          ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -253,6 +277,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 controller: _passCtrl,
                 obscureText: !_showPass,
                 suffixIcon: IconButton(
+                  tooltip: _showPass ? l.hidePassword : l.showPassword,
                   icon: Icon(
                     _showPass ? Icons.visibility_off : Icons.visibility,
                     color: AppColors.grey,
@@ -269,6 +294,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 controller: _confirmCtrl,
                 obscureText: !_showConfirm,
                 suffixIcon: IconButton(
+                  tooltip: _showConfirm ? l.hidePassword : l.showPassword,
                   icon: Icon(
                     _showConfirm ? Icons.visibility_off : Icons.visibility,
                     color: AppColors.grey,
@@ -283,33 +309,26 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               const SizedBox(height: 24),
 
               // --- Gender (optional) ---
-              Text('${l.gender} (${l.optional})',
-                  style: const TextStyle(
-                      color: AppColors.gold, fontWeight: FontWeight.w600)),
+              Text('${l.gender} (${l.optional})'.toUpperCase(),
+                  style: AppTextStyles.eyebrow),
               const SizedBox(height: 8),
-              Row(
-                children: [
-                  _GenderChip(
-                    label: l.male,
-                    selected: _gender == 'male',
-                    // Tapping a selected chip clears it — gender is optional.
-                    onTap: () => setState(
-                        () => _gender = _gender == 'male' ? null : 'male'),
-                  ),
-                  const SizedBox(width: 12),
-                  _GenderChip(
-                    label: l.female,
-                    selected: _gender == 'female',
-                    onTap: () => setState(
-                        () => _gender = _gender == 'female' ? null : 'female'),
-                  ),
+              AppChoiceChips<String>(
+                value: _gender,
+                // Tapping the selected chip again clears it — gender is
+                // optional.
+                onSelected: (v) =>
+                    setState(() => _gender = _gender == v ? null : v),
+                options: [
+                  AppChoiceChipOption(value: 'male', label: l.male),
+                  AppChoiceChipOption(value: 'female', label: l.female),
                 ],
               ),
               const SizedBox(height: 24),
 
               // --- Date of Birth (optional) ---
               BrandedTextField(
-                label: '${l.dateOfBirth} (${l.optional})',
+                label: l.dateOfBirth,
+                helperText: l.optional,
                 hint: l.selectDate,
                 controller: _dobCtrl,
                 readOnly: true,
@@ -324,7 +343,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 children: [
                   Expanded(
                     child: BrandedTextField(
-                      label: '${l.height} (${l.optional})',
+                      label: l.height,
+                      helperText: l.optional,
                       hint: l.heightHint,
                       controller: _heightCtrl,
                       keyboardType: TextInputType.number,
@@ -335,7 +355,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: BrandedTextField(
-                      label: '${l.weight} (${l.optional})',
+                      label: l.weight,
+                      helperText: l.optional,
                       hint: l.weightHint,
                       controller: _weightCtrl,
                       keyboardType: TextInputType.number,
@@ -367,44 +388,40 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           ),
         ),
         ),
+        ),
       ),
     );
   }
 }
 
-class _GenderChip extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-  const _GenderChip(
-      {required this.label, required this.selected, required this.onTap});
+/// Dashed circular stroke drawn just outside its child — the "add photo"
+/// affordance ring. Dash rhythm is fixed (6 on / 6 off), adjusted to close
+/// the circle cleanly.
+class _DashedRingPainter extends CustomPainter {
+  final Color color;
+  final double strokeWidth;
+  const _DashedRingPainter({required this.color, required this.strokeWidth});
 
   @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-          decoration: BoxDecoration(
-            color: selected ? AppColors.gold : AppColors.navyLight,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: selected ? AppColors.gold : AppColors.grey,
-            ),
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              color: selected ? AppColors.navyBlue : AppColors.white,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-      ),
-    );
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth;
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = (size.shortestSide - strokeWidth) / 2;
+    const dashLength = 6.0;
+    final circumference = 2 * 3.1415926535 * radius;
+    // Round to a whole number of on/off pairs so the ring closes seamlessly.
+    final dashCount = (circumference / (dashLength * 2)).round();
+    final sweep = 2 * 3.1415926535 / (dashCount * 2);
+    final rect = Rect.fromCircle(center: center, radius: radius);
+    for (var i = 0; i < dashCount * 2; i += 2) {
+      canvas.drawArc(rect, i * sweep, sweep, false, paint);
+    }
   }
+
+  @override
+  bool shouldRepaint(_DashedRingPainter oldDelegate) =>
+      oldDelegate.color != color || oldDelegate.strokeWidth != strokeWidth;
 }

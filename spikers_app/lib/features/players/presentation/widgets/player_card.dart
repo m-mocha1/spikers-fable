@@ -1,32 +1,45 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_gradients.dart';
 import '../../../../core/constants/app_motion.dart';
+import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/attendance_tiers.dart';
+import '../../../../core/utils/bidi.dart';
 import '../../../../core/widgets/animations.dart';
+import '../../../../core/widgets/app_avatar.dart';
 import '../../../../core/widgets/injured_icon.dart';
 import '../../../../core/widgets/level_badge.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../home/presentation/widgets/profile_stat_cards.dart'
     show tierLabel;
 
-/// Premium roster row shared by the coach roster (players tab) and the
-/// player-facing peer list. Presentation only — everything shown is derived
-/// from the summary the caller already holds.
+/// Premium roster row shared by the coach roster (players tab), the
+/// player-facing peer list and the coaches screen. Presentation only —
+/// everything shown is derived from the summary the caller already holds.
 ///
 /// Hierarchy: name first, quiet one-line meta underneath, then the attendance
 /// story as a thin gold bar filling toward the next milestone tier (the same
 /// thresholds as the profile's games-played card, so the two never disagree).
 /// The avatar carries the tier's badge art docked on its corner, so a player's
 /// standing is readable at a glance while scrolling.
+///
+/// Rows without an attendance story (coaches — `CoachSummary` carries no
+/// attendance data) pass a null [attendanceCount] plus a [roleLabel]: the
+/// tier badge, meta line and progress bar all drop away and the quiet gold
+/// role eyebrow takes their place.
 class PlayerCard extends StatelessWidget {
   final String name;
   final String photoUrl;
   final bool injured;
-  final int attendanceCount;
+
+  /// Null hides the entire attendance story (badge, meta line, tier bar).
+  final int? attendanceCount;
+
+  /// Quiet gold eyebrow under the name for rows with no attendance story
+  /// (e.g. "COACH").
+  final String? roleLabel;
 
   /// Hidden when null (peer rows, or a coach row with no date of birth).
   final int? age;
@@ -41,8 +54,9 @@ class PlayerCard extends StatelessWidget {
     super.key,
     required this.name,
     required this.photoUrl,
-    required this.injured,
-    required this.attendanceCount,
+    this.injured = false,
+    this.attendanceCount,
+    this.roleLabel,
     this.age,
     this.trailing,
     required this.onTap,
@@ -51,7 +65,9 @@ class PlayerCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    final tier = AttendanceTiers.tierIndex(attendanceCount);
+    final tier = attendanceCount == null
+        ? null
+        : AttendanceTiers.tierIndex(attendanceCount!);
 
     return Pressable(
       onTap: onTap,
@@ -85,7 +101,7 @@ class PlayerCard extends StatelessWidget {
                     children: [
                       Flexible(
                         child: Text(
-                          name,
+                          bidiIsolate(name),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
@@ -102,68 +118,69 @@ class PlayerCard extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 3),
-                  Row(
-                    children: [
-                      if (age != null)
+                  if (attendanceCount != null) ...[
+                    Row(
+                      children: [
+                        if (age != null)
+                          Text(
+                            '${l.ageYears(age!)} · ',
+                            style: const TextStyle(
+                              color: AppColors.grey,
+                              fontSize: 12,
+                            ),
+                          ),
+                        const Icon(
+                          Icons.sports_volleyball,
+                          size: 11,
+                          color: AppColors.grey,
+                        ),
+                        const SizedBox(width: 4),
+                        Flexible(
+                          // Short plural ("12 sessions") instead of the full
+                          // "sessions attended" phrase — the meta line shares
+                          // its row with the age and must survive 360dp next
+                          // to the trailing membership chip without clipping.
+                          child: Text(
+                            l.sessionsCount(attendanceCount!),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: AppColors.grey,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _TierProgressBar(
+                            count: attendanceCount!,
+                            tier: tier!,
+                            l: l,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
                         Text(
-                          '$age ${l.years} · ',
+                          tierLabel(l, tier).toUpperCase(),
                           style: const TextStyle(
-                            color: AppColors.grey,
-                            fontSize: 12,
+                            color: AppColors.gold,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.8,
                           ),
                         ),
-                      const Icon(
-                        Icons.sports_volleyball,
-                        size: 11,
-                        color: AppColors.grey,
-                      ),
-                      const SizedBox(width: 4),
-                      Flexible(
-                        child: Text.rich(
-                          TextSpan(
-                            children: [
-                              TextSpan(
-                                text: '$attendanceCount ',
-                                style: const TextStyle(
-                                  color: AppColors.white,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                              TextSpan(text: l.sessionsAttended),
-                            ],
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: AppColors.grey,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _TierProgressBar(
-                          count: attendanceCount,
-                          tier: tier,
-                          l: l,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        tierLabel(l, tier).toUpperCase(),
-                        style: const TextStyle(
-                          color: AppColors.gold,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0.8,
-                        ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    ),
+                  ] else if (roleLabel != null)
+                    Text(
+                      roleLabel!.toUpperCase(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextStyles.eyebrow,
+                    ),
                 ],
               ),
             ),
@@ -185,12 +202,13 @@ class PlayerCard extends StatelessWidget {
 
 /// Avatar inside a thin gold gradient ring (with a navy gap so the ring reads
 /// as a ring, not a border), with the player's games-played tier badge art
-/// docked on the corner. The badge degrades to nothing if the art is missing
-/// ([LevelBadge]'s errorBuilder), leaving a plain ringed avatar.
+/// docked on the corner. A null [tier] (no attendance story — coaches) leaves
+/// a plain ringed avatar, as does missing badge art ([LevelBadge]'s
+/// errorBuilder).
 class _TieredAvatar extends StatelessWidget {
   final String name;
   final String photoUrl;
-  final int tier;
+  final int? tier;
   final AppLocalizations l;
   const _TieredAvatar({
     required this.name,
@@ -201,64 +219,42 @@ class _TieredAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final initials = name.trim().isEmpty
-        ? '?'
-        : name
-              .trim()
-              .split(' ')
-              .map((w) => w[0])
-              .take(2)
-              .join()
-              .toUpperCase();
+    final ring = Container(
+      padding: const EdgeInsets.all(1.6),
+      decoration: const BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: AppGradients.goldCta,
+      ),
+      child: Container(
+        padding: const EdgeInsets.all(2),
+        decoration: const BoxDecoration(
+          shape: BoxShape.circle,
+          color: AppColors.navyLight,
+        ),
+        child: AppAvatar(name: name, photoUrl: photoUrl, radius: 21),
+      ),
+    );
 
+    if (tier == null) return ring;
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        Container(
-          padding: const EdgeInsets.all(1.6),
-          decoration: const BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: AppGradients.goldCta,
-          ),
-          child: Container(
-            padding: const EdgeInsets.all(2),
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppColors.navyLight,
-            ),
-            child: CircleAvatar(
-              radius: 21,
-              backgroundColor: AppColors.gold.withValues(alpha: 0.18),
-              backgroundImage: photoUrl.isNotEmpty
-                  ? CachedNetworkImageProvider(photoUrl)
-                  : null,
-              child: photoUrl.isEmpty
-                  ? Text(
-                      initials,
-                      style: const TextStyle(
-                        color: AppColors.gold,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14,
-                      ),
-                    )
-                  : null,
-            ),
-          ),
-        ),
+        ring,
         PositionedDirectional(
           bottom: -3,
           end: -3,
           child: Container(
-            // Navy backing circle separates the badge art from the photo.
-            padding: const EdgeInsets.all(1.5),
+            // Navy backing circle separates the badge art from the photo —
+            // kept hairline-thin so the badge art dominates, not the disc.
+            padding: const EdgeInsets.all(1),
             decoration: const BoxDecoration(
               color: AppColors.navyLight,
               shape: BoxShape.circle,
             ),
             child: LevelBadge(
-              asset: AppAssets.gamesPlayedBadges[tier],
-              size: 19,
-              label: tierLabel(l, tier),
+              asset: AppAssets.gamesPlayedBadges[tier!],
+              size: 23,
+              label: tierLabel(l, tier!),
             ),
           ),
         ),
@@ -315,12 +311,6 @@ class _TierProgressBar extends StatelessWidget {
                     decoration: BoxDecoration(
                       gradient: AppGradients.goldCta,
                       borderRadius: BorderRadius.circular(2),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.gold.withValues(alpha: 0.40),
-                          blurRadius: 5,
-                        ),
-                      ],
                     ),
                   ),
                 ),

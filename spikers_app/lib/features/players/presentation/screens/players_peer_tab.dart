@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/app_router.dart';
 import '../../../../core/widgets/animations.dart';
+import '../../../../core/widgets/floating_nav_bar.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../providers/players_providers.dart';
@@ -25,7 +26,8 @@ class PlayersPeerTab extends ConsumerWidget {
           return EmptyStateView(icon: Icons.group_outlined, title: l.noPlayers);
         }
         return ListView.builder(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+          padding: const EdgeInsets.fromLTRB(
+              16, 16, 16, FloatingNavBar.scrollClearance),
           itemCount: peers.length,
           itemBuilder: (_, i) {
             final peer = peers[i];

@@ -311,6 +311,7 @@ class _SessionChatScreenState extends ConsumerState<SessionChatScreen> {
                   ),
                 )
               : IconButton(
+                  tooltip: l.sendMessage,
                   onPressed: _send,
                   icon: const Icon(Icons.send_rounded, color: AppColors.gold),
                 ),

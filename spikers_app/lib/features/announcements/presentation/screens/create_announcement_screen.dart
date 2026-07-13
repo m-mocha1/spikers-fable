@@ -3,7 +3,9 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_motion.dart';
+import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/app_snackbar.dart';
+import '../../../../core/widgets/app_choice_chips.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'package:spikers_app/core/widgets/branded_button.dart';
 import 'package:spikers_app/core/widgets/branded_text_field.dart';
@@ -117,26 +119,25 @@ class _CreateAnnouncementScreenState
                       (v == null || v.trim().isEmpty) ? l.requiredField : null,
                 ),
                 const SizedBox(height: 24),
-                Text(l.audience,
-                    style: const TextStyle(fontWeight: FontWeight.w600)),
+                Text(l.audience.toUpperCase(), style: AppTextStyles.eyebrow),
                 const SizedBox(height: 8),
                 Align(
                   alignment: AlignmentDirectional.centerStart,
-                  child: SegmentedButton<String>(
-                    segments: [
-                      ButtonSegment(value: 'all', label: Text(l.allGenders)),
-                      ButtonSegment(value: 'male', label: Text(l.male)),
-                      ButtonSegment(value: 'female', label: Text(l.female)),
+                  child: AppChoiceChips<String>(
+                    value: _audience,
+                    onSelected: (v) => setState(() => _audience = v),
+                    options: [
+                      AppChoiceChipOption(value: 'all', label: l.allGenders),
+                      AppChoiceChipOption(value: 'male', label: l.male),
+                      AppChoiceChipOption(value: 'female', label: l.female),
                     ],
-                    selected: {_audience},
-                    showSelectedIcon: false,
-                    onSelectionChanged: (s) =>
-                        setState(() => _audience = s.first),
                   ),
                 ),
                 const SizedBox(height: 24),
                 BrandedButton(
-                  label: l.save,
+                  // "Post" when composing — "Save" only makes sense when
+                  // editing an existing announcement.
+                  label: isEdit ? l.save : l.post,
                   isLoading: _isSubmitting,
                   onPressed: _isSubmitting ? null : _submit,
                 ),

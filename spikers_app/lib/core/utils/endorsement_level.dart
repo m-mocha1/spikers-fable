@@ -5,12 +5,18 @@
 /// Thresholds are deliberately simple and centralised here so the session
 /// list, attendee list, and profile all agree. Tune the boundaries in one
 /// place.
+///
+/// Lifetime endorsements needed to *enter* levels 2..5 (level 1 starts at
+/// zero) — the endorsement twin of `AttendanceTiers.thresholds`, exposed so
+/// the profile's progress bar and badge case can render the ladder.
+const endorsementThresholds = [40, 100, 200, 400];
+
 int endorsementLevel(int endorsementCount) {
-  if (endorsementCount >= 400) return 5;
-  if (endorsementCount >= 200) return 4;
-  if (endorsementCount >= 100) return 3;
-  if (endorsementCount >= 40) return 2;
-  return 1;
+  var level = 1;
+  for (final t in endorsementThresholds) {
+    if (endorsementCount >= t) level++;
+  }
+  return level;
 }
 
 /// The endorsement level newly reached going from [previous] to [current]

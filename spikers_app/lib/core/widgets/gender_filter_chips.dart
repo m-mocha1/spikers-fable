@@ -1,86 +1,59 @@
 import 'package:flutter/material.dart';
 
 import '../../l10n/app_localizations.dart';
-import '../constants/app_colors.dart';
+import 'app_choice_chips.dart';
 
 /// The All / male / female pill row used to filter gender-tagged lists
-/// (players tab, sessions history). [value] is 'all', 'male' or 'female'.
+/// (players tab, sessions history, leaderboard, member picker). Thin wrapper
+/// over [AppChoiceChips]; [value] is 'all', 'male' or 'female'.
 class GenderFilterChips extends StatelessWidget {
   final String value;
   final ValueChanged<String> onChanged;
+
+  /// All-icon mode for rows shared with other controls (the leaderboard's
+  /// period toggle): "All" renders as a groups icon instead of text, giving
+  /// the group a fixed, locale-independent width. Every chip keeps its
+  /// localized semantic label. Also safe un-flexed inside a plain [Row] —
+  /// icon-only chips don't need the bounded width text chips do.
+  final bool compact;
+
   const GenderFilterChips({
     super.key,
     required this.value,
     required this.onChanged,
+    this.compact = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        AppFilterChip(
+    return AppChoiceChips<String>(
+      value: value,
+      onSelected: onChanged,
+      // Nav-bar-style: no pill fill, the active filter is the gold one.
+      quiet: true,
+      options: [
+        AppChoiceChipOption(
+          value: 'all',
           label: l.allGenders,
-          active: value == 'all',
-          onTap: () => onChanged('all'),
+          icon: compact ? Icons.groups : null,
+          iconOnly: compact,
         ),
-        const SizedBox(width: 8),
-        AppFilterChip(
+        // Icon-only keeps the filter rows compact; the localized label is
+        // still announced by screen readers.
+        AppChoiceChipOption(
+          value: 'male',
+          label: l.male,
           icon: Icons.male,
-          active: value == 'male',
-          onTap: () => onChanged('male'),
+          iconOnly: true,
         ),
-        const SizedBox(width: 8),
-        AppFilterChip(
+        AppChoiceChipOption(
+          value: 'female',
+          label: l.female,
           icon: Icons.female,
-          active: value == 'female',
-          onTap: () => onChanged('female'),
+          iconOnly: true,
         ),
       ],
-    );
-  }
-}
-
-/// Gold-on-navy pill used for the app's list filters (gender chips, the
-/// leaderboard's month/all-time toggle). Provide [label] or [icon].
-class AppFilterChip extends StatelessWidget {
-  final String? label;
-  final IconData? icon;
-  final bool active;
-  final VoidCallback onTap;
-  const AppFilterChip({
-    super.key,
-    this.label,
-    this.icon,
-    required this.active,
-    required this.onTap,
-  }) : assert(label != null || icon != null);
-
-  @override
-  Widget build(BuildContext context) {
-    final color = active ? AppColors.navyBlue : AppColors.white;
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-        decoration: BoxDecoration(
-          color: active ? AppColors.gold : AppColors.navyLight,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: active ? AppColors.gold : AppColors.grey),
-        ),
-        child: icon != null
-            ? Icon(icon, color: color, size: 18)
-            : Text(
-                label!,
-                style: TextStyle(
-                  color: color,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 13,
-                ),
-              ),
-      ),
     );
   }
 }
