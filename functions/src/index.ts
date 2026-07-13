@@ -15,7 +15,7 @@ const REGION = "europe-west1";
 
 // Number of session card designs. Keep in sync with the length of
 // AppAssets.cardDesigns in the Flutter app (lib/core/constants/app_assets.dart).
-const CARD_DESIGN_COUNT = 6;
+const CARD_DESIGN_COUNT = 8;
 
 // Picks a random card-design index, avoiding `previous` so two consecutively
 // created sessions don't share the same card. Falls back to a plain uniform
@@ -593,6 +593,10 @@ export const cancelSession = onCall({ region: REGION }, async (request) => {
     throw new HttpsError("permission-denied", "Not your session");
   }
 
+  // Silent (admin testing) sessions stay quiet through their whole lifecycle:
+  // they suppressed the create push and they suppress the cancellation push too.
+  const isSilent = session["silent"] === true;
+
   // Notify everyone the session was advertised to (matching players + all
   // staff), minus the canceller, before deleting.
   const [players, staff] = await Promise.all([
@@ -602,7 +606,7 @@ export const cancelSession = onCall({ region: REGION }, async (request) => {
   const recipients = [...new Set([...players, ...staff])].filter(
     (id) => id !== uid
   );
-  if (recipients.length > 0) {
+  if (!isSilent && recipients.length > 0) {
     const sessionTitle = session["title"] as string;
     const coachName = await fetchUserName(session["coachId"] as string);
     const startDate = (

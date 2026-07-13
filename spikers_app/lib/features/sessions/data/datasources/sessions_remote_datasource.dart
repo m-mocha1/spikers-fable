@@ -176,10 +176,17 @@ class SessionsRemoteDataSource {
     return times.reduce((a, b) => a.isAfter(b) ? a : b);
   }
 
-  Future<void> create(SessionModel session) async {
-    final previous = await _mostRecentDesignIndex();
+  Future<void> create(SessionModel session, {int? designIndex}) async {
     final payload = session.toMap();
-    payload['designIndex'] = _pickDesignIndex(previous);
+    final count = AppAssets.cardDesigns.length;
+    if (designIndex != null && designIndex >= 0 && designIndex < count) {
+      // Admin pinned a specific card (art testing) — honor it verbatim instead
+      // of the random anti-repeat draw.
+      payload['designIndex'] = designIndex;
+    } else {
+      final previous = await _mostRecentDesignIndex();
+      payload['designIndex'] = _pickDesignIndex(previous);
+    }
     await _db.collection('sessions').add(payload);
   }
 

@@ -332,6 +332,42 @@ abstract class AppLocalizations {
   /// **'Select at least one member'**
   String get selectMembersError;
 
+  /// No description provided for @adminTesting.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin · Testing'**
+  String get adminTesting;
+
+  /// No description provided for @notifyOnCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Notify players & coaches'**
+  String get notifyOnCreate;
+
+  /// No description provided for @notifyOnCreateSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Off = create and cancel this session silently — no notifications sent'**
+  String get notifyOnCreateSubtitle;
+
+  /// No description provided for @sessionArt.
+  ///
+  /// In en, this message translates to:
+  /// **'Card art'**
+  String get sessionArt;
+
+  /// No description provided for @sessionArtRandom.
+  ///
+  /// In en, this message translates to:
+  /// **'Random'**
+  String get sessionArtRandom;
+
+  /// No description provided for @sessionArtCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Card {number}'**
+  String sessionArtCard(int number);
+
   /// No description provided for @searchMembers.
   ///
   /// In en, this message translates to:
@@ -1340,29 +1376,11 @@ abstract class AppLocalizations {
   /// **'Edit capacity'**
   String get editCapacity;
 
-  /// No description provided for @gamesThisMonth.
-  ///
-  /// In en, this message translates to:
-  /// **'Games this month'**
-  String get gamesThisMonth;
-
-  /// No description provided for @gamesAllTime.
-  ///
-  /// In en, this message translates to:
-  /// **'Games all time'**
-  String get gamesAllTime;
-
   /// No description provided for @games.
   ///
   /// In en, this message translates to:
   /// **'Games'**
   String get games;
-
-  /// No description provided for @endorsementsAllTime.
-  ///
-  /// In en, this message translates to:
-  /// **'Endorsements all time'**
-  String get endorsementsAllTime;
 
   /// No description provided for @clearSearch.
   ///
@@ -2023,6 +2041,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Top tier reached'**
   String get topTierReached;
+
+  /// No description provided for @updateAvailableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Update Available'**
+  String get updateAvailableTitle;
+
+  /// No description provided for @updateAvailableBody.
+  ///
+  /// In en, this message translates to:
+  /// **'A new version of the app is ready with the latest features and fixes.'**
+  String get updateAvailableBody;
+
+  /// No description provided for @updateNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Update Now'**
+  String get updateNow;
+
+  /// No description provided for @updateLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get updateLater;
 }
 
 class _AppLocalizationsDelegate

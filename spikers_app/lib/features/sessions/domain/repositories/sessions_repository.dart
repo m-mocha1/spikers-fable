@@ -70,8 +70,10 @@ abstract class SessionsRepository {
   /// never attended — feeds the attendance export's "last session" column.
   Future<DateTime?> fetchLastAttendedTime(String uid);
 
-  /// Creates the session with a random card design.
-  Future<void> create(SessionModel session);
+  /// Creates the session. [designIndex] pins a specific card design (admin art
+  /// testing) — must be a valid index into `AppAssets.cardDesigns`; when null or
+  /// out of range a random design is chosen, avoiding the previous session's.
+  Future<void> create(SessionModel session, {int? designIndex});
 
   /// Transactional join; falls back to the waitlist when full.
   /// Throws [SessionActionException].

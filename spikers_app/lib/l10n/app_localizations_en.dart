@@ -129,6 +129,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get selectMembersError => 'Select at least one member';
 
   @override
+  String get adminTesting => 'Admin · Testing';
+
+  @override
+  String get notifyOnCreate => 'Notify players & coaches';
+
+  @override
+  String get notifyOnCreateSubtitle =>
+      'Off = create and cancel this session silently — no notifications sent';
+
+  @override
+  String get sessionArt => 'Card art';
+
+  @override
+  String get sessionArtRandom => 'Random';
+
+  @override
+  String sessionArtCard(int number) {
+    return 'Card $number';
+  }
+
+  @override
   String get searchMembers => 'Search members';
 
   @override
@@ -722,16 +743,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get editCapacity => 'Edit capacity';
 
   @override
-  String get gamesThisMonth => 'Games this month';
-
-  @override
-  String get gamesAllTime => 'Games all time';
-
-  @override
   String get games => 'Games';
-
-  @override
-  String get endorsementsAllTime => 'Endorsements all time';
 
   @override
   String get clearSearch => 'Clear search';
@@ -1139,4 +1151,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get topTierReached => 'Top tier reached';
+
+  @override
+  String get updateAvailableTitle => 'Update Available';
+
+  @override
+  String get updateAvailableBody =>
+      'A new version of the app is ready with the latest features and fixes.';
+
+  @override
+  String get updateNow => 'Update Now';
+
+  @override
+  String get updateLater => 'Later';
 }

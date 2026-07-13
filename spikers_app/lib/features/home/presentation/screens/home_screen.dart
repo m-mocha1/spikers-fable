@@ -8,6 +8,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_motion.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../l10n/app_localizations.dart';
+import 'package:spikers_app/core/widgets/app_upgrade_alert.dart';
 import 'package:spikers_app/core/widgets/floating_nav_bar.dart';
 import 'package:spikers_app/core/widgets/gradient_background.dart';
 import '../../../announcements/presentation/widgets/announcements_bell.dart';
@@ -137,78 +138,83 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ];
     final safeIndex = _index >= tabs.length ? 0 : _index;
 
-    return Scaffold(
-      extendBody: true,
-      backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        title: Text(l.appName),
-        actions: [
-          // History is open to everyone: players view past sessions to give
-          // endorsements (only allowed once a session has ended).
-          if (_index == 0)
+    // Home is the app's landing screen after auth, so it's where we check the
+    // store for a newer build and prompt the user to update (see
+    // [AppUpgradeAlert]).
+    return AppUpgradeAlert(
+      child: Scaffold(
+        extendBody: true,
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          title: Text(l.appName),
+          actions: [
+            // History is open to everyone: players view past sessions to give
+            // endorsements (only allowed once a session has ended).
+            if (_index == 0)
+              IconButton(
+                tooltip: l.sessionsHistory,
+                icon: const Icon(Icons.history),
+                onPressed: () => context.push(Routes.sessionsHistory),
+              ),
+            // The roster (full users collection) is only readable by staff, so
+            // the export is coach-gated; players get the peer tab instead.
+            if (_index == 1 && isCoach) const ExportAttendanceButton(),
+            if (_index == 1)
+              IconButton(
+                tooltip: l.coachesTab,
+                icon: const Icon(Icons.sports_outlined),
+                onPressed: () => context.push(Routes.coachesList),
+              ),
             IconButton(
-              tooltip: l.sessionsHistory,
-              icon: const Icon(Icons.history),
-              onPressed: () => context.push(Routes.sessionsHistory),
+              tooltip: l.leaderboard,
+              icon: const Icon(Icons.emoji_events_outlined),
+              onPressed: () => context.push(Routes.leaderboard),
             ),
-          // The roster (full users collection) is only readable by staff, so
-          // the export is coach-gated; players get the peer tab instead.
-          if (_index == 1 && isCoach) const ExportAttendanceButton(),
-          if (_index == 1)
-            IconButton(
-              tooltip: l.coachesTab,
-              icon: const Icon(Icons.sports_outlined),
-              onPressed: () => context.push(Routes.coachesList),
+            const AnnouncementsBell(),
+          ],
+        ),
+        body: GradientBackground(
+          child: IndexedStack(index: safeIndex, children: tabs),
+        ),
+        floatingActionButton: (isCoach && _index == 0)
+            ? FloatingActionButton.small(
+                tooltip: l.newSession,
+                onPressed: () => _showSessionOptions(context, l),
+                child: const Icon(Icons.add),
+              ).animate().scale(
+                duration: AppMotion.normal,
+                curve: Curves.easeOutBack,
+                begin: const Offset(0, 0),
+                end: const Offset(1, 1),
+              )
+            : null,
+        bottomNavigationBar: FloatingNavBar(
+          currentIndex: _index >= 3 ? 0 : _index,
+          onTap: (i) {
+            HapticFeedback.selectionClick();
+            setState(() {
+              if (i != _index) _reveal[i]++;
+              _index = i;
+            });
+          },
+          items: [
+            FloatingNavItem(
+              icon: Icons.sports_volleyball_outlined,
+              activeIcon: Icons.sports_volleyball,
+              label: l.sessions,
             ),
-          IconButton(
-            tooltip: l.leaderboard,
-            icon: const Icon(Icons.emoji_events_outlined),
-            onPressed: () => context.push(Routes.leaderboard),
-          ),
-          const AnnouncementsBell(),
-        ],
-      ),
-      body: GradientBackground(
-        child: IndexedStack(index: safeIndex, children: tabs),
-      ),
-      floatingActionButton: (isCoach && _index == 0)
-          ? FloatingActionButton.small(
-              tooltip: l.newSession,
-              onPressed: () => _showSessionOptions(context, l),
-              child: const Icon(Icons.add),
-            ).animate().scale(
-              duration: AppMotion.normal,
-              curve: Curves.easeOutBack,
-              begin: const Offset(0, 0),
-              end: const Offset(1, 1),
-            )
-          : null,
-      bottomNavigationBar: FloatingNavBar(
-        currentIndex: _index >= 3 ? 0 : _index,
-        onTap: (i) {
-          HapticFeedback.selectionClick();
-          setState(() {
-            if (i != _index) _reveal[i]++;
-            _index = i;
-          });
-        },
-        items: [
-          FloatingNavItem(
-            icon: Icons.sports_volleyball_outlined,
-            activeIcon: Icons.sports_volleyball,
-            label: l.sessions,
-          ),
-          FloatingNavItem(
-            icon: Icons.group_outlined,
-            activeIcon: Icons.group,
-            label: l.playersTab,
-          ),
-          FloatingNavItem(
-            icon: Icons.person_outline,
-            activeIcon: Icons.person,
-            label: l.profile,
-          ),
-        ],
+            FloatingNavItem(
+              icon: Icons.group_outlined,
+              activeIcon: Icons.group,
+              label: l.playersTab,
+            ),
+            FloatingNavItem(
+              icon: Icons.person_outline,
+              activeIcon: Icons.person,
+              label: l.profile,
+            ),
+          ],
+        ),
       ),
     );
   }

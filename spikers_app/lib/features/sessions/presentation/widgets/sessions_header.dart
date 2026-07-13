@@ -9,6 +9,7 @@ import 'package:intl/intl.dart' show DateFormat;
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_gradients.dart';
+import '../../../../core/constants/app_image_fx.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/widgets/animations.dart';
 import '../../../../core/widgets/attendee_facepile.dart';
@@ -183,7 +184,10 @@ class _NextUpHero extends StatelessWidget {
                     child: Stack(
                       fit: StackFit.expand,
                       children: [
-                        Image.asset(designAsset, fit: BoxFit.cover),
+                        ColorFiltered(
+                          colorFilter: AppImageFx.cardArtPop,
+                          child: Image.asset(designAsset, fit: BoxFit.cover),
+                        ),
                         const DecoratedBox(
                           decoration:
                               BoxDecoration(gradient: AppGradients.heroScrim),

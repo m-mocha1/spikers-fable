@@ -52,5 +52,12 @@
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
+        <!-- Lets `upgrader` (via url_launcher) open the Play Store / a browser
+             to the app's listing on Android 11+ package-visibility. -->
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <category android:name="android.intent.category.BROWSABLE"/>
+            <data android:scheme="https"/>
+        </intent>
     </queries>
 </manifest>

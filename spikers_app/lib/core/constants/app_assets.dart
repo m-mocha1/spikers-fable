@@ -2,13 +2,18 @@ class AppAssets {
   static const logo        = 'assets/images/logo.png';
   static const splashBg    = 'assets/images/startUpScreen.png';
 
+  /// Session card art, in the order shown to admins in the art picker (card 1
+  /// is index 0). Keep this list and its length in sync with CARD_DESIGN_COUNT
+  /// in functions/src/index.ts, which the recurring-session job reads.
   static const cardDesigns = <String>[
     'assets/images/cards/card_a_trajectory.jpeg',
     'assets/images/cards/card_b_netCat.jpeg',
     'assets/images/cards/card_c_ball.jpeg',
+    'assets/images/cards/card_d_medel.jpeg',
     'assets/images/cards/card_e_court.jpeg',
     'assets/images/cards/card_f_kit.jpeg',
     'assets/images/cards/card_g_basket.jpeg',
+    'assets/images/cards/card_h_crow.jpeg',
   ];
 
   /// Ascending badge art for the games-played tiers, indexed by

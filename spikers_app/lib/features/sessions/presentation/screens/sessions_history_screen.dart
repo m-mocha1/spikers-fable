@@ -9,6 +9,7 @@ import '../../../../core/router/app_router.dart';
 import '../../../../core/utils/title_case.dart';
 import '../../../../core/widgets/animations.dart';
 import '../../../../core/widgets/gender_filter_chips.dart';
+import '../../../../core/widgets/retracting_header.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'package:spikers_app/features/sessions/domain/entities/session_model.dart';
@@ -63,29 +64,35 @@ class _SessionsHistoryScreenState
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
                   itemCount: filtered.length,
                   itemBuilder: (_, i) => AppStaggeredItem(
+                    // Key by session identity so switching the gender filter
+                    // reorders cards instead of recycling one session's
+                    // avatar-state onto another (see _HistoryCardState).
+                    key: ValueKey(filtered[i].id),
                     index: i,
-                    child: _HistoryCard(session: filtered[i]),
+                    child: _HistoryCard(
+                      key: ValueKey(filtered[i].id),
+                      session: filtered[i],
+                    ),
                   ),
                 );
 
           // Players' lists are already gender-scoped by the query, so only
           // coaches/admins get the tag filter.
           if (!isCoach) return list;
-          return Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                child: Align(
-                  alignment: AlignmentDirectional.centerStart,
-                  child: GenderFilterChips(
-                    value: genderFilter,
-                    onChanged: (v) =>
-                        ref.read(_genderFilterProvider.notifier).state = v,
-                  ),
+          // Coach gender filter retracts on scroll-down, returns on scroll-up.
+          return RetractingHeader(
+            header: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+              child: Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: GenderFilterChips(
+                  value: genderFilter,
+                  onChanged: (v) =>
+                      ref.read(_genderFilterProvider.notifier).state = v,
                 ),
               ),
-              Expanded(child: list),
-            ],
+            ),
+            child: list,
           );
         },
       ),
@@ -101,7 +108,7 @@ class _AvatarData {
 
 class _HistoryCard extends ConsumerStatefulWidget {
   final SessionModel session;
-  const _HistoryCard({required this.session});
+  const _HistoryCard({super.key, required this.session});
 
   @override
   ConsumerState<_HistoryCard> createState() => _HistoryCardState();
@@ -119,6 +126,23 @@ class _HistoryCardState extends ConsumerState<_HistoryCard> {
   void initState() {
     super.initState();
     _loadAvatars();
+  }
+
+  @override
+  void didUpdateWidget(_HistoryCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Belt-and-suspenders: even though items are keyed by session id, reload
+    // if this card is ever handed a different session (or its attendance
+    // changed) so the faces can never lag the session shown.
+    final old = oldWidget.session;
+    final now = widget.session;
+    if (old.id != now.id || old.attendedIds != now.attendedIds) {
+      setState(() {
+        _avatars = [];
+        _loaded = false;
+      });
+      _loadAvatars();
+    }
   }
 
   Future<void> _loadAvatars() async {

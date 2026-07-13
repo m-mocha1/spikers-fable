@@ -44,6 +44,17 @@
     }
   },
   "selectMembersError": "اختر عضوًا واحدًا على الأقل",
+  "adminTesting": "المشرف · اختبار",
+  "notifyOnCreate": "إشعار اللاعبين والمدربين",
+  "notifyOnCreateSubtitle": "أوقفه لإنشاء وإلغاء هذه الجلسة بصمت — لن يتم إرسال أي إشعارات",
+  "sessionArt": "تصميم البطاقة",
+  "sessionArtRandom": "عشوائي",
+  "sessionArtCard": "بطاقة {number}",
+  "@sessionArtCard": {
+    "placeholders": {
+      "number": { "type": "int" }
+    }
+  },
   "searchMembers": "البحث عن الأعضاء",
   "membersOnly": "للأعضاء المحددين فقط",
   "done": "تم",
@@ -326,10 +337,7 @@
   "markAll": "تحديد الكل",
   "editRoster": "تعديل القائمة",
   "editCapacity": "تعديل السعة",
-  "gamesThisMonth": "مباريات هذا الشهر",
-  "gamesAllTime": "المباريات الكلية",
   "games": "المباريات",
-  "endorsementsAllTime": "التأييدات الكلية",
   "clearSearch": "مسح البحث",
   "sendMessage": "إرسال الرسالة",
   "showPassword": "إظهار كلمة المرور",
@@ -462,5 +470,9 @@
   "sectionAccount": "الحساب",
   "memberSince": "عضو منذ {year}",
   "unlocksAt": "يُفتح عند {count}",
-  "topTierReached": "تم بلوغ أعلى مستوى"
+  "topTierReached": "تم بلوغ أعلى مستوى",
+  "updateAvailableTitle": "يتوفر تحديث",
+  "updateAvailableBody": "يتوفر إصدار جديد من التطبيق يتضمّن أحدث الميزات والإصلاحات.",
+  "updateNow": "تحديث الآن",
+  "updateLater": "لاحقًا"
 }

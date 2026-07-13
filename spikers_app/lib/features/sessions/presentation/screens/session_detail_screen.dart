@@ -858,7 +858,8 @@ class _CountdownCard extends StatelessWidget {
                 ),
               ),
             ),
-            // Uniform veil so the centered timer stays legible over any design.
+            // Uniform veil — the list + Next-Up cards keep the brighter art,
+            // but the detail hero is dimmed so the centered timer stays legible.
             ColoredBox(color: Colors.black.withValues(alpha: 0.22)),
             // Laminated gloss, same finish as the list cards.
             const DecoratedBox(

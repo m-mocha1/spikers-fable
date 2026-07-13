@@ -139,6 +139,27 @@ class AppLocalizationsAr extends AppLocalizations {
   String get selectMembersError => 'اختر عضوًا واحدًا على الأقل';
 
   @override
+  String get adminTesting => 'المشرف · اختبار';
+
+  @override
+  String get notifyOnCreate => 'إشعار اللاعبين والمدربين';
+
+  @override
+  String get notifyOnCreateSubtitle =>
+      'أوقفه لإنشاء وإلغاء هذه الجلسة بصمت — لن يتم إرسال أي إشعارات';
+
+  @override
+  String get sessionArt => 'تصميم البطاقة';
+
+  @override
+  String get sessionArtRandom => 'عشوائي';
+
+  @override
+  String sessionArtCard(int number) {
+    return 'بطاقة $number';
+  }
+
+  @override
   String get searchMembers => 'البحث عن الأعضاء';
 
   @override
@@ -753,16 +774,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get editCapacity => 'تعديل السعة';
 
   @override
-  String get gamesThisMonth => 'مباريات هذا الشهر';
-
-  @override
-  String get gamesAllTime => 'المباريات الكلية';
-
-  @override
   String get games => 'المباريات';
-
-  @override
-  String get endorsementsAllTime => 'التأييدات الكلية';
 
   @override
   String get clearSearch => 'مسح البحث';
@@ -1180,4 +1192,17 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get topTierReached => 'تم بلوغ أعلى مستوى';
+
+  @override
+  String get updateAvailableTitle => 'يتوفر تحديث';
+
+  @override
+  String get updateAvailableBody =>
+      'يتوفر إصدار جديد من التطبيق يتضمّن أحدث الميزات والإصلاحات.';
+
+  @override
+  String get updateNow => 'تحديث الآن';
+
+  @override
+  String get updateLater => 'لاحقًا';
 }

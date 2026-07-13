@@ -18,6 +18,8 @@ import '../../../auth/presentation/providers/auth_providers.dart';
 import '../providers/sessions_providers.dart';
 import '../widgets/coach_select_chips.dart';
 import '../widgets/member_picker_sheet.dart';
+import '../widgets/session_art_picker.dart';
+import '../../../../core/theme/app_spacing.dart';
 
 class CreateSessionScreen extends ConsumerStatefulWidget {
   const CreateSessionScreen({super.key});
@@ -46,6 +48,11 @@ class _CreateSessionScreenState extends ConsumerState<CreateSessionScreen> {
   final Set<String> _selectedCoachIds = {};
   bool _isCustom = false;
   final Set<String> _selectedMemberIds = {};
+
+  // Admin-only testing controls. [_notify] off creates the session silently
+  // (no push); [_designIndex] pins a specific card art (null = random).
+  bool _notify = true;
+  int? _designIndex;
 
   final _fmt = DateFormat('MMM d, yyyy  HH:mm');
 
@@ -122,6 +129,13 @@ class _CreateSessionScreenState extends ConsumerState<CreateSessionScreen> {
 
     final user = ref.read(currentUserProvider).value;
     if (user == null) return;
+
+    // The silent-create and art-pin controls are admin-only; ignore any state
+    // for everyone else so the standard notify + random-art path is unchanged.
+    final isAdmin = ref.read(isAdminProvider);
+    final silent = isAdmin && !_notify;
+    final designIndex = isAdmin ? _designIndex : null;
+
     setState(() => _isSubmitting = true);
 
     // Custom (members-only) sessions ignore gender/age; store a wide-open
@@ -166,9 +180,16 @@ class _CreateSessionScreenState extends ConsumerState<CreateSessionScreen> {
         memberIds: _isCustom ? _selectedMemberIds.toList() : const [],
         attendeeIds: const [],
         createdAt: DateTime.now(),
+        // A silent session is written already-notified so the onSessionCreated
+        // Cloud Function skips the create push; the persisted [silent] flag also
+        // makes cancelSession skip its cancellation push for the same session.
+        notified: silent,
+        silent: silent,
       );
 
-      await ref.read(sessionsRepositoryProvider).create(session);
+      await ref
+          .read(sessionsRepositoryProvider)
+          .create(session, designIndex: designIndex);
       if (!mounted) return;
       Navigator.of(context).pop();
       showAppSnackbar(l.sessionCreated);
@@ -179,9 +200,55 @@ class _CreateSessionScreenState extends ConsumerState<CreateSessionScreen> {
     }
   }
 
+  Widget _adminTestingSection(AppLocalizations l) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.navyLight,
+        borderRadius: BorderRadius.circular(AppRadius.card),
+        border: Border.all(color: AppColors.navyElevated),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.science_outlined,
+                  size: 16, color: AppColors.gold),
+              const SizedBox(width: AppSpacing.xs),
+              Text(l.adminTesting.toUpperCase(), style: AppTextStyles.eyebrow),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          // Notify toggle — off means the session is created silently.
+          SwitchListTile(
+            value: _notify,
+            onChanged: (v) => setState(() => _notify = v),
+            title: Text(l.notifyOnCreate,
+                style: const TextStyle(fontWeight: FontWeight.w600)),
+            subtitle: Text(l.notifyOnCreateSubtitle,
+                style: const TextStyle(color: AppColors.grey, fontSize: 12)),
+            activeThumbColor: AppColors.gold,
+            contentPadding: EdgeInsets.zero,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(l.sessionArt.toUpperCase(), style: AppTextStyles.sectionHeader),
+          const SizedBox(height: AppSpacing.sm),
+          SessionArtPicker(
+            value: _designIndex,
+            onChanged: (v) => setState(() => _designIndex = v),
+            randomLabel: l.sessionArtRandom,
+            cardSemanticLabel: (n) => l.sessionArtCard(n),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
+    final isAdmin = ref.watch(isAdminProvider);
     return Scaffold(
       appBar: AppBar(title: Text(l.createSession)),
       // SafeArea keeps the bottom CTA above the Android gesture bar.
@@ -351,6 +418,14 @@ class _CreateSessionScreenState extends ConsumerState<CreateSessionScreen> {
                     (v == null || v.isEmpty) ? l.requiredField : null,
               ),
               const SizedBox(height: 24),
+
+              // Admin-only testing controls: create a session silently and/or
+              // pin a specific card art, for trying out new art and session
+              // tweaks without notifying players, coaches or other admins.
+              if (isAdmin) ...[
+                _adminTestingSection(l),
+                const SizedBox(height: 24),
+              ],
 
               // Templates capture the gender/age audience, which a custom
               // session overrides — so hide the option when custom.

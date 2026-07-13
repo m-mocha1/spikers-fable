@@ -90,7 +90,8 @@ class SessionsRepositoryImpl implements SessionsRepository {
       _remote.fetchLastAttendedTime(uid);
 
   @override
-  Future<void> create(SessionModel session) => _remote.create(session);
+  Future<void> create(SessionModel session, {int? designIndex}) =>
+      _remote.create(session, designIndex: designIndex);
 
   @override
   Future<JoinResult> join(String sessionId) async {

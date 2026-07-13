@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../core/constants/app_assets.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_gradients.dart';
+import '../../core/constants/app_image_fx.dart';
 import '../../core/constants/app_motion.dart';
 import '../../core/router/app_router.dart';
 import '../../core/utils/title_case.dart';
@@ -164,26 +165,6 @@ class _SessionCardState extends State<SessionCard> {
       ),
     ];
 
-    // Left status stripe — revealed with the content: after the art settles
-    // it fades in and "draws" downward (a vertical wipe), the tall-thin
-    // equivalent of the rows' fade + upward drift.
-    final stripe = Container(width: 5, color: statusColor);
-    final animatedStripe = _returnGeneration == 0
-        ? stripe
-        : stripe
-            .animate(
-              key: ValueKey(_returnGeneration),
-              delay: AppMotion.heroSettle,
-            )
-            .fadeIn(duration: AppMotion.normal, curve: AppMotion.enter)
-            .scale(
-              begin: const Offset(1, 0),
-              end: const Offset(1, 1),
-              alignment: Alignment.topCenter,
-              duration: AppMotion.normal,
-              curve: AppMotion.enter,
-            );
-
     final content = _returnGeneration == 0
         ? Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -254,7 +235,10 @@ class _SessionCardState extends State<SessionCard> {
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
-                      Image.asset(designAsset, fit: BoxFit.cover),
+                      ColorFiltered(
+                        colorFilter: AppImageFx.cardArtPop,
+                        child: Image.asset(designAsset, fit: BoxFit.cover),
+                      ),
                       const DecoratedBox(
                         decoration:
                             BoxDecoration(gradient: AppGradients.cardScrim),
@@ -267,13 +251,6 @@ class _SessionCardState extends State<SessionCard> {
                   ),
                 ),
               ),
-            ),
-            // Left status stripe.
-            PositionedDirectional(
-              start: 0,
-              top: 0,
-              bottom: 0,
-              child: animatedStripe,
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),

@@ -6,13 +6,13 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_gradients.dart';
 import '../../../../core/constants/app_motion.dart';
-import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/utils/bidi.dart';
 import '../../../../core/widgets/animations.dart';
 import '../../../../core/widgets/app_avatar.dart';
 import '../../../../core/widgets/app_choice_chips.dart';
-import '../../../../core/widgets/gender_filter_chips.dart';
 import '../../../../core/widgets/gradient_background.dart';
+import '../../../../core/widgets/retracting_header.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
@@ -29,15 +29,12 @@ class LeaderboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context)!;
-    final tab = ref.watch(leaderboardTabProvider);
-    final isMonthly = tab == 0;
     final board = ref.watch(leaderboardBoardProvider);
     final isEndorsements = board == 1;
-    final entriesAsync = ref.watch(isEndorsements
-        ? endorsementLeaderboardProvider
-        : isMonthly
-            ? monthlyLeaderboardProvider
-            : allTimeLeaderboardProvider);
+    // Games is all-time only now (the month toggle was dropped); endorsements
+    // were always all-time (only the aggregate count is public).
+    final entriesAsync = ref.watch(
+        isEndorsements ? endorsementLeaderboardProvider : allTimeLeaderboardProvider);
     final isCoach = ref.watch(currentUserProvider).value?.isCoach ?? false;
     final genderFilter = ref.watch(_genderFilterProvider);
     // Same icon as the score pills below — the switch and the numbers it
@@ -46,125 +43,91 @@ class LeaderboardScreen extends ConsumerWidget {
         isEndorsements ? Icons.thumb_up : Icons.sports_volleyball;
 
     Future<void> refresh() async {
-      ref.invalidate(monthlyLeaderboardProvider);
       ref.invalidate(allTimeLeaderboardProvider);
       ref.invalidate(endorsementLeaderboardProvider);
       await ref.read(isEndorsements
           ? endorsementLeaderboardProvider.future
-          : isMonthly
-              ? monthlyLeaderboardProvider.future
-              : allTimeLeaderboardProvider.future);
+          : allTimeLeaderboardProvider.future);
     }
+
+    // Every control on one line: board switch (Games / Endorsements) then, for
+    // coaches only, the gender filter. Built from individual chips because a
+    // scroll strip can't host the Wrap-based AppChoiceChips/GenderFilterChips —
+    // same quiet gold pills either way. A thin rule separates the two groups.
+    Widget groupRule() => Container(
+          width: 1,
+          height: 20,
+          margin: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+          color: AppColors.grey.withValues(alpha: 0.25),
+        );
+    final controls = <Widget>[
+      AppChoiceChip(
+        label: l.games,
+        icon: Icons.sports_volleyball,
+        quiet: true,
+        selected: !isEndorsements,
+        onTap: () => ref.read(leaderboardBoardProvider.notifier).state = 0,
+      ),
+      const SizedBox(width: AppSpacing.xs),
+      AppChoiceChip(
+        label: l.endorsements,
+        icon: Icons.thumb_up,
+        quiet: true,
+        selected: isEndorsements,
+        onTap: () => ref.read(leaderboardBoardProvider.notifier).state = 1,
+      ),
+      // Players' boards are already gender-scoped by the repository, so only
+      // coaches/admins get the gender tag filter. With the period toggle gone
+      // it sits right after the board switch, on-screen without scrolling.
+      if (isCoach) ...[
+        groupRule(),
+        AppChoiceChip(
+          label: l.allGenders,
+          icon: Icons.groups,
+          iconOnly: true,
+          quiet: true,
+          selected: genderFilter == 'all',
+          onTap: () => ref.read(_genderFilterProvider.notifier).state = 'all',
+        ),
+        const SizedBox(width: AppSpacing.xs),
+        AppChoiceChip(
+          label: l.male,
+          icon: Icons.male,
+          iconOnly: true,
+          quiet: true,
+          selected: genderFilter == 'male',
+          onTap: () => ref.read(_genderFilterProvider.notifier).state = 'male',
+        ),
+        const SizedBox(width: AppSpacing.xs),
+        AppChoiceChip(
+          label: l.female,
+          icon: Icons.female,
+          iconOnly: true,
+          quiet: true,
+          selected: genderFilter == 'female',
+          onTap: () =>
+              ref.read(_genderFilterProvider.notifier).state = 'female',
+        ),
+      ],
+    ];
 
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(title: Text(l.leaderboard)),
       body: GradientBackground(
-        child: Column(
-        children: [
-          // Board switch: games (attendance) vs endorsements. Endorsements
-          // have no monthly slice — individual endorsement docs are private,
-          // only the lifetime count is public — so the period toggle below
-          // is games-only.
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-            child: Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: AppChoiceChips<int>(
-                value: board,
-                quiet: true,
-                onSelected: (v) =>
-                    ref.read(leaderboardBoardProvider.notifier).state = v,
-                options: [
-                  AppChoiceChipOption(
-                      value: 0,
-                      label: l.games,
-                      icon: Icons.sports_volleyball),
-                  AppChoiceChipOption(
-                      value: 1, label: l.endorsements, icon: Icons.thumb_up),
-                ],
-              ),
+        // One compact control strip — board switch plus the coach-only gender
+        // filter — retracts on scroll-down and returns on scroll-up so the
+        // board gets the full height once the user starts browsing.
+        child: RetractingHeader(
+          header: Padding(
+            padding: const EdgeInsets.only(top: 10, bottom: 6),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(children: controls),
             ),
           ),
-          // One quiet control row: gender filter (coaches only) at the
-          // start, the period toggle tucked small at the end — nothing
-          // shouts over the podium below. Skipped entirely when it would
-          // be empty (player viewing endorsements).
-          if (isCoach || !isEndorsements)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-              child: Row(
-                children: [
-                  // Players' boards are already gender-scoped by the
-                  // repository, so only coaches/admins get the tag filter.
-                  if (isCoach)
-                    GenderFilterChips(
-                      value: genderFilter,
-                      onChanged: (v) =>
-                          ref.read(_genderFilterProvider.notifier).state = v,
-                      compact: true,
-                    ),
-                  if (!isEndorsements)
-                    Expanded(
-                      child: Align(
-                        alignment: AlignmentDirectional.centerEnd,
-                        child: AppChoiceChips<int>(
-                          value: tab,
-                          quiet: true,
-                          onSelected: (v) => ref
-                              .read(leaderboardTabProvider.notifier)
-                              .state = v,
-                          options: [
-                            AppChoiceChipOption(value: 0, label: l.thisMonth),
-                            AppChoiceChipOption(value: 1, label: l.allTime),
-                          ],
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          // Name the metric the numbers below actually measure — without it
-          // the podium's large numerals read as unexplained scores vs ranks.
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
-            child: Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: Text(
-                (isEndorsements
-                        ? l.endorsementsAllTime
-                        : isMonthly
-                            ? l.gamesThisMonth
-                            : l.gamesAllTime)
-                    .toUpperCase(),
-                style: AppTextStyles.eyebrow,
-              ),
-            ),
-          ),
-          // Players' boards are silently scoped to their own gender by the
-          // repository — say so, or the "missing" players read as a bug.
-          if (!isCoach)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-              child: Align(
-                alignment: AlignmentDirectional.centerStart,
-                child: Text(
-                  switch (
-                      ref.watch(currentUserProvider).value?.gender) {
-                    'male' => l.leaderboardMensBoard,
-                    'female' => l.leaderboardWomensBoard,
-                    _ => l.leaderboardSubtitle,
-                  },
-                  style: const TextStyle(
-                    color: AppColors.grey,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ),
-          Expanded(
-            child: entriesAsync.when(
+          child: entriesAsync.when(
               loading: () => const ListShimmer(
                   itemHeight: 68,
                   padding: EdgeInsets.fromLTRB(16, 4, 16, 16)),
@@ -185,9 +148,9 @@ class LeaderboardScreen extends ConsumerWidget {
                   );
                 }
                 final myUid = ref.watch(currentUserProvider).value?.uid ?? '';
-                // Standard competition ranking: equal counts share a rank
-                // ("=1"), the next distinct count skips past them — so ties
-                // never look like arbitrary ordering.
+                // Standard competition ranking: equal counts share a rank, the
+                // next distinct count skips past them — so ties never look like
+                // arbitrary ordering.
                 final ranks = List<int>.filled(entries.length, 0);
                 for (var i = 0; i < entries.length; i++) {
                   ranks[i] = i > 0 && entries[i].count == entries[i - 1].count
@@ -236,8 +199,6 @@ class LeaderboardScreen extends ConsumerWidget {
                 );
               },
             ),
-          ),
-        ],
         ),
       ),
     );
@@ -285,8 +246,8 @@ class _LeaderboardTile extends StatelessWidget {
           SizedBox(
             width: 32,
             child: Center(
-              // A shared rank shows as "=N" — honest about the tie; the
-              // trophy is reserved for a sole #1.
+              // Ties share the same number; the trophy is reserved for a sole
+              // #1.
               child: rank == 1 && !isTied
                   ? const Icon(Icons.emoji_events,
                           color: AppColors.gold, size: 24)
@@ -298,7 +259,7 @@ class _LeaderboardTile extends StatelessWidget {
                   : FittedBox(
                       fit: BoxFit.scaleDown,
                       child: Text(
-                        isTied ? '=$rank' : '#$rank',
+                        '#$rank',
                         style: TextStyle(
                           fontWeight: FontWeight.w700,
                           fontSize: isTop3 ? 18 : 15,
@@ -416,7 +377,7 @@ class _YouChip extends StatelessWidget {
 
 /// Podium for the top three (rendered only when there are ≥3 entries).
 /// [top3] is descending: index 0 = #1, 1 = #2, 2 = #3; laid out #2 · #1 · #3.
-/// [ranks]/[tied] carry the shared-rank story ("=1" on equal counts).
+/// [ranks]/[tied] carry the shared-rank story (equal counts share a rank).
 class _Podium extends StatelessWidget {
   final List<LeaderboardEntry> top3;
   final List<int> ranks;
@@ -511,10 +472,20 @@ class _PodiumSlot extends StatelessWidget {
         gradient: isFirst ? AppGradients.goldCta : null,
         color: isFirst ? null : AppColors.gold.withValues(alpha: ringAlpha),
       ),
-      child: AppAvatar(
-        name: entry.name,
-        photoUrl: entry.photoUrl,
-        radius: avatarRadius,
+      // Navy gap between the gold ring and the avatar — same as the list
+      // tiles. Without it a no-photo player's gold-tinted fallback disc sits
+      // directly on the gold ring and reads as a gold blob.
+      child: Container(
+        padding: const EdgeInsets.all(2),
+        decoration: const BoxDecoration(
+          shape: BoxShape.circle,
+          color: AppColors.navyLight,
+        ),
+        child: AppAvatar(
+          name: entry.name,
+          photoUrl: entry.photoUrl,
+          radius: avatarRadius,
+        ),
       ),
     );
 
@@ -585,7 +556,7 @@ class _PodiumSlot extends StatelessWidget {
             border: Border.all(color: AppColors.gold.withValues(alpha: 0.35)),
           ),
           child: Text(
-            isTied ? '=$rank' : '$rank',
+            '$rank',
             style: TextStyle(
               color: isFirst ? AppColors.navyBlue : AppColors.gold,
               fontWeight: FontWeight.w800,

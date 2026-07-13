@@ -44,6 +44,17 @@
     }
   },
   "selectMembersError": "Select at least one member",
+  "adminTesting": "Admin · Testing",
+  "notifyOnCreate": "Notify players & coaches",
+  "notifyOnCreateSubtitle": "Off = create and cancel this session silently — no notifications sent",
+  "sessionArt": "Card art",
+  "sessionArtRandom": "Random",
+  "sessionArtCard": "Card {number}",
+  "@sessionArtCard": {
+    "placeholders": {
+      "number": { "type": "int" }
+    }
+  },
   "searchMembers": "Search members",
   "membersOnly": "Members only",
   "done": "Done",
@@ -326,10 +337,7 @@
   "markAll": "Mark all",
   "editRoster": "Edit roster",
   "editCapacity": "Edit capacity",
-  "gamesThisMonth": "Games this month",
-  "gamesAllTime": "Games all time",
   "games": "Games",
-  "endorsementsAllTime": "Endorsements all time",
   "clearSearch": "Clear search",
   "sendMessage": "Send message",
   "showPassword": "Show password",
@@ -556,5 +564,9 @@
       "count": { "type": "int" }
     }
   },
-  "topTierReached": "Top tier reached"
+  "topTierReached": "Top tier reached",
+  "updateAvailableTitle": "Update Available",
+  "updateAvailableBody": "A new version of the app is ready with the latest features and fixes.",
+  "updateNow": "Update Now",
+  "updateLater": "Later"
 }

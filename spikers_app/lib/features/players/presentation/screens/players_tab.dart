@@ -10,6 +10,7 @@ import '../../../../core/widgets/animations.dart';
 import '../../../../core/widgets/floating_nav_bar.dart';
 import '../../../../core/widgets/gender_filter_chips.dart';
 import '../../../../core/widgets/membership_chip.dart';
+import '../../../../core/widgets/retracting_header.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../providers/players_providers.dart';
@@ -54,7 +55,10 @@ class _PlayersTabState extends ConsumerState<PlayersTab> {
           return matchesGender && matchesQuery;
         }).toList();
 
-        return Column(
+        // Search + filters retract on scroll-down and return on scroll-up so
+        // the roster gets the full screen height once the user starts browsing.
+        final header = Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             // Search on its own full-width row, filters underneath — gives
             // the search field room to breathe instead of fighting the chips
@@ -90,54 +94,56 @@ class _PlayersTabState extends ConsumerState<PlayersTab> {
                 ],
               ),
             ),
-            Expanded(
-              child: filtered.isEmpty
-                  ? EmptyStateView(
-                      icon: Icons.group_outlined,
-                      title: q.isEmpty ? l.noPlayers : l.noPlayersMatch,
-                    )
-                  : ListView.builder(
-                      padding: const EdgeInsets.fromLTRB(
-                          16, 20, 16, FloatingNavBar.scrollClearance),
-                      itemCount: filtered.length,
-                      itemBuilder: (_, i) {
-                        final p = filtered[i];
-                        return AppStaggeredItem(
-                          key: ValueKey(p.uid),
-                          index: i,
-                          child: PlayerCard(
-                            name: p.name,
-                            photoUrl: p.photoUrl,
-                            injured: p.injured,
-                            attendanceCount: p.attendanceCount,
-                            age: p.dateOfBirth == null
-                                ? null
-                                : AgeCalculator.fromDate(p.dateOfBirth!),
-                            onTap: () => context.push(
-                              Routes.playerProfile,
-                              extra: p.uid,
-                            ),
-                            trailing: MembershipChip(
-                              isPaid: p.isPaid,
-                              daysLeft: p.paymentDaysLeft,
-                              isLifetime: p.lifetimeMember,
-                              // LIFETIME is this screen's one glowing element.
-                              emphasized: true,
-                              onTap: () => confirmTogglePayment(
-                                context,
-                                ref,
-                                uid: p.uid,
-                                name: p.name,
-                                paidUntil: p.paidUntil,
-                                isLifetime: p.lifetimeMember,
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-            ),
           ],
+        );
+
+        return RetractingHeader(
+          header: header,
+          child: filtered.isEmpty
+              ? EmptyStateView(
+                  icon: Icons.group_outlined,
+                  title: q.isEmpty ? l.noPlayers : l.noPlayersMatch,
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.fromLTRB(
+                      16, 20, 16, FloatingNavBar.scrollClearance),
+                  itemCount: filtered.length,
+                  itemBuilder: (_, i) {
+                    final p = filtered[i];
+                    return AppStaggeredItem(
+                      key: ValueKey(p.uid),
+                      index: i,
+                      child: PlayerCard(
+                        name: p.name,
+                        photoUrl: p.photoUrl,
+                        injured: p.injured,
+                        attendanceCount: p.attendanceCount,
+                        age: p.dateOfBirth == null
+                            ? null
+                            : AgeCalculator.fromDate(p.dateOfBirth!),
+                        onTap: () => context.push(
+                          Routes.playerProfile,
+                          extra: p.uid,
+                        ),
+                        trailing: MembershipChip(
+                          isPaid: p.isPaid,
+                          daysLeft: p.paymentDaysLeft,
+                          isLifetime: p.lifetimeMember,
+                          // LIFETIME is this screen's one glowing element.
+                          emphasized: true,
+                          onTap: () => confirmTogglePayment(
+                            context,
+                            ref,
+                            uid: p.uid,
+                            name: p.name,
+                            paidUntil: p.paidUntil,
+                            isLifetime: p.lifetimeMember,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
         );
       },
     );
@@ -254,4 +260,3 @@ class _ResultCountPill extends StatelessWidget {
     );
   }
 }
-
