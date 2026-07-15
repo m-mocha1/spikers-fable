@@ -212,6 +212,18 @@
   "sessionsAttendedTitle": "عدد مرات الحضور",
   "registrationDate": "تاريخ التسجيل",
   "lastSessionDate": "تاريخ آخر حضور",
+  "lastPaidDate": "تاريخ آخر دفعة",
+  "membershipStatus": "حالة العضوية",
+  "membershipExpiry": "تاريخ انتهاء العضوية",
+  "membershipLifetime": "عضوية دائمة",
+  "export": "تصدير",
+  "exportColumns": "الأعمدة المضمّنة",
+  "playersWillBeExported": "{count, plural, zero{لن يتم تصدير أي لاعب} one{سيتم تصدير لاعب واحد} two{سيتم تصدير لاعبين} few{سيتم تصدير {count} لاعبين} many{سيتم تصدير {count} لاعبًا} other{سيتم تصدير {count} لاعب}}",
+  "@playersWillBeExported": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "addPhoto": "أضف صورة",
   "changePhoto": "تغيير الصورة",
   "pickFromGallery": "المعرض",

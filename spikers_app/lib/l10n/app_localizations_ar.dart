@@ -547,6 +547,39 @@ class AppLocalizationsAr extends AppLocalizations {
   String get lastSessionDate => 'تاريخ آخر حضور';
 
   @override
+  String get lastPaidDate => 'تاريخ آخر دفعة';
+
+  @override
+  String get membershipStatus => 'حالة العضوية';
+
+  @override
+  String get membershipExpiry => 'تاريخ انتهاء العضوية';
+
+  @override
+  String get membershipLifetime => 'عضوية دائمة';
+
+  @override
+  String get export => 'تصدير';
+
+  @override
+  String get exportColumns => 'الأعمدة المضمّنة';
+
+  @override
+  String playersWillBeExported(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'سيتم تصدير $count لاعب',
+      many: 'سيتم تصدير $count لاعبًا',
+      few: 'سيتم تصدير $count لاعبين',
+      two: 'سيتم تصدير لاعبين',
+      one: 'سيتم تصدير لاعب واحد',
+      zero: 'لن يتم تصدير أي لاعب',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get addPhoto => 'أضف صورة';
 
   @override

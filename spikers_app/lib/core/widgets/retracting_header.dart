@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 
 import '../constants/app_motion.dart';
+import 'scroll_retraction.dart';
 
 /// Pins [header] above a scrollable [child] and retracts the header out of view
 /// as the user scrolls the list down, revealing it again when they scroll back
@@ -39,6 +39,8 @@ class _RetractingHeaderState extends State<RetractingHeader>
     value: 1,
   );
 
+  late final ScrollRetraction _retraction = ScrollRetraction(_controller);
+
   late final Animation<double> _sizeFactor = CurvedAnimation(
     parent: _controller,
     curve: AppMotion.ambient,
@@ -48,31 +50,6 @@ class _RetractingHeaderState extends State<RetractingHeader>
   void dispose() {
     _controller.dispose();
     super.dispose();
-  }
-
-  bool _onScroll(UserScrollNotification n) {
-    // Ignore horizontal scrolls (filter-chip rows, facepiles) — only the
-    // vertical list should drive the header.
-    if (n.metrics.axis != Axis.vertical) return false;
-
-    // Always reveal when the list is at (or overscrolled past) the top, so the
-    // header can never be stranded off-screen with nothing left to scroll up to.
-    if (n.metrics.pixels <= n.metrics.minScrollExtent) {
-      _controller.forward();
-      return false;
-    }
-
-    switch (n.direction) {
-      case ScrollDirection.reverse: // finger up, reading further down → hide.
-        _controller.reverse();
-        break;
-      case ScrollDirection.forward: // finger down, heading back up → show.
-        _controller.forward();
-        break;
-      case ScrollDirection.idle:
-        break;
-    }
-    return false;
   }
 
   @override
@@ -85,10 +62,7 @@ class _RetractingHeaderState extends State<RetractingHeader>
           child: widget.header,
         ),
         Expanded(
-          child: NotificationListener<UserScrollNotification>(
-            onNotification: _onScroll,
-            child: widget.child,
-          ),
+          child: RetractOnScroll(retraction: _retraction, child: widget.child),
         ),
       ],
     );

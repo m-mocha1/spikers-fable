@@ -992,6 +992,48 @@ abstract class AppLocalizations {
   /// **'Last Session Attended'**
   String get lastSessionDate;
 
+  /// No description provided for @lastPaidDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Last Payment Date'**
+  String get lastPaidDate;
+
+  /// No description provided for @membershipStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Membership Status'**
+  String get membershipStatus;
+
+  /// No description provided for @membershipExpiry.
+  ///
+  /// In en, this message translates to:
+  /// **'Membership Expiry'**
+  String get membershipExpiry;
+
+  /// No description provided for @membershipLifetime.
+  ///
+  /// In en, this message translates to:
+  /// **'Lifetime'**
+  String get membershipLifetime;
+
+  /// No description provided for @export.
+  ///
+  /// In en, this message translates to:
+  /// **'Export'**
+  String get export;
+
+  /// No description provided for @exportColumns.
+  ///
+  /// In en, this message translates to:
+  /// **'Columns to include'**
+  String get exportColumns;
+
+  /// No description provided for @playersWillBeExported.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 player will be exported} other{{count} players will be exported}}'**
+  String playersWillBeExported(int count);
+
   /// No description provided for @addPhoto.
   ///
   /// In en, this message translates to:

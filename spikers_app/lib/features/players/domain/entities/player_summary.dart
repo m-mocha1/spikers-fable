@@ -6,7 +6,11 @@ import 'package:spikers_app/features/auth/domain/entities/user_model.dart';
 class PlayerSummary {
   final String uid;
   final String name;
-  final String gender;
+
+  /// 'male' or 'female'; null when the player never provided one (gender is
+  /// optional at registration — App Store guideline 5.1.1(v)). Never defaulted:
+  /// a genderless player must not silently count as male in filters or exports.
+  final String? gender;
   final String photoUrl;
   final DateTime? dateOfBirth;
   final DateTime? createdAt;
@@ -40,7 +44,7 @@ class PlayerSummary {
     return PlayerSummary(
       uid: doc.id,
       name: (d['name'] ?? '') as String,
-      gender: (d['gender'] ?? 'male') as String,
+      gender: d['gender'] as String?,
       photoUrl: (d['photoUrl'] ?? '') as String,
       dateOfBirth: (d['dateOfBirth'] as Timestamp?)?.toDate(),
       createdAt: (d['createdAt'] as Timestamp?)?.toDate(),

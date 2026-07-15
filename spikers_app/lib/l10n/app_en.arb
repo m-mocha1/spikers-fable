@@ -212,6 +212,18 @@
   "sessionsAttendedTitle": "Sessions Attended",
   "registrationDate": "Registration Date",
   "lastSessionDate": "Last Session Attended",
+  "lastPaidDate": "Last Payment Date",
+  "membershipStatus": "Membership Status",
+  "membershipExpiry": "Membership Expiry",
+  "membershipLifetime": "Lifetime",
+  "export": "Export",
+  "exportColumns": "Columns to include",
+  "playersWillBeExported": "{count, plural, one{1 player will be exported} other{{count} players will be exported}}",
+  "@playersWillBeExported": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "addPhoto": "Add Photo",
   "changePhoto": "Change Photo",
   "pickFromGallery": "Gallery",

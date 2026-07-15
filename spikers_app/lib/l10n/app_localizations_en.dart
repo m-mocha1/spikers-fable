@@ -519,6 +519,35 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lastSessionDate => 'Last Session Attended';
 
   @override
+  String get lastPaidDate => 'Last Payment Date';
+
+  @override
+  String get membershipStatus => 'Membership Status';
+
+  @override
+  String get membershipExpiry => 'Membership Expiry';
+
+  @override
+  String get membershipLifetime => 'Lifetime';
+
+  @override
+  String get export => 'Export';
+
+  @override
+  String get exportColumns => 'Columns to include';
+
+  @override
+  String playersWillBeExported(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count players will be exported',
+      one: '1 player will be exported',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get addPhoto => 'Add Photo';
 
   @override

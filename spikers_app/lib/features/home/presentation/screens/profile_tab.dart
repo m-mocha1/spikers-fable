@@ -35,11 +35,7 @@ import '../widgets/achievements_card.dart';
 import '../widgets/profile_stat_cards.dart';
 
 class ProfileTab extends ConsumerStatefulWidget {
-  const ProfileTab({super.key, this.revealGeneration = 0});
-
-  /// Bumped by the home shell each time this tab becomes visible; re-mounts the
-  /// body below so the staggered entrance replays on every visit.
-  final int revealGeneration;
+  const ProfileTab({super.key});
 
   @override
   ConsumerState<ProfileTab> createState() => _ProfileTabState();
@@ -55,7 +51,10 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
   /// fires exactly once per device; the first sighting only records a baseline
   /// (no celebration on a fresh install).
   Future<void> _checkMilestone(
-      String uid, int count, AppLocalizations l) async {
+    String uid,
+    int count,
+    AppLocalizations l,
+  ) async {
     final prefs = await SharedPreferences.getInstance();
     final key = 'last_seen_attendance_$uid';
     final previous = prefs.getInt(key);
@@ -74,7 +73,10 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
   /// saw it. Same one-shot-per-device baseline behaviour, keyed separately so
   /// it can't collide with the games-played milestone.
   Future<void> _checkEndorsementMilestone(
-      String uid, int count, AppLocalizations l) async {
+    String uid,
+    int count,
+    AppLocalizations l,
+  ) async {
     final prefs = await SharedPreferences.getInstance();
     final key = 'last_seen_endorsements_$uid';
     final previous = prefs.getInt(key);
@@ -84,7 +86,10 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
     final level = crossedEndorsementLevel(previous, count);
     if (level == null || !mounted) return;
     HapticFeedback.mediumImpact();
-    showCelebration(context, badgeAsset: AppAssets.endorsementBadges[level - 1]);
+    showCelebration(
+      context,
+      badgeAsset: AppAssets.endorsementBadges[level - 1],
+    );
     showAppSnackbar(
       '🎉 ${l.endorsementMilestoneUnlocked(count, l.endorsementLevelLabel(level))}',
     );
@@ -227,158 +232,145 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
         attendance != null && !(user.isCoach && attendance == 0);
     final tier = AttendanceTiers.tierIndex(attendance ?? 0);
 
-    return KeyedSubtree(
-      key: ValueKey(widget.revealGeneration),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(
-            24, 24, 24, FloatingNavBar.scrollClearance),
-        child: Column(
-          children:
-              [
-                    const SizedBox(height: 8),
-                    _HeroAvatar(
-                      user: user,
-                      badgeAsset: showTierBadge
-                          ? AppAssets.gamesPlayedBadges[tier]
-                          : null,
-                      badgeLabel: showTierBadge ? tierLabel(l, tier) : null,
-                      isUploading: _uploading,
-                      onTap: () => _showAvatarPicker(l),
-                    ),
-                    const SizedBox(height: 14),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Flexible(
-                          child: Text(
-                            user.name,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 0.2,
-                            ),
-                          ),
-                        ),
-                        if (user.injured) ...[
-                          const SizedBox(width: 8),
-                          const InjuredIcon(size: 22),
-                        ],
-                      ],
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      email,
-                      style: const TextStyle(
-                        color: AppColors.grey,
-                        fontSize: 13,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      alignment: WrapAlignment.center,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [
-                        ProfileRoleBadge(isCoach: user.isCoach, l: l),
-                        _MemberSinceChip(year: user.createdAt.year, l: l),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    GamesPlayedCard(
-                      uid: user.uid,
-                      isCoach: user.isCoach,
-                      l: l,
-                    ),
-                    EndorsementsCard(
-                      uid: user.uid,
-                      isCoach: user.isCoach,
-                      l: l,
-                    ),
-                    AchievementsCard(uid: user.uid, l: l),
-                    const SizedBox(height: 24),
-                    _SectionHeader(label: l.sectionDetails),
-                    const SizedBox(height: 10),
-                    ProfileStatsRow(
-                      user: user,
-                      l: l,
-                      onEdit: () => showEditBodyMetricsDialog(context, user),
-                    ),
-                    const SizedBox(height: 12),
-                    ProfileInfoCard(user: user, l: l),
-                    if (user.gender == null || user.dateOfBirth == null) ...[
-                      const SizedBox(height: 12),
-                      _CompleteProfileCard(
-                        l: l,
-                        onTap: () => showSetProfileBasicsDialog(context, user),
-                      ),
-                    ],
-                    const SizedBox(height: 24),
-                    _SectionHeader(label: l.sectionAccount),
-                    const SizedBox(height: 10),
-                    _AccountCard(l: l, user: user),
-                    const SizedBox(height: 20),
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton.icon(
-                        onPressed: () => signOutToLogin(ref),
-                        icon: const Icon(
-                          Icons.logout,
-                          color: AppColors.errorRed,
-                        ),
-                        label: Text(
-                          l.signOut,
-                          style: const TextStyle(color: AppColors.errorRed),
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: AppColors.errorRed),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextButton(
-                      onPressed: _deleting ? null : () => _deleteAccount(l),
-                      child: _deleting
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: AppColors.errorRed,
-                              ),
-                            )
-                          : Text(
-                              l.deleteMyAccountTitle,
-                              style: const TextStyle(
-                                color: AppColors.grey,
-                                fontSize: 13,
-                              ),
-                            ),
-                    ),
-                    // Deliberately low-key: the coach key is handed out
-                    // in person, so this shouldn't read as a feature to
-                    // regular players — just an unlock for those who have one.
-                    if (!user.isCoach)
-                      TextButton(
-                        onPressed: () => _showCoachKeyDialog(l),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(
+        24,
+        24,
+        24,
+        FloatingNavBar.scrollClearance,
+      ),
+      child: Column(
+        children:
+            [
+                  const SizedBox(height: 8),
+                  _HeroAvatar(
+                    user: user,
+                    badgeAsset: showTierBadge
+                        ? AppAssets.gamesPlayedBadges[tier]
+                        : null,
+                    badgeLabel: showTierBadge ? tierLabel(l, tier) : null,
+                    isUploading: _uploading,
+                    onTap: () => _showAvatarPicker(l),
+                  ),
+                  const SizedBox(height: 14),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Flexible(
                         child: Text(
-                          l.haveCoachKey,
+                          user.name,
+                          textAlign: TextAlign.center,
                           style: const TextStyle(
-                            color: AppColors.grey,
-                            fontSize: 13,
+                            fontSize: 24,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.2,
                           ),
                         ),
                       ),
-                  ]
-                  .animate(interval: AppMotion.stagger)
-                  .fadeIn(duration: AppMotion.normal, curve: AppMotion.enter)
-                  .slideY(begin: 0.12, end: 0, curve: AppMotion.enter),
-        ),
+                      if (user.injured) ...[
+                        const SizedBox(width: 8),
+                        const InjuredIcon(size: 22),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    email,
+                    style: const TextStyle(color: AppColors.grey, fontSize: 13),
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    alignment: WrapAlignment.center,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      ProfileRoleBadge(isCoach: user.isCoach, l: l),
+                      _MemberSinceChip(year: user.createdAt.year, l: l),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  GamesPlayedCard(uid: user.uid, isCoach: user.isCoach, l: l),
+                  EndorsementsCard(uid: user.uid, isCoach: user.isCoach, l: l),
+                  AchievementsCard(uid: user.uid, l: l),
+                  const SizedBox(height: 24),
+                  _SectionHeader(label: l.sectionDetails),
+                  const SizedBox(height: 10),
+                  ProfileStatsRow(
+                    user: user,
+                    l: l,
+                    onEdit: () => showEditBodyMetricsDialog(context, user),
+                  ),
+                  const SizedBox(height: 12),
+                  ProfileInfoCard(user: user, l: l),
+                  if (user.gender == null || user.dateOfBirth == null) ...[
+                    const SizedBox(height: 12),
+                    _CompleteProfileCard(
+                      l: l,
+                      onTap: () => showSetProfileBasicsDialog(context, user),
+                    ),
+                  ],
+                  const SizedBox(height: 24),
+                  _SectionHeader(label: l.sectionAccount),
+                  const SizedBox(height: 10),
+                  _AccountCard(l: l, user: user),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () => signOutToLogin(ref),
+                      icon: const Icon(Icons.logout, color: AppColors.errorRed),
+                      label: Text(
+                        l.signOut,
+                        style: const TextStyle(color: AppColors.errorRed),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: AppColors.errorRed),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextButton(
+                    onPressed: _deleting ? null : () => _deleteAccount(l),
+                    child: _deleting
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppColors.errorRed,
+                            ),
+                          )
+                        : Text(
+                            l.deleteMyAccountTitle,
+                            style: const TextStyle(
+                              color: AppColors.grey,
+                              fontSize: 13,
+                            ),
+                          ),
+                  ),
+                  // Deliberately low-key: the coach key is handed out
+                  // in person, so this shouldn't read as a feature to
+                  // regular players — just an unlock for those who have one.
+                  if (!user.isCoach)
+                    TextButton(
+                      onPressed: () => _showCoachKeyDialog(l),
+                      child: Text(
+                        l.haveCoachKey,
+                        style: const TextStyle(
+                          color: AppColors.grey,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                ]
+                .animate(interval: AppMotion.stagger)
+                .fadeIn(duration: AppMotion.normal, curve: AppMotion.enter)
+                .slideY(begin: 0.12, end: 0, curve: AppMotion.enter),
       ),
     );
   }
@@ -602,8 +594,10 @@ class _AccountCard extends ConsumerWidget {
               onTap: () =>
                   context.push('${Routes.paymentHistory}?uid=${user.uid}'),
               child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
                 child: Row(
                   children: [
                     const Icon(
@@ -638,8 +632,10 @@ class _AccountCard extends ConsumerWidget {
             InkWell(
               onTap: () => ref.read(localeProvider.notifier).toggle(),
               child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
                 child: Row(
                   children: [
                     const Icon(Icons.language_outlined, color: AppColors.gold),
@@ -703,8 +699,7 @@ class _CoachKeyDialogState extends ConsumerState<_CoachKeyDialog> {
       _submitting = true;
       _errorText = null;
     });
-    final result =
-        await ref.read(authRepositoryProvider).promoteToCoach(key);
+    final result = await ref.read(authRepositoryProvider).promoteToCoach(key);
     if (!mounted) return;
     switch (result) {
       case CoachPromotion.promoted:
@@ -728,10 +723,7 @@ class _CoachKeyDialogState extends ConsumerState<_CoachKeyDialog> {
     return AlertDialog(
       backgroundColor: AppColors.navyLight,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      title: Text(
-        l.coachKey,
-        style: const TextStyle(color: AppColors.white),
-      ),
+      title: Text(l.coachKey, style: const TextStyle(color: AppColors.white)),
       content: BrandedTextField(
         label: l.coachKey,
         hint: l.coachKeyHint,
@@ -746,8 +738,9 @@ class _CoachKeyDialogState extends ConsumerState<_CoachKeyDialog> {
       ),
       actions: [
         TextButton(
-          onPressed:
-              _submitting ? null : () => Navigator.of(context).pop(false),
+          onPressed: _submitting
+              ? null
+              : () => Navigator.of(context).pop(false),
           child: Text(l.cancel, style: const TextStyle(color: AppColors.grey)),
         ),
         TextButton(

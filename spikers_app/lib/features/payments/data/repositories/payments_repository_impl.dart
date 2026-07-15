@@ -10,4 +10,8 @@ class PaymentsRepositoryImpl implements PaymentsRepository {
   @override
   Stream<List<PaymentRecord>> watchHistory(String userId) =>
       _remote.watchHistory(userId);
+
+  @override
+  Future<DateTime?> fetchLastPaidAt(String userId) =>
+      _remote.fetchLastPaidAt(userId);
 }

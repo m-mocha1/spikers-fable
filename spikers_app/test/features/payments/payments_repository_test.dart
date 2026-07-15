@@ -43,4 +43,29 @@ void main() {
       expect(records, isEmpty);
     });
   });
+
+  group('fetchLastPaidAt', () {
+    test('returns the newest paid entry', () async {
+      await seedRecord('p1', 'paid', DateTime(2026, 1, 10));
+      await seedRecord('p1', 'paid', DateTime(2026, 5, 20));
+
+      expect(await repo.fetchLastPaidAt('p1'), DateTime(2026, 5, 20));
+    });
+
+    test('ignores unpaid entries even when they are newer', () async {
+      await seedRecord('p1', 'paid', DateTime(2026, 5, 20));
+      // Marking them unpaid deletes users/p1.paidAt, which is exactly why the
+      // export reads the log instead: the payment itself still happened.
+      await seedRecord('p1', 'unpaid', DateTime(2026, 6, 1));
+
+      expect(await repo.fetchLastPaidAt('p1'), DateTime(2026, 5, 20));
+    });
+
+    test('returns null when the player never paid', () async {
+      await seedRecord('p1', 'unpaid', DateTime(2026, 6, 1));
+
+      expect(await repo.fetchLastPaidAt('p1'), isNull);
+      expect(await repo.fetchLastPaidAt('nobody'), isNull);
+    });
+  });
 }
