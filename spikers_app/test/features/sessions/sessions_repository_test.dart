@@ -346,6 +346,69 @@ void main() {
     });
   });
 
+  group('fetchAttendedSessions', () {
+    Future<void> seedHistory(String id, DateTime start,
+        {List<String> attendedIds = const ['u1', 'u2']}) async {
+      await db.collection('sessions_history').doc(id).set({
+        'title': id,
+        'location': 'hall',
+        'gender': 'mixed',
+        'minAge': 0,
+        'maxAge': 99,
+        'startTime': Timestamp.fromDate(start),
+        'endTime': Timestamp.fromDate(start.add(const Duration(hours: 2))),
+        'maxPlayers': 10,
+        'coachId': 'c1',
+        'attendeeIds': attendedIds,
+        'attendedIds': attendedIds,
+        'createdAt': Timestamp.fromDate(DateTime(2026)),
+      });
+    }
+
+    test('returns full models with the roster preserved', () async {
+      await seedHistory('h1', DateTime(2026, 6, 1, 18),
+          attendedIds: ['u1', 'u2', 'u3']);
+      await seedHistory('other', DateTime(2026, 6, 8, 18),
+          attendedIds: ['someone-else']);
+
+      final sessions = await repo.fetchAttendedSessions('u1');
+      expect(sessions.map((s) => s.id), ['h1']);
+      expect(sessions.single.title, 'h1');
+      expect(sessions.single.attendedIds, ['u1', 'u2', 'u3']);
+      expect(sessions.single.endTime, DateTime(2026, 6, 1, 20));
+    });
+
+    test('includes not-yet-archived live sessions the user attended',
+        () async {
+      await seedHistory('h1', DateTime(2026, 6, 1, 18));
+      final liveStart = DateTime(2026, 6, 20, 18);
+      await db.collection('sessions').doc('live1').set({
+        'title': 'live1',
+        'location': 'hall',
+        'gender': 'mixed',
+        'minAge': 0,
+        'maxAge': 99,
+        'startTime': Timestamp.fromDate(liveStart),
+        'endTime':
+            Timestamp.fromDate(liveStart.add(const Duration(hours: 2))),
+        'maxPlayers': 10,
+        'coachId': 'c1',
+        'attendeeIds': ['u1'],
+        'attendedIds': ['u1'],
+        'createdAt': Timestamp.fromDate(DateTime(2026)),
+      });
+
+      final ids = (await repo.fetchAttendedSessions('u1')).map((s) => s.id);
+      expect(ids, containsAll(['h1', 'live1']));
+    });
+
+    test('empty when the user never attended', () async {
+      await seedHistory('h1', DateTime(2026, 6, 1, 18),
+          attendedIds: ['someone-else']);
+      expect(await repo.fetchAttendedSessions('u1'), isEmpty);
+    });
+  });
+
   group('join result/error mapping', () {
     HttpsCallable stubCall(dynamic result) {
       final callable = _MockCallable();

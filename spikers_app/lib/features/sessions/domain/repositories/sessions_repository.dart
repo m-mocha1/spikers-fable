@@ -70,6 +70,11 @@ abstract class SessionsRepository {
   /// never attended — feeds the attendance export's "last session" column.
   Future<DateTime?> fetchLastAttendedTime(String uid);
 
+  /// Full sessions where [uid] was marked attended (recent first, bounded) —
+  /// used by the post-session shout-out prompt to find a recently-ended session
+  /// whose teammates the user can still endorse.
+  Future<List<SessionModel>> fetchAttendedSessions(String uid, {int limit});
+
   /// Creates the session. [designIndex] pins a specific card design (admin art
   /// testing) — must be a valid index into `AppAssets.cardDesigns`; when null or
   /// out of range a random design is chosen, avoiding the previous session's.

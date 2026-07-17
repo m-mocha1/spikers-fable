@@ -19,6 +19,7 @@ import '../../../notifications/application/notifications_service.dart';
 import '../../../players/presentation/screens/players_peer_tab.dart';
 import '../../../players/presentation/screens/players_tab.dart';
 import '../../../sessions/presentation/screens/sessions_tab.dart';
+import '../../../sessions/presentation/widgets/shout_out_gate.dart';
 import 'profile_tab.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -268,21 +269,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
     // Home is the app's landing screen after auth, so it's where we check the
     // store for a newer build and prompt the user to update (see
-    // [AppUpgradeAlert]).
+    // [AppUpgradeAlert]). [ShoutOutGate] sits inside it so the update prompt
+    // keeps priority: it separately, once per launch, offers to endorse a
+    // teammate after a session the user just attended.
     return AppUpgradeAlert(
-      // Only the Scaffold can act on the app bar's changing height, so it is
-      // what rebuilds per frame. Everything expensive is built above and passed
-      // in by reference, so those subtrees are reused rather than rebuilt 60
-      // times a second — which would restart the FAB's entrance animation.
-      child: AnimatedBuilder(
-        animation: _barsFactor,
-        builder: (_, _) => Scaffold(
-          extendBody: true,
-          backgroundColor: Colors.transparent,
-          appBar: RetractingAppBar(factor: _barsFactor.value, bar: appBar),
-          body: body,
-          floatingActionButton: fab,
-          bottomNavigationBar: navBar,
+      child: ShoutOutGate(
+        // Only the Scaffold can act on the app bar's changing height, so it is
+        // what rebuilds per frame. Everything expensive is built above and
+        // passed in by reference, so those subtrees are reused rather than
+        // rebuilt 60 times a second — which would restart the FAB's entrance
+        // animation.
+        child: AnimatedBuilder(
+          animation: _barsFactor,
+          builder: (_, _) => Scaffold(
+            extendBody: true,
+            backgroundColor: Colors.transparent,
+            appBar: RetractingAppBar(factor: _barsFactor.value, bar: appBar),
+            body: body,
+            floatingActionButton: fab,
+            bottomNavigationBar: navBar,
+          ),
         ),
       ),
     );

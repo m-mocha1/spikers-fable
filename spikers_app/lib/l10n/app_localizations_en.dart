@@ -1150,6 +1150,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get endorseFailed => 'Couldn\'t give endorsement';
 
   @override
+  String get shoutOutTitle => 'Who impressed you?';
+
+  @override
+  String shoutOutSubtitle(String title) {
+    return 'You played $title';
+  }
+
+  @override
+  String get shoutOutSkip => 'Maybe later';
+
+  @override
   String endorsementLevelLabel(int level) {
     return 'Level $level';
   }

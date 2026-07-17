@@ -2036,6 +2036,24 @@ abstract class AppLocalizations {
   /// **'Couldn\'t give endorsement'**
   String get endorseFailed;
 
+  /// No description provided for @shoutOutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Who impressed you?'**
+  String get shoutOutTitle;
+
+  /// No description provided for @shoutOutSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You played {title}'**
+  String shoutOutSubtitle(String title);
+
+  /// No description provided for @shoutOutSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Maybe later'**
+  String get shoutOutSkip;
+
   /// No description provided for @endorsementLevelLabel.
   ///
   /// In en, this message translates to:

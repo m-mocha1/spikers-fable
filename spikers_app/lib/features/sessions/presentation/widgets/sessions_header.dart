@@ -55,6 +55,8 @@ class SessionsHeader extends StatelessWidget {
         : user.name.trim().split(' ').first;
 
     final next = nextUpFor(user, sessions);
+    // The list below drops the hero's own session, so the count follows suit.
+    final otherCount = sessions.length - (next != null ? 1 : 0);
 
     final weekCount = sessions
         .where((s) =>
@@ -110,7 +112,12 @@ class SessionsHeader extends StatelessWidget {
               _NudgeCard(l: l, weekCount: weekCount),
               const SizedBox(height: 26),
             ],
-            _SectionLabel(label: l.upcoming, count: sessions.length),
+            // The Next-Up hero already stands in for its own session, so the
+            // list below (and this count) leaves it out. With nothing else
+            // coming up the whole label is dropped rather than showing an empty
+            // "UPCOMING 0" strip under the hero.
+            if (otherCount > 0)
+              _SectionLabel(label: l.upcoming, count: otherCount),
           ],
         ),
       ),

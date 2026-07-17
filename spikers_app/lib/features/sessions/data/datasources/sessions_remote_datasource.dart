@@ -176,6 +176,30 @@ class SessionsRemoteDataSource {
     return times.reduce((a, b) => a.isAfter(b) ? a : b);
   }
 
+  /// Full session docs where [uid] was marked attended — archived history plus
+  /// any not-yet-archived live sessions. Bounded by [limit]. Backed by the same
+  /// (attendedIds, startTime) composite index as [fetchAttendedTimes].
+  ///
+  /// Unlike [fetchAttendedTimes] (which keeps only the start timestamps for the
+  /// streak stat), this returns the whole model — the post-session shout-out
+  /// prompt needs the roster (`attendedIds`), `title`, and `endTime`.
+  Future<List<SessionModel>> fetchAttendedSessions(String uid,
+      {int limit = 20}) async {
+    final results = await Future.wait([
+      _db
+          .collection('sessions_history')
+          .where('attendedIds', arrayContains: uid)
+          .orderBy('startTime', descending: true)
+          .limit(limit)
+          .get(),
+      _db.collection('sessions').where('attendedIds', arrayContains: uid).get(),
+    ]);
+    return [
+      for (final snap in results)
+        for (final doc in snap.docs) SessionModel.fromDoc(doc),
+    ];
+  }
+
   Future<void> create(SessionModel session, {int? designIndex}) async {
     final payload = session.toMap();
     final count = AppAssets.cardDesigns.length;

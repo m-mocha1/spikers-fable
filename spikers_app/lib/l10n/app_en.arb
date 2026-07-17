@@ -548,6 +548,14 @@
     }
   },
   "endorseFailed": "Couldn't give endorsement",
+  "shoutOutTitle": "Who impressed you?",
+  "shoutOutSubtitle": "You played {title}",
+  "@shoutOutSubtitle": {
+    "placeholders": {
+      "title": { "type": "String" }
+    }
+  },
+  "shoutOutSkip": "Maybe later",
   "endorsementLevelLabel": "Level {level}",
   "@endorsementLevelLabel": {
     "placeholders": {

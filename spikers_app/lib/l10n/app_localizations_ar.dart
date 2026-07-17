@@ -1195,6 +1195,17 @@ class AppLocalizationsAr extends AppLocalizations {
   String get endorseFailed => 'تعذّر منح التأييد';
 
   @override
+  String get shoutOutTitle => 'من الذي أبهرك؟';
+
+  @override
+  String shoutOutSubtitle(String title) {
+    return 'لعبت $title';
+  }
+
+  @override
+  String get shoutOutSkip => 'لاحقًا';
+
+  @override
   String endorsementLevelLabel(int level) {
     return 'المستوى $level';
   }
