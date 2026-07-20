@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:spikers_app/features/players/data/datasources/players_remote_datasource.dart';
@@ -8,13 +9,16 @@ import 'package:spikers_app/features/players/data/repositories/players_repositor
 
 class _MockFunctions extends Mock implements FirebaseFunctions {}
 
+class _MockStorage extends Mock implements FirebaseStorage {}
+
 void main() {
   late FakeFirebaseFirestore db;
   late PlayersRepositoryImpl repo;
 
   setUp(() {
     db = FakeFirebaseFirestore();
-    repo = PlayersRepositoryImpl(PlayersRemoteDataSource(db, _MockFunctions()));
+    repo = PlayersRepositoryImpl(
+        PlayersRemoteDataSource(db, _MockFunctions(), _MockStorage()));
   });
 
   Future<void> seedPlayer(String uid, String name,

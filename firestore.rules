@@ -92,7 +92,15 @@ service cloud.firestore {
                             || isValidWeight(request.resource.data.weightKg)))
                     || (isCoach() &&
                         request.resource.data.diff(resource.data).affectedKeys()
-                            .hasOnly(['paidUntil', 'paidAt']));
+                            .hasOnly(['paidUntil', 'paidAt']))
+                    // Coach/admin may replace a *player's* profile photo (not a
+                    // coach's/admin's). resource.data.role is the target's
+                    // existing role, so no extra get() is needed.
+                    || (isCoach()
+                        && request.resource.data.diff(resource.data).affectedKeys()
+                            .hasOnly(['photoUrl'])
+                        && resource.data.role == 'player'
+                        && request.resource.data.photoUrl is string);
       allow delete: if false;
 
       match /templates/{templateId} {

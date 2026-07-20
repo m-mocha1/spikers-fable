@@ -4,12 +4,22 @@ service firebase.storage {
 
     function isAuth() { return request.auth != null; }
 
+    // Coach/admin may upload a profile photo for any player. Role is read from
+    // the caller's own Firestore user doc (cross-service read). Note this only
+    // authorizes writing the image blob; making it a player's *visible* photo
+    // (setting photoUrl on their user doc) is gated to player targets by
+    // firestore.rules, and the client only offers this for player targets.
+    function isCoach() {
+      return isAuth()
+             && firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role in ['coach', 'admin'];
+    }
+
     match /profilePhotos/{fileName} {
       allow read: if isAuth();
       allow write: if isAuth()
-                   && fileName == request.auth.uid + '.jpg'
                    && request.resource.size < 5 * 1024 * 1024
-                   && request.resource.contentType.matches('image/.*');
+                   && request.resource.contentType.matches('image/.*')
+                   && (fileName == request.auth.uid + '.jpg' || isCoach());
     }
 
     match /{allPaths=**} {

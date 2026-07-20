@@ -31,4 +31,12 @@ class PlayersRepositoryImpl implements PlayersRepository {
 
   @override
   Future<void> deletePlayer(String uid) => _remote.deletePlayer(uid);
+
+  @override
+  Future<void> renamePlayer(String uid, String name) =>
+      _remote.renamePlayer(uid, name);
+
+  @override
+  Future<void> updatePlayerPhoto(String uid, String filePath) =>
+      _remote.updatePlayerPhoto(uid, filePath);
 }

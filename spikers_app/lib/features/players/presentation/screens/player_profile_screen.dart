@@ -9,8 +9,11 @@ import '../../../../core/constants/app_motion.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/utils/app_snackbar.dart';
 import '../../../../core/utils/attendance_tiers.dart';
+import '../../../../core/utils/avatar_picker.dart';
 import '../../../../core/widgets/confirm_dialog.dart';
+import '../../../../core/widgets/edit_name_dialog.dart';
 import '../../../../core/widgets/injured_icon.dart';
+import '../../../../core/widgets/profile_hero_avatar.dart';
 import '../../../../core/widgets/ringed_avatar.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -130,9 +133,11 @@ class PlayerProfileScreen extends ConsumerWidget {
               children:
                   [
                         const SizedBox(height: 16),
-                        RingedAvatar(
-                          name: user.name,
-                          photoUrl: user.photoUrl,
+                        _EditablePlayerAvatar(
+                          user: user,
+                          // A coach can replace a plain player's photo by
+                          // tapping the avatar; staff photos aren't editable.
+                          canEdit: isCoach && !user.isCoach,
                           badgeAsset: showTierBadge
                               ? AppAssets.gamesPlayedBadges[tier]
                               : null,
@@ -144,13 +149,28 @@ class PlayerProfileScreen extends ConsumerWidget {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Flexible(
-                              child: Text(
-                                user.name,
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: 0.2,
+                              child: GestureDetector(
+                                behavior: HitTestBehavior.opaque,
+                                // A coach renames a plain player by tapping the
+                                // name; staff targets aren't renamable (also
+                                // enforced server-side).
+                                onTap: (isCoach && !user.isCoach)
+                                    ? () => showEditNameDialog(
+                                          context,
+                                          initialName: user.name,
+                                          onSubmit: (n) => ref
+                                              .read(playersRepositoryProvider)
+                                              .renamePlayer(user.uid, n),
+                                        )
+                                    : null,
+                                child: Text(
+                                  user.name,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: 0.2,
+                                  ),
                                 ),
                               ),
                             ),
@@ -346,6 +366,59 @@ class _PaymentActionButton extends ConsumerWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// The player's hero avatar on the coach profile view. When [canEdit] (viewer
+/// is staff and the target is a plain player) the coach taps it to upload a new
+/// photo; otherwise it's display-only. Owns the upload spinner state so the
+/// surrounding screen can stay a stateless ConsumerWidget.
+class _EditablePlayerAvatar extends ConsumerStatefulWidget {
+  final UserModel user;
+  final bool canEdit;
+  final String? badgeAsset;
+  final String? badgeLabel;
+  const _EditablePlayerAvatar({
+    required this.user,
+    required this.canEdit,
+    this.badgeAsset,
+    this.badgeLabel,
+  });
+
+  @override
+  ConsumerState<_EditablePlayerAvatar> createState() =>
+      _EditablePlayerAvatarState();
+}
+
+class _EditablePlayerAvatarState extends ConsumerState<_EditablePlayerAvatar> {
+  bool _uploading = false;
+
+  Future<void> _edit(AppLocalizations l) async {
+    final file = await pickAvatarImage(context, l);
+    if (file == null || !mounted) return;
+    setState(() => _uploading = true);
+    try {
+      await ref
+          .read(playersRepositoryProvider)
+          .updatePlayerPhoto(widget.user.uid, file.path);
+      showAppSnackbar(l.photoUpdated);
+    } catch (_) {
+      showAppSnackbar(l.unknownError);
+    } finally {
+      if (mounted) setState(() => _uploading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    return ProfileHeroAvatar(
+      user: widget.user,
+      badgeAsset: widget.badgeAsset,
+      badgeLabel: widget.badgeLabel,
+      isUploading: _uploading,
+      onTap: widget.canEdit ? () => _edit(l) : null,
     );
   }
 }

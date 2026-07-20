@@ -78,6 +78,10 @@ abstract class AuthRepository {
 
   Future<void> updateProfilePhoto(XFile image);
 
+  /// Updates the signed-in user's display name. The name is trimmed; the
+  /// Firestore rules enforce the 1–80 character bound server-side.
+  Future<void> updateName(String name);
+
   Future<void> updateBodyMetrics({required int heightCm, required int weightKg});
 
   /// Sets gender and/or date of birth. Only writes the provided fields; the

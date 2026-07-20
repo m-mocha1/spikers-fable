@@ -1586,6 +1586,24 @@ abstract class AppLocalizations {
   /// **'Edit height & weight'**
   String get editBodyMetrics;
 
+  /// No description provided for @editName.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Name'**
+  String get editName;
+
+  /// No description provided for @nameUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Name updated'**
+  String get nameUpdated;
+
+  /// No description provided for @invalidName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name must be 1–80 characters'**
+  String get invalidName;
+
   /// No description provided for @save.
   ///
   /// In en, this message translates to:

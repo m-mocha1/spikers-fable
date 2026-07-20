@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 import 'package:spikers_app/features/auth/domain/entities/user_model.dart';
 import '../../domain/entities/player_summary.dart';
@@ -7,8 +10,9 @@ import '../../domain/entities/player_summary.dart';
 class PlayersRemoteDataSource {
   final FirebaseFirestore _db;
   final FirebaseFunctions _functions;
+  final FirebaseStorage _storage;
 
-  PlayersRemoteDataSource(this._db, this._functions);
+  PlayersRemoteDataSource(this._db, this._functions, this._storage);
 
   static const _paymentPeriodDays = 30;
 
@@ -105,4 +109,23 @@ class PlayersRemoteDataSource {
   /// caller is an admin server-side.
   Future<void> deletePlayer(String uid) =>
       _functions.httpsCallable('adminDeleteUser').call({'userId': uid});
+
+  /// Coach/admin uploads a new profile photo for [uid] and points that user's
+  /// photoUrl at it. Same storage path and downscaled image as the self-flow
+  /// (`AuthRemoteDataSource.uploadProfilePhoto`). Authorization is enforced by
+  /// storage.rules (coach may upload) and firestore.rules (photoUrl may only
+  /// be set on a player target).
+  Future<void> updatePlayerPhoto(String uid, String filePath) async {
+    final ref = _storage.ref('profilePhotos/$uid.jpg');
+    await ref.putFile(File(filePath));
+    final url = await ref.getDownloadURL();
+    await _db.collection('users').doc(uid).update({'photoUrl': url});
+  }
+
+  /// Coach/admin renames another player. The callable enforces server-side
+  /// that the caller is staff and that the target is a plain player (staff
+  /// accounts can't be renamed by others).
+  Future<void> renamePlayer(String uid, String name) => _functions
+      .httpsCallable('coachRenamePlayer')
+      .call({'userId': uid, 'name': name.trim()});
 }

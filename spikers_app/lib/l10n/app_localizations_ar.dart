@@ -893,6 +893,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get editBodyMetrics => 'تعديل الطول والوزن';
 
   @override
+  String get editName => 'تعديل الاسم';
+
+  @override
+  String get nameUpdated => 'تم تحديث الاسم';
+
+  @override
+  String get invalidName => 'يجب أن يتكوّن الاسم من 1 إلى 80 حرفاً';
+
+  @override
   String get save => 'حفظ';
 
   @override

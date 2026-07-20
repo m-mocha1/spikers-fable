@@ -858,6 +858,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get editBodyMetrics => 'Edit height & weight';
 
   @override
+  String get editName => 'Edit Name';
+
+  @override
+  String get nameUpdated => 'Name updated';
+
+  @override
+  String get invalidName => 'Name must be 1–80 characters';
+
+  @override
   String get save => 'Save';
 
   @override

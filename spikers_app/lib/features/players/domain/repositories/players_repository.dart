@@ -27,4 +27,13 @@ abstract class PlayersRepository {
   /// + photo) via the adminDeleteUser callable. Authorization is enforced
   /// server-side.
   Future<void> deletePlayer(String uid);
+
+  /// Coach/admin: renames another player via the coachRenamePlayer callable.
+  /// The backend rejects non-staff callers and staff targets, so a coach can
+  /// never rename another coach or admin.
+  Future<void> renamePlayer(String uid, String name);
+
+  /// Coach/admin: uploads and sets a new profile photo for another player.
+  /// storage.rules + firestore.rules restrict this to player targets.
+  Future<void> updatePlayerPhoto(String uid, String filePath);
 }

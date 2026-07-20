@@ -766,6 +766,40 @@ export const adminDeleteUser = onCall({ region: REGION }, async (request) => {
 });
 
 // ---------------------------------------------------------------------------
+// coachRenamePlayer — coach/admin renames another user's display name.
+// Restricted to plain-player targets: staff may never rename another
+// coach/admin (a player edits their own name directly via the client, which
+// the Firestore rules already allow). mirrorUserPublic propagates the change
+// to users_public automatically.
+// ---------------------------------------------------------------------------
+export const coachRenamePlayer = onCall({ region: REGION }, async (request) => {
+  const callerUid = await requireStaff(request);
+
+  const userId = request.data["userId"] as string | undefined;
+  const raw = request.data["name"] as string | undefined;
+  if (!userId) throw new HttpsError("invalid-argument", "userId required");
+  if (typeof raw !== "string") {
+    throw new HttpsError("invalid-argument", "name required");
+  }
+  const name = raw.trim();
+  if (name.length < 1 || name.length > 80) {
+    throw new HttpsError("invalid-argument", "Name must be 1–80 characters");
+  }
+
+  const snap = await db.collection("users").doc(userId).get();
+  if (!snap.exists) throw new HttpsError("not-found", "User not found");
+  const role = snap.data()?.["role"];
+  if (role === "coach" || role === "admin") {
+    throw new HttpsError("permission-denied", "Cannot rename staff");
+  }
+
+  await db.collection("users").doc(userId).update({ name });
+
+  logger.info("coachRenamePlayer: renamed", { userId, by: callerUid });
+  return { success: true };
+});
+
+// ---------------------------------------------------------------------------
 // deleteMyAccount — self-service permanent deletion of the caller's own
 // account. Required for App Store / Google Play data-deletion compliance.
 // Any authenticated, email-verified user (player or staff) may delete

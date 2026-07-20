@@ -13,6 +13,7 @@ final playersRepositoryProvider = Provider<PlayersRepository>(
     PlayersRemoteDataSource(
       ref.watch(firestoreProvider),
       ref.watch(firebaseFunctionsProvider),
+      ref.watch(firebaseStorageProvider),
     ),
   ),
 );

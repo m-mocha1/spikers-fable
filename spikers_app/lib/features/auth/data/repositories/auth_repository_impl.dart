@@ -439,6 +439,13 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<void> updateName(String name) async {
+    final uid = _lastUser?.uid;
+    if (uid == null) return;
+    await _remote.updateUserDoc(uid, {'name': name.trim()});
+  }
+
+  @override
   Future<void> updateBodyMetrics(
       {required int heightCm, required int weightKg}) async {
     final uid = _lastUser?.uid;

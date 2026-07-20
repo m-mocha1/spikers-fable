@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/constants/app_assets.dart';
@@ -11,21 +10,21 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_motion.dart';
 import '../../../../core/utils/attendance_tiers.dart';
 import '../../../../core/utils/endorsement_level.dart';
-import '../../../../core/widgets/animations.dart';
 import '../../../../core/widgets/celebration.dart';
 import '../../../../core/widgets/injured_icon.dart';
 import '../../../../core/providers/locale_provider.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/utils/app_snackbar.dart';
-import '../../../../core/utils/media_permissions.dart';
+import '../../../../core/utils/avatar_picker.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'package:spikers_app/core/widgets/branded_text_field.dart';
 import 'package:spikers_app/core/widgets/confirm_dialog.dart';
 import 'package:spikers_app/core/widgets/edit_body_metrics_dialog.dart';
+import 'package:spikers_app/core/widgets/edit_name_dialog.dart';
 import 'package:spikers_app/core/widgets/floating_nav_bar.dart';
+import 'package:spikers_app/core/widgets/profile_hero_avatar.dart';
 import 'package:spikers_app/core/widgets/membership_chip.dart';
 import 'package:spikers_app/core/widgets/profile_info.dart';
-import 'package:spikers_app/core/widgets/ringed_avatar.dart';
 import 'package:spikers_app/core/widgets/set_profile_basics_dialog.dart';
 import '../../../auth/domain/entities/user_model.dart';
 import '../../../auth/domain/repositories/auth_repository.dart';
@@ -130,70 +129,9 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
     showAppSnackbar('🎉 ${l.coachPromotedSnack}');
   }
 
-  void _showAvatarPicker(AppLocalizations l) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.navyLight,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (_) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 8),
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.grey.withValues(alpha: 0.4),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 8),
-            ListTile(
-              leading: const Icon(
-                Icons.photo_library_outlined,
-                color: AppColors.gold,
-              ),
-              title: Text(l.pickFromGallery),
-              onTap: () {
-                Navigator.of(context).pop();
-                _pickAndUpload(ImageSource.gallery, l);
-              },
-            ),
-            ListTile(
-              leading: const Icon(
-                Icons.camera_alt_outlined,
-                color: AppColors.gold,
-              ),
-              title: Text(l.takePhoto),
-              onTap: () {
-                Navigator.of(context).pop();
-                _pickAndUpload(ImageSource.camera, l);
-              },
-            ),
-            const SizedBox(height: 8),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _pickAndUpload(ImageSource source, AppLocalizations l) async {
-    // Camera capture needs a runtime permission; gallery goes through the
-    // Android Photo Picker / iOS PHPicker, which require none.
-    if (source == ImageSource.camera) {
-      final granted = await ensureCameraPermission(context, l);
-      if (!granted || !mounted) return;
-    }
-    final file = await ImagePicker().pickImage(
-      source: source,
-      maxWidth: 512,
-      maxHeight: 512,
-      imageQuality: 80,
-    );
-    if (file == null) return;
+  Future<void> _editAvatar(AppLocalizations l) async {
+    final file = await pickAvatarImage(context, l);
+    if (file == null || !mounted) return;
     setState(() => _uploading = true);
     try {
       await ref.read(authRepositoryProvider).updateProfilePhoto(file);
@@ -243,27 +181,37 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
         children:
             [
                   const SizedBox(height: 8),
-                  _HeroAvatar(
+                  ProfileHeroAvatar(
                     user: user,
                     badgeAsset: showTierBadge
                         ? AppAssets.gamesPlayedBadges[tier]
                         : null,
                     badgeLabel: showTierBadge ? tierLabel(l, tier) : null,
                     isUploading: _uploading,
-                    onTap: () => _showAvatarPicker(l),
+                    onTap: () => _editAvatar(l),
                   ),
                   const SizedBox(height: 14),
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Flexible(
-                        child: Text(
-                          user.name,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 0.2,
+                        // Tap your own name to rename it (no separate edit icon).
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () => showEditNameDialog(
+                            context,
+                            initialName: user.name,
+                            onSubmit: (n) =>
+                                ref.read(authRepositoryProvider).updateName(n),
+                          ),
+                          child: Text(
+                            user.name,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.2,
+                            ),
                           ),
                         ),
                       ),
@@ -399,78 +347,6 @@ class _SectionHeader extends StatelessWidget {
             letterSpacing: 1.4,
           ),
         ),
-      ),
-    );
-  }
-}
-
-/// The owner's hero avatar: ringed tier avatar plus the photo-upload
-/// affordances (camera chip docked bottom-start so it never collides with the
-/// tier badge on the bottom-end corner, and a dimming spinner while a new
-/// photo uploads).
-class _HeroAvatar extends StatelessWidget {
-  final UserModel user;
-  final String? badgeAsset;
-  final String? badgeLabel;
-  final bool isUploading;
-  final VoidCallback? onTap;
-  const _HeroAvatar({
-    required this.user,
-    this.badgeAsset,
-    this.badgeLabel,
-    this.isUploading = false,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Pressable(
-      onTap: isUploading ? null : onTap,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          RingedAvatar(
-            name: user.name,
-            photoUrl: user.photoUrl,
-            radius: 64,
-            badgeAsset: badgeAsset,
-            badgeLabel: badgeLabel,
-          ),
-          if (isUploading)
-            // 140 = inner avatar (128) + ring and gap padding (2 × 6).
-            Container(
-              width: 140,
-              height: 140,
-              decoration: const BoxDecoration(
-                color: Colors.black45,
-                shape: BoxShape.circle,
-              ),
-              child: const Center(
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: AppColors.gold,
-                ),
-              ),
-            ),
-          if (!isUploading)
-            PositionedDirectional(
-              bottom: 2,
-              start: 2,
-              child: Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: AppColors.navyLight,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.navyBlue, width: 2),
-                ),
-                child: const Icon(
-                  Icons.camera_alt,
-                  size: 14,
-                  color: AppColors.gold,
-                ),
-              ),
-            ),
-        ],
       ),
     );
   }
