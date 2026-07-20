@@ -2,7 +2,7 @@ name: spikers_app
 description: "Jerusalem Spikers Volleyball Club App"
 publish_to: 'none'
 
-version: 1.0.6+33
+version: 1.0.7+34
 # comment: "version: x.y.z+build_number" where:
 
 environment:
