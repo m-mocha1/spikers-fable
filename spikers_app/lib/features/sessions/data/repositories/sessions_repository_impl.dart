@@ -95,6 +95,11 @@ class SessionsRepositoryImpl implements SessionsRepository {
       _remote.fetchAttendedSessions(uid, limit: limit);
 
   @override
+  Future<List<SessionModel>> fetchCoachRecentSessions(String coachUid,
+          {int limit = 20}) =>
+      _remote.fetchCoachRecentSessions(coachUid, limit: limit);
+
+  @override
   Future<void> create(SessionModel session, {int? designIndex}) =>
       _remote.create(session, designIndex: designIndex);
 
@@ -151,6 +156,10 @@ class SessionsRepositoryImpl implements SessionsRepository {
   @override
   Future<void> removeAttendee(String sessionId, String userId) =>
       _wrap(() => _remote.removeAttendee(sessionId, userId));
+
+  @override
+  Future<void> confirmAttendance(String sessionId, List<String> presentUids) =>
+      _wrap(() => _remote.confirmAttendance(sessionId, presentUids));
 
   @override
   Future<void> endorse(String sessionId, String userId) =>

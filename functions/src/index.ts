@@ -17,6 +17,13 @@ const REGION = "europe-west1";
 // AppAssets.cardDesigns in the Flutter app (lib/core/constants/app_assets.dart).
 const CARD_DESIGN_COUNT = 8;
 
+// How long before a session's official start a coach may begin marking players
+// present. Attendance should reflect who actually showed up, so marking is
+// blocked until the session is (nearly) under way — this window lets a coach
+// tick people off courtside a few minutes early without opening the door to
+// crediting attendance days in advance. See markAttended / confirmAttendance.
+const ATTENDANCE_GRACE_MS = 15 * 60 * 1000; // 15 minutes
+
 // Picks a random card-design index, avoiding `previous` so two consecutively
 // created sessions don't share the same card. Falls back to a plain uniform
 // draw when there's no previous index or only one design to choose from.
@@ -1002,6 +1009,7 @@ export const leaveSession = onCall({ region: REGION }, async (request) => {
     const session = sessionDoc.data()!;
     const attendeeIds: string[] = session["attendeeIds"] ?? [];
     const waitlistIds: string[] = session["waitlistIds"] ?? [];
+    const attendedIds: string[] = session["attendedIds"] ?? [];
     sessionTitle = (session["title"] as string) ?? "";
 
     if (attendeeIds.includes(uid)) {
@@ -1025,6 +1033,16 @@ export const leaveSession = onCall({ region: REGION }, async (request) => {
         if (promotedUid && !next.includes(promotedUid)) next.push(promotedUid);
         update["attendeeIds"] = next;
         update["waitlistIds"] = waitlistIds.slice(1);
+      }
+      // If the leaver was already marked present (possible inside the pre-start
+      // grace window), strip the mark and undo the attendance credit in the
+      // same transaction — otherwise a player could bank attendance for a
+      // session they then bailed on.
+      if (attendedIds.includes(uid)) {
+        update["attendedIds"] = attendedIds.filter((x) => x !== uid);
+        tx.update(db.collection("users").doc(uid), {
+          attendanceCount: admin.firestore.FieldValue.increment(-1),
+        });
       }
       tx.update(sessionRef, update);
       return;
@@ -1094,9 +1112,15 @@ export const removeAttendee = onCall({ region: REGION }, async (request) => {
         update["attendeeIds"] = next;
         update["waitlistIds"] = waitlistIds.slice(1);
       }
-      // Drop any attendance mark for the removed player.
+      // Drop any attendance mark for the removed player — and undo the
+      // attendance credit on their user doc, so removing a marked player keeps
+      // the session roster and their lifetime attendanceCount in agreement
+      // (the same reconciliation markAttended/leaveSession do).
       if (attendedIds.includes(targetUid)) {
         update["attendedIds"] = attendedIds.filter((x) => x !== targetUid);
+        tx.update(db.collection("users").doc(targetUid), {
+          attendanceCount: admin.firestore.FieldValue.increment(-1),
+        });
       }
       tx.update(sessionRef, update);
       return;
@@ -1450,6 +1474,21 @@ export const markAttended = onCall({ region: REGION }, async (request) => {
     const wasAttended = attendedIds.includes(userId);
     if (attended === wasAttended) return;
 
+    // Marking someone present only makes sense once they could actually be
+    // there: block it until the session is (nearly) under way. Un-marking
+    // (corrections) is always allowed, and a live doc that hasn't started can
+    // still be pre-marked within the grace window. History docs have ended, so
+    // their startTime is always well in the past and this passes trivially.
+    if (attended) {
+      const startTime = data["startTime"] as admin.firestore.Timestamp;
+      if (startTime.toMillis() - ATTENDANCE_GRACE_MS > Date.now()) {
+        throw new HttpsError(
+          "failed-precondition",
+          "Attendance is not open yet"
+        );
+      }
+    }
+
     const nextAttended = attended
       ? [...attendedIds, userId]
       : attendedIds.filter((x) => x !== userId);
@@ -1457,6 +1496,98 @@ export const markAttended = onCall({ region: REGION }, async (request) => {
     tx.update(ref, { attendedIds: nextAttended });
     tx.update(userRef, {
       attendanceCount: admin.firestore.FieldValue.increment(attended ? 1 : -1),
+    });
+  });
+
+  return { success: true };
+});
+
+// ---------------------------------------------------------------------------
+// confirmAttendance — coach "take attendance" in a single shot. Given the set
+// of players who were actually present, it reconciles the session's attendedIds
+// and every affected user's lifetime attendanceCount in one transaction, then
+// flags the session attendanceConfirmed so the app stops nagging the coach to
+// take attendance for it. Owner-coach or any staff; works on a live or an
+// already-archived (history) session, exactly like markAttended.
+// ---------------------------------------------------------------------------
+export const confirmAttendance = onCall({ region: REGION }, async (request) => {
+  const uid = request.auth?.uid;
+  if (!uid) throw new HttpsError("unauthenticated", "Not authenticated");
+  if (request.auth?.token?.email_verified !== true) {
+    throw new HttpsError("permission-denied", "Email not verified");
+  }
+
+  const sessionId = request.data?.["sessionId"] as string | undefined;
+  const presentUidsRaw = request.data?.["presentUids"];
+  if (!sessionId || !Array.isArray(presentUidsRaw)) {
+    throw new HttpsError(
+      "invalid-argument",
+      "sessionId and presentUids required"
+    );
+  }
+  const presentUids = presentUidsRaw.filter(
+    (x): x is string => typeof x === "string"
+  );
+
+  const sessionRef = db.collection("sessions").doc(sessionId);
+  const historyRef = db.collection("sessions_history").doc(sessionId);
+  const callerIsStaff = await isStaffUid(uid);
+
+  await db.runTransaction(async (tx) => {
+    const sessionDoc = await tx.get(sessionRef);
+    let ref: FirebaseFirestore.DocumentReference;
+    let data: FirebaseFirestore.DocumentData;
+
+    if (sessionDoc.exists) {
+      ref = sessionRef;
+      data = sessionDoc.data()!;
+    } else {
+      const historyDoc = await tx.get(historyRef);
+      if (!historyDoc.exists)
+        throw new HttpsError("not-found", "Session not found");
+      ref = historyRef;
+      data = historyDoc.data()!;
+    }
+
+    if (data["coachId"] !== uid && !callerIsStaff) {
+      throw new HttpsError("permission-denied", "Not your session");
+    }
+
+    // Taking attendance only makes sense once the session is (nearly) under
+    // way — same gate as markAttended.
+    const startTime = data["startTime"] as admin.firestore.Timestamp;
+    if (startTime.toMillis() - ATTENDANCE_GRACE_MS > Date.now()) {
+      throw new HttpsError("failed-precondition", "Attendance is not open yet");
+    }
+
+    const attendeeIds: string[] = data["attendeeIds"] ?? [];
+    const attendedIds: string[] = data["attendedIds"] ?? [];
+    // Only players actually on the roster can be marked present — silently drop
+    // any stray uid the client sent so we never credit a non-attendee.
+    const attendeeSet = new Set(attendeeIds);
+    const nextAttended = presentUids.filter((u) => attendeeSet.has(u));
+    const nextSet = new Set(nextAttended);
+    const prevSet = new Set(attendedIds);
+
+    // Only the delta touches user docs, so re-confirming with no changes is a
+    // cheap no-op on the counts (idempotent).
+    const added = nextAttended.filter((u) => !prevSet.has(u));
+    const removed = attendedIds.filter((u) => !nextSet.has(u));
+
+    for (const u of added) {
+      tx.update(db.collection("users").doc(u), {
+        attendanceCount: admin.firestore.FieldValue.increment(1),
+      });
+    }
+    for (const u of removed) {
+      tx.update(db.collection("users").doc(u), {
+        attendanceCount: admin.firestore.FieldValue.increment(-1),
+      });
+    }
+
+    tx.update(ref, {
+      attendedIds: nextAttended,
+      attendanceConfirmed: true,
     });
   });
 
@@ -1676,6 +1807,7 @@ export const createRecurringSessions = onSchedule(
         waitlistSize: data["waitlistSize"] ?? 0,
         waitlistIds: [] as string[],
         notified: false,
+        attendanceConfirmed: false,
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
         designIndex: pickDesignIndex(lastDesignIndex),
       };

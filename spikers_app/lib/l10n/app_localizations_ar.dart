@@ -1258,4 +1258,52 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get updateLater => 'لاحقًا';
+
+  @override
+  String get attendanceOpensAtStart => 'يبدأ تسجيل الحضور عند بدء الجلسة';
+
+  @override
+  String get attendanceNotOpenYet => 'يمكنك تسجيل الحضور بعد بدء الجلسة';
+
+  @override
+  String get takeAttendanceTitle => 'من الذي حضر؟';
+
+  @override
+  String takeAttendanceSubtitle(String title) {
+    return 'أكّد من حضر ⁨$title⁩';
+  }
+
+  @override
+  String get takeAttendanceHint =>
+      'الجميع محدَّد كحاضر — أزِل التحديد عن الغائبين فقط.';
+
+  @override
+  String get confirmAttendanceButton => 'تأكيد الحضور';
+
+  @override
+  String get attendanceSaved => 'تم حفظ الحضور';
+
+  @override
+  String get present => 'حاضر';
+
+  @override
+  String get absent => 'غائب';
+
+  @override
+  String get takeAttendanceSkip => 'لاحقًا';
+
+  @override
+  String sessionsNeedAttendance(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count جلسة بحاجة لتسجيل الحضور',
+      many: '$count جلسة بحاجة لتسجيل الحضور',
+      few: '$count جلسات بحاجة لتسجيل الحضور',
+      two: 'جلستان بحاجة لتسجيل الحضور',
+      one: 'جلسة واحدة بحاجة لتسجيل الحضور',
+      zero: 'لا جلسات بحاجة لتسجيل الحضور',
+    );
+    return '$_temp0';
+  }
 }

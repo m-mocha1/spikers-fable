@@ -591,5 +591,26 @@
   "updateAvailableTitle": "Update Available",
   "updateAvailableBody": "A new version of the app is ready with the latest features and fixes.",
   "updateNow": "Update Now",
-  "updateLater": "Later"
+  "updateLater": "Later",
+  "attendanceOpensAtStart": "Attendance opens when the session starts",
+  "attendanceNotOpenYet": "You can mark attendance once the session starts",
+  "takeAttendanceTitle": "Who showed up?",
+  "takeAttendanceSubtitle": "Confirm who attended {title}",
+  "@takeAttendanceSubtitle": {
+    "placeholders": {
+      "title": { "type": "String" }
+    }
+  },
+  "takeAttendanceHint": "Everyone starts present — just uncheck the no-shows.",
+  "confirmAttendanceButton": "Confirm attendance",
+  "attendanceSaved": "Attendance saved",
+  "present": "Present",
+  "absent": "Absent",
+  "takeAttendanceSkip": "Later",
+  "sessionsNeedAttendance": "{count, plural, one{1 session needs attendance} other{{count} sessions need attendance}}",
+  "@sessionsNeedAttendance": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  }
 }

@@ -200,6 +200,29 @@ class SessionsRemoteDataSource {
     ];
   }
 
+  /// Recent sessions owned by [coachUid] — archived history (newest-ended
+  /// first, bounded) plus any live sessions they own that may have just ended
+  /// before the cron archived them. Backed by the (coachId, endTime desc)
+  /// composite index on sessions_history; the live query is a plain equality
+  /// on the small `sessions` collection. Feeds the coach take-attendance prompt
+  /// and badge, which filter these down to the ones still needing attendance.
+  Future<List<SessionModel>> fetchCoachRecentSessions(String coachUid,
+      {int limit = 20}) async {
+    final results = await Future.wait([
+      _db
+          .collection('sessions_history')
+          .where('coachId', isEqualTo: coachUid)
+          .orderBy('endTime', descending: true)
+          .limit(limit)
+          .get(),
+      _db.collection('sessions').where('coachId', isEqualTo: coachUid).get(),
+    ]);
+    return [
+      for (final snap in results)
+        for (final doc in snap.docs) SessionModel.fromDoc(doc),
+    ];
+  }
+
   Future<void> create(SessionModel session, {int? designIndex}) async {
     final payload = session.toMap();
     final count = AppAssets.cardDesigns.length;
@@ -292,6 +315,12 @@ class SessionsRemoteDataSource {
       _fns.httpsCallable('removeAttendee').call({
         'sessionId': sessionId,
         'userId': userId,
+      });
+
+  Future<void> confirmAttendance(String sessionId, List<String> presentUids) =>
+      _fns.httpsCallable('confirmAttendance').call({
+        'sessionId': sessionId,
+        'presentUids': presentUids,
       });
 
   Future<void> endorse(String sessionId, String userId) =>

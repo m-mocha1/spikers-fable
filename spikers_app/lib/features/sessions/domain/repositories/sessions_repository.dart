@@ -75,6 +75,12 @@ abstract class SessionsRepository {
   /// whose teammates the user can still endorse.
   Future<List<SessionModel>> fetchAttendedSessions(String uid, {int limit});
 
+  /// Recent sessions owned by [coachUid] (history + live), newest first —
+  /// the coach take-attendance prompt/badge filter these to the ones that have
+  /// ended without attendance being taken.
+  Future<List<SessionModel>> fetchCoachRecentSessions(String coachUid,
+      {int limit});
+
   /// Creates the session. [designIndex] pins a specific card design (admin art
   /// testing) — must be a valid index into `AppAssets.cardDesigns`; when null or
   /// out of range a random design is chosen, avoiding the previous session's.
@@ -111,6 +117,13 @@ abstract class SessionsRepository {
   /// Owner-coach or admin removes a player from the session (attendee or
   /// waitlist). Throws [SessionActionException].
   Future<void> removeAttendee(String sessionId, String userId);
+
+  /// Coach "take attendance" in one shot: [presentUids] are the players who
+  /// actually showed up. Reconciles the session's attended set and every
+  /// affected player's lifetime count server-side, and flags the session as
+  /// having had attendance taken. Owner-coach or staff. Idempotent.
+  /// Throws [SessionActionException].
+  Future<void> confirmAttendance(String sessionId, List<String> presentUids);
 
   /// Records a single endorsement from the signed-in user to [userId] for
   /// [sessionId] (Overwatch-style peer endorsement). Idempotent server-side.

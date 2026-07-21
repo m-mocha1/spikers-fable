@@ -19,6 +19,7 @@ import '../../../notifications/application/notifications_service.dart';
 import '../../../players/presentation/screens/players_peer_tab.dart';
 import '../../../players/presentation/screens/players_tab.dart';
 import '../../../sessions/presentation/screens/sessions_tab.dart';
+import '../../../sessions/presentation/widgets/coach_attendance_gate.dart';
 import '../../../sessions/presentation/widgets/shout_out_gate.dart';
 import 'profile_tab.dart';
 
@@ -273,21 +274,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     // keeps priority: it separately, once per launch, offers to endorse a
     // teammate after a session the user just attended.
     return AppUpgradeAlert(
-      child: ShoutOutGate(
-        // Only the Scaffold can act on the app bar's changing height, so it is
-        // what rebuilds per frame. Everything expensive is built above and
-        // passed in by reference, so those subtrees are reused rather than
-        // rebuilt 60 times a second — which would restart the FAB's entrance
-        // animation.
-        child: AnimatedBuilder(
-          animation: _barsFactor,
-          builder: (_, _) => Scaffold(
-            extendBody: true,
-            backgroundColor: Colors.transparent,
-            appBar: RetractingAppBar(factor: _barsFactor.value, bar: appBar),
-            body: body,
-            floatingActionButton: fab,
-            bottomNavigationBar: navBar,
+      // Coaches get the take-attendance prompt for a session they just ran;
+      // players get the shout-out prompt for one they just played. The two
+      // audiences are effectively disjoint, and each fires at most once per
+      // launch behind its own latch.
+      child: CoachAttendanceGate(
+        child: ShoutOutGate(
+          // Only the Scaffold can act on the app bar's changing height, so it
+          // is what rebuilds per frame. Everything expensive is built above and
+          // passed in by reference, so those subtrees are reused rather than
+          // rebuilt 60 times a second — which would restart the FAB's entrance
+          // animation.
+          child: AnimatedBuilder(
+            animation: _barsFactor,
+            builder: (_, _) => Scaffold(
+              extendBody: true,
+              backgroundColor: Colors.transparent,
+              appBar: RetractingAppBar(factor: _barsFactor.value, bar: appBar),
+              body: body,
+              floatingActionButton: fab,
+              bottomNavigationBar: navBar,
+            ),
           ),
         ),
       ),

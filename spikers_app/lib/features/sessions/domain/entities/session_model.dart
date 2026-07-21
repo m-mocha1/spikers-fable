@@ -25,6 +25,12 @@ class SessionModel {
   final List<String> waitlistIds;
   final bool notified;
 
+  /// Whether a coach has explicitly taken attendance for this session (via the
+  /// "confirm attendance" flow). Distinguishes "nobody was marked because the
+  /// coach hasn't done it yet" from "the coach took attendance and nobody
+  /// showed" — drives the post-session take-attendance prompt for coaches.
+  final bool attendanceConfirmed;
+
   /// Admin "silent" session (created with notifications off). Persisted so the
   /// whole lifecycle stays quiet — cancelSession also skips its FCM fan-out when
   /// this is true. See the create-session admin toggle.
@@ -50,6 +56,7 @@ class SessionModel {
     this.waitlistSize = 0,
     this.waitlistIds = const [],
     this.notified = false,
+    this.attendanceConfirmed = false,
     this.silent = false,
     required this.createdAt,
     this.designIndex = 0,
@@ -95,6 +102,7 @@ class SessionModel {
       waitlistSize: (d['waitlistSize'] ?? 0) as int,
       waitlistIds: List<String>.from(d['waitlistIds'] ?? []),
       notified: d['notified'] ?? false,
+      attendanceConfirmed: d['attendanceConfirmed'] ?? false,
       silent: d['silent'] ?? false,
       createdAt: (d['createdAt'] as Timestamp).toDate(),
       designIndex: ((d['designIndex'] ?? 0) as num).toInt(),
@@ -118,6 +126,7 @@ class SessionModel {
         'waitlistSize': waitlistSize,
         'waitlistIds': waitlistIds,
         'notified': notified,
+        'attendanceConfirmed': attendanceConfirmed,
         'silent': silent,
         'createdAt': Timestamp.fromDate(createdAt),
         'designIndex': designIndex,

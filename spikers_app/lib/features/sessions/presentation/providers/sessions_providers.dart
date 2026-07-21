@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/firebase/firebase_providers.dart';
+import 'package:spikers_app/features/sessions/domain/attendance_prompt.dart';
 import 'package:spikers_app/features/sessions/domain/entities/recurring_session_model.dart';
 import 'package:spikers_app/features/sessions/domain/entities/session_model.dart';
 import 'package:spikers_app/features/sessions/domain/entities/session_template_model.dart';
@@ -98,6 +99,24 @@ final sessionsHistoryProvider =
   final viewer = ref.watch(currentUserProvider).value;
   if (viewer == null) return Stream.value(const []);
   return ref.watch(sessionsRepositoryProvider).watchHistory(viewer);
+});
+
+/// Sessions the signed-in coach still needs to take attendance for — ended
+/// recently, owned by them, and not yet confirmed. Empty for players/signed
+/// out. Drives the "N sessions need attendance" banner on the sessions tab;
+/// invalidate it after a confirm to refresh the count.
+final coachAttendanceTodoProvider =
+    FutureProvider.autoDispose<List<SessionModel>>((ref) async {
+  final viewer = ref.watch(currentUserProvider).value;
+  if (viewer == null || !viewer.isCoach) return const [];
+  final sessions = await ref
+      .watch(sessionsRepositoryProvider)
+      .fetchCoachRecentSessions(viewer.uid);
+  return coachSessionsNeedingAttendance(
+    sessions: sessions,
+    uid: viewer.uid,
+    now: DateTime.now(),
+  );
 });
 
 final templatesProvider =

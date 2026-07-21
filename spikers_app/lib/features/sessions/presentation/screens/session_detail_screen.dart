@@ -391,6 +391,13 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
     HapticFeedback.lightImpact();
     try {
       await _repo.markAttended(_session!.id, userId, attended);
+    } on SessionActionException catch (e) {
+      if (mounted) setState(() => _optimisticAttended.remove(userId)); // undo
+      // The session hadn't started yet (e.g. the screen was open across the
+      // start boundary) — tell the coach precisely why, not "unknown error".
+      showAppSnackbar(e.code == 'failed-precondition'
+          ? l.attendanceNotOpenYet
+          : l.unknownError);
     } catch (_) {
       if (mounted) setState(() => _optimisticAttended.remove(userId)); // undo
       showAppSnackbar(l.unknownError);
@@ -1569,10 +1576,16 @@ class _AttendeesSection extends StatelessWidget {
         ? Colors.orange
         : AppColors.success;
     final attendedCount = attendedIds.length;
-    // Courtside attendance stays one tap away while the session is live or
-    // upcoming; once it has ended the per-row toggles retreat behind edit
-    // mode (corrections stay possible — markAttended works on history).
-    final showMarkControls = isCoach && (!isEnded || editMode);
+    // Attendance only opens once the session is under way: marking players
+    // present before anyone could have shown up is both meaningless and the
+    // root of the "marked-then-left still counts" bug, so the server rejects
+    // it. Before start the coach sees a hint instead of the toggles. Once the
+    // session is live the per-row toggles are one tap away; after it ends they
+    // retreat behind edit mode (corrections stay possible — markAttended works
+    // on history).
+    final isUpcoming = session.isUpcoming;
+    final showMarkControls =
+        isCoach && !isUpcoming && (!isEnded || editMode);
     final showMarkAll = showMarkControls &&
         session.attendeeIds.isNotEmpty &&
         attendedCount < session.attendeeIds.length;
@@ -1749,6 +1762,32 @@ class _AttendeesSection extends StatelessWidget {
                     ),
             ),
           ),
+
+          // Before the session starts, tell the coach why the attendance
+          // toggles aren't here yet instead of silently hiding them.
+          if (isCoach && isUpcoming && session.attendeeIds.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                const Icon(
+                  Icons.schedule_outlined,
+                  size: 15,
+                  color: AppColors.grey,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    l.attendanceOpensAtStart,
+                    style: const TextStyle(
+                      color: AppColors.grey,
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
 
           if (session.attendeeIds.isNotEmpty) ...[
             const SizedBox(height: 16),

@@ -1213,4 +1213,50 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get updateLater => 'Later';
+
+  @override
+  String get attendanceOpensAtStart =>
+      'Attendance opens when the session starts';
+
+  @override
+  String get attendanceNotOpenYet =>
+      'You can mark attendance once the session starts';
+
+  @override
+  String get takeAttendanceTitle => 'Who showed up?';
+
+  @override
+  String takeAttendanceSubtitle(String title) {
+    return 'Confirm who attended $title';
+  }
+
+  @override
+  String get takeAttendanceHint =>
+      'Everyone starts present — just uncheck the no-shows.';
+
+  @override
+  String get confirmAttendanceButton => 'Confirm attendance';
+
+  @override
+  String get attendanceSaved => 'Attendance saved';
+
+  @override
+  String get present => 'Present';
+
+  @override
+  String get absent => 'Absent';
+
+  @override
+  String get takeAttendanceSkip => 'Later';
+
+  @override
+  String sessionsNeedAttendance(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count sessions need attendance',
+      one: '1 session needs attendance',
+    );
+    return '$_temp0';
+  }
 }

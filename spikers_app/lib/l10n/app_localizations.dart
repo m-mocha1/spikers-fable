@@ -2143,6 +2143,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Later'**
   String get updateLater;
+
+  /// No description provided for @attendanceOpensAtStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Attendance opens when the session starts'**
+  String get attendanceOpensAtStart;
+
+  /// No description provided for @attendanceNotOpenYet.
+  ///
+  /// In en, this message translates to:
+  /// **'You can mark attendance once the session starts'**
+  String get attendanceNotOpenYet;
+
+  /// No description provided for @takeAttendanceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Who showed up?'**
+  String get takeAttendanceTitle;
+
+  /// No description provided for @takeAttendanceSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm who attended {title}'**
+  String takeAttendanceSubtitle(String title);
+
+  /// No description provided for @takeAttendanceHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Everyone starts present — just uncheck the no-shows.'**
+  String get takeAttendanceHint;
+
+  /// No description provided for @confirmAttendanceButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm attendance'**
+  String get confirmAttendanceButton;
+
+  /// No description provided for @attendanceSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Attendance saved'**
+  String get attendanceSaved;
+
+  /// No description provided for @present.
+  ///
+  /// In en, this message translates to:
+  /// **'Present'**
+  String get present;
+
+  /// No description provided for @absent.
+  ///
+  /// In en, this message translates to:
+  /// **'Absent'**
+  String get absent;
+
+  /// No description provided for @takeAttendanceSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get takeAttendanceSkip;
+
+  /// No description provided for @sessionsNeedAttendance.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 session needs attendance} other{{count} sessions need attendance}}'**
+  String sessionsNeedAttendance(int count);
 }
 
 class _AppLocalizationsDelegate

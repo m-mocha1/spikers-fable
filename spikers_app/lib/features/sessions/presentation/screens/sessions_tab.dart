@@ -9,6 +9,7 @@ import 'package:spikers_app/core/widgets/floating_nav_bar.dart';
 import 'package:spikers_app/core/widgets/session_card.dart';
 import 'package:spikers_app/core/widgets/set_profile_basics_dialog.dart';
 import '../widgets/sessions_header.dart';
+import '../widgets/take_attendance_sheet.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../providers/sessions_providers.dart';
 
@@ -83,7 +84,13 @@ class SessionsTab extends ConsumerWidget {
             itemBuilder: (_, i) {
               if (i == 0) {
                 if (user == null) return const SizedBox.shrink();
-                return SessionsHeader(user: user, sessions: sessions);
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (user.isCoach) const _AttendanceTodoBanner(),
+                    SessionsHeader(user: user, sessions: sessions),
+                  ],
+                );
               }
               final session = listed[i - 1];
               return AppStaggeredItem(
@@ -95,6 +102,61 @@ class SessionsTab extends ConsumerWidget {
           ),
         );
       },
+    );
+  }
+}
+
+/// Coach-only nudge at the top of the sessions list: when one or more of the
+/// coach's sessions have ended without attendance taken, a tappable banner
+/// surfaces the count and opens the take-attendance sheet for the most recent
+/// one. Complements the once-per-launch [CoachAttendanceGate] popup so the task
+/// stays discoverable after the popup is dismissed. Renders nothing when there
+/// is nothing outstanding.
+class _AttendanceTodoBanner extends ConsumerWidget {
+  const _AttendanceTodoBanner();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
+    final todo = ref.watch(coachAttendanceTodoProvider).value ?? const [];
+    if (todo.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Material(
+        color: AppColors.gold.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: () => showTakeAttendanceSheet(
+            context,
+            session: todo.first,
+            onSaved: () => ref.invalidate(coachAttendanceTodoProvider),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            child: Row(
+              children: [
+                const Icon(Icons.fact_check_outlined,
+                    color: AppColors.gold, size: 22),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    l.sessionsNeedAttendance(todo.length),
+                    style: const TextStyle(
+                      color: AppColors.white,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+                const Icon(Icons.arrow_forward_ios,
+                    color: AppColors.gold, size: 14),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
