@@ -32,7 +32,7 @@ class CreateSessionScreen extends ConsumerStatefulWidget {
 class _CreateSessionScreenState extends ConsumerState<CreateSessionScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleCtrl = TextEditingController();
-  final _locationCtrl = TextEditingController();
+  final _locationCtrl = TextEditingController(text: 'Frer School');
   final _minAgeCtrl = TextEditingController(text: '16');
   final _maxAgeCtrl = TextEditingController(text: '40');
   final _maxPlayersCtrl = TextEditingController(text: '12');
