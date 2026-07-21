@@ -332,6 +332,102 @@ abstract class AppLocalizations {
   /// **'Select at least one member'**
   String get selectMembersError;
 
+  /// No description provided for @quickGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick groups'**
+  String get quickGroups;
+
+  /// No description provided for @newGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'New group'**
+  String get newGroup;
+
+  /// No description provided for @saveAsGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Save as group'**
+  String get saveAsGroup;
+
+  /// No description provided for @groupName.
+  ///
+  /// In en, this message translates to:
+  /// **'Group name'**
+  String get groupName;
+
+  /// No description provided for @groupNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Starters, U18'**
+  String get groupNameHint;
+
+  /// No description provided for @groupNameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a group name'**
+  String get groupNameRequired;
+
+  /// No description provided for @renameGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename group'**
+  String get renameGroup;
+
+  /// No description provided for @deleteGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete group'**
+  String get deleteGroup;
+
+  /// No description provided for @updateGroupMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'Update to current selection'**
+  String get updateGroupMembers;
+
+  /// No description provided for @deleteGroupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete group?'**
+  String get deleteGroupTitle;
+
+  /// No description provided for @deleteGroupMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete “{name}”? This won’t affect any players.'**
+  String deleteGroupMessage(String name);
+
+  /// No description provided for @groupSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'“{name}” saved'**
+  String groupSaved(String name);
+
+  /// No description provided for @groupUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Group updated'**
+  String get groupUpdated;
+
+  /// No description provided for @groupDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Group deleted'**
+  String get groupDeleted;
+
+  /// No description provided for @groupMembersCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 member} other{{count} members}}'**
+  String groupMembersCount(int count);
+
+  /// No description provided for @noGroupsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No saved groups yet'**
+  String get noGroupsYet;
+
   /// No description provided for @adminTesting.
   ///
   /// In en, this message translates to:

@@ -9,6 +9,11 @@ import '../../../../core/widgets/state_views.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../players/domain/entities/player_summary.dart';
 import '../../../players/presentation/providers/players_providers.dart';
+import '../../domain/entities/player_group_model.dart';
+import '../../domain/player_group_selection.dart';
+import '../providers/sessions_providers.dart';
+import 'player_group_actions.dart';
+import 'player_group_rail.dart';
 
 /// Opens a modal bottom sheet that lets a coach pick members (players) for a
 /// custom session. Returns the chosen uid set, or null if dismissed without
@@ -39,6 +44,9 @@ class _MemberPickerSheet extends ConsumerStatefulWidget {
 class _MemberPickerSheetState extends ConsumerState<_MemberPickerSheet> {
   final _searchController = TextEditingController();
   late final Set<String> _selected = {...widget.initial};
+  // Fresh view: no group is highlighted until the coach explicitly taps one,
+  // even if the incoming selection already covers it.
+  final Set<String> _appliedGroupIds = {};
   String _query = '';
   String _genderFilter = 'all';
 
@@ -48,10 +56,48 @@ class _MemberPickerSheetState extends ConsumerState<_MemberPickerSheet> {
     super.dispose();
   }
 
+  /// Toggles a saved group in/out of the selection, updating both the member
+  /// set and the applied-group highlight. Overlap-safe and restricted to
+  /// players that still exist.
+  void _applyGroup(
+      PlayerGroup g, List<PlayerGroup> groups, Set<String>? validUids) {
+    final result = toggleGroup(
+      group: g,
+      allGroups: groups,
+      selected: _selected,
+      appliedGroupIds: _appliedGroupIds,
+      validUids: validUids,
+    );
+    setState(() {
+      _selected
+        ..clear()
+        ..addAll(result.selected);
+      _appliedGroupIds
+        ..clear()
+        ..addAll(result.appliedGroupIds);
+    });
+  }
+
+  /// After a manual check/uncheck, drop any applied group no longer fully
+  /// selected so its chip stops falsely showing as applied.
+  void _syncAppliedGroups(List<PlayerGroup> groups, Set<String>? validUids) {
+    final reconciled = reconcileAppliedGroups(
+      allGroups: groups,
+      appliedGroupIds: _appliedGroupIds,
+      selected: _selected,
+      validUids: validUids,
+    );
+    _appliedGroupIds
+      ..clear()
+      ..addAll(reconciled);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     final playersAsync = ref.watch(playersProvider);
+    final groups = ref.watch(playerGroupsProvider).valueOrNull ?? const [];
+    final validUids = playersAsync.valueOrNull?.map((p) => p.uid).toSet();
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
     return Padding(
@@ -94,6 +140,18 @@ class _MemberPickerSheetState extends ConsumerState<_MemberPickerSheet> {
                 ],
               ),
             ),
+            // Saved groups: tap to fill the selection, long-press to manage.
+            if (groups.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+                child: PlayerGroupRail(
+                  groups: groups,
+                  appliedGroupIds: _appliedGroupIds,
+                  onApply: (g) => _applyGroup(g, groups, validUids),
+                  onManage: (g) => manageGroup(context, ref, g,
+                      currentSelection: _selected),
+                ),
+              ),
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
               child: GenderFilterChips(
@@ -169,6 +227,7 @@ class _MemberPickerSheetState extends ConsumerState<_MemberPickerSheet> {
                         } else {
                           _selected.remove(filtered[i].uid);
                         }
+                        _syncAppliedGroups(groups, validUids);
                       }),
                     ),
                   );
@@ -179,9 +238,37 @@ class _MemberPickerSheetState extends ConsumerState<_MemberPickerSheet> {
               top: false,
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
-                child: BrandedButton(
-                  label: l.done,
-                  onPressed: () => Navigator.of(context).pop(_selected),
+                child: Row(
+                  children: [
+                    // Save the current selection as a reusable named group.
+                    if (_selected.isNotEmpty) ...[
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () => saveNewGroup(context, ref,
+                              memberIds: _selected),
+                          icon: const Icon(Icons.bookmark_add_outlined,
+                              color: AppColors.gold, size: 18),
+                          label: Text(
+                            l.saveAsGroup,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(color: AppColors.gold),
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            minimumSize: const Size.fromHeight(52),
+                            side: const BorderSide(color: AppColors.gold),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                    ],
+                    Expanded(
+                      child: BrandedButton(
+                        label: l.done,
+                        onPressed: () => Navigator.of(context).pop(_selected),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),

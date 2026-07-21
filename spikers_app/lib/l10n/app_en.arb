@@ -44,6 +44,37 @@
     }
   },
   "selectMembersError": "Select at least one member",
+  "quickGroups": "Quick groups",
+  "newGroup": "New group",
+  "saveAsGroup": "Save as group",
+  "groupName": "Group name",
+  "groupNameHint": "e.g. Starters, U18",
+  "groupNameRequired": "Enter a group name",
+  "renameGroup": "Rename group",
+  "deleteGroup": "Delete group",
+  "updateGroupMembers": "Update to current selection",
+  "deleteGroupTitle": "Delete group?",
+  "deleteGroupMessage": "Delete “{name}”? This won’t affect any players.",
+  "@deleteGroupMessage": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "groupSaved": "“{name}” saved",
+  "@groupSaved": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "groupUpdated": "Group updated",
+  "groupDeleted": "Group deleted",
+  "groupMembersCount": "{count, plural, =1{1 member} other{{count} members}}",
+  "@groupMembersCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "noGroupsYet": "No saved groups yet",
   "adminTesting": "Admin · Testing",
   "notifyOnCreate": "Notify players & coaches",
   "notifyOnCreateSubtitle": "Off = create and cancel this session silently — no notifications sent",

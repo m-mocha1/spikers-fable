@@ -44,6 +44,37 @@
     }
   },
   "selectMembersError": "اختر عضوًا واحدًا على الأقل",
+  "quickGroups": "مجموعات سريعة",
+  "newGroup": "مجموعة جديدة",
+  "saveAsGroup": "حفظ كمجموعة",
+  "groupName": "اسم المجموعة",
+  "groupNameHint": "مثال: الأساسيون، تحت 18",
+  "groupNameRequired": "أدخل اسم المجموعة",
+  "renameGroup": "إعادة تسمية المجموعة",
+  "deleteGroup": "حذف المجموعة",
+  "updateGroupMembers": "تحديث بالتحديد الحالي",
+  "deleteGroupTitle": "حذف المجموعة؟",
+  "deleteGroupMessage": "حذف “{name}”؟ لن يؤثر ذلك على أي لاعب.",
+  "@deleteGroupMessage": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "groupSaved": "تم حفظ “{name}”",
+  "@groupSaved": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "groupUpdated": "تم تحديث المجموعة",
+  "groupDeleted": "تم حذف المجموعة",
+  "groupMembersCount": "{count, plural, zero{{count} أعضاء} one{عضو واحد} two{عضوان} few{{count} أعضاء} many{{count} عضواً} other{{count} عضو}}",
+  "@groupMembersCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "noGroupsYet": "لا توجد مجموعات محفوظة بعد",
   "adminTesting": "المشرف · اختبار",
   "notifyOnCreate": "إشعار اللاعبين والمدربين",
   "notifyOnCreateSubtitle": "أوقفه لإنشاء وإلغاء هذه الجلسة بصمت — لن يتم إرسال أي إشعارات",

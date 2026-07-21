@@ -5,10 +5,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:spikers_app/core/constants/app_assets.dart';
 import 'package:spikers_app/features/sessions/data/datasources/sessions_remote_datasource.dart';
+import 'package:spikers_app/features/sessions/data/repositories/player_groups_repository_impl.dart';
 import 'package:spikers_app/features/sessions/data/repositories/session_chat_repository_impl.dart';
 import 'package:spikers_app/features/sessions/data/repositories/sessions_repository_impl.dart';
 import 'package:spikers_app/features/sessions/data/repositories/templates_repository_impl.dart';
 import 'package:spikers_app/features/sessions/domain/repositories/sessions_repository.dart';
+import 'package:spikers_app/features/sessions/domain/entities/player_group_model.dart';
 import 'package:spikers_app/features/sessions/domain/entities/session_model.dart';
 import 'package:spikers_app/features/sessions/domain/entities/session_template_model.dart';
 import 'package:spikers_app/features/auth/domain/entities/user_model.dart';
@@ -696,6 +698,70 @@ void main() {
       await templates.delete('c1', list.single.id);
       list = await templates.watch('c1').first;
       expect(list, isEmpty);
+    });
+  });
+
+  group('player groups repository (shared library)', () {
+    test('save creates, updates, and delete removes', () async {
+      final groups = PlayerGroupsRepositoryImpl(ds);
+      await groups.save(PlayerGroup(
+        id: '',
+        name: 'Starters',
+        memberIds: const ['p1', 'p2'],
+        createdBy: 'c1',
+        createdAt: DateTime(2026),
+        updatedAt: DateTime(2026),
+      ));
+
+      var list = await groups.watch().first;
+      expect(list.single.name, 'Starters');
+      expect(list.single.memberIds, ['p1', 'p2']);
+      expect(list.single.createdBy, 'c1');
+
+      // Saving with the existing id updates in place (rename + new roster);
+      // createdBy is preserved (toUpdateMap never rewrites it).
+      final existing = list.single;
+      await groups.save(PlayerGroup(
+        id: existing.id,
+        name: 'First Team',
+        memberIds: const ['p1', 'p2', 'p3'],
+        createdBy: existing.createdBy,
+        createdAt: existing.createdAt,
+        updatedAt: DateTime(2027),
+      ));
+      list = await groups.watch().first;
+      expect(list.length, 1);
+      expect(list.single.name, 'First Team');
+      expect(list.single.memberIds, ['p1', 'p2', 'p3']);
+      expect(list.single.createdBy, 'c1');
+
+      await groups.delete(existing.id);
+      list = await groups.watch().first;
+      expect(list, isEmpty);
+    });
+
+    test('watch returns all coaches groups, updatedAt descending', () async {
+      final groups = PlayerGroupsRepositoryImpl(ds);
+      // Two different coaches — both visible in the one shared library.
+      await groups.save(PlayerGroup(
+        id: '',
+        name: 'Older',
+        memberIds: const ['p1'],
+        createdBy: 'c1',
+        createdAt: DateTime(2026, 1, 1),
+        updatedAt: DateTime(2026, 1, 1),
+      ));
+      await groups.save(PlayerGroup(
+        id: '',
+        name: 'Newer',
+        memberIds: const ['p2'],
+        createdBy: 'c2',
+        createdAt: DateTime(2026, 6, 1),
+        updatedAt: DateTime(2026, 6, 1),
+      ));
+
+      final list = await groups.watch().first;
+      expect(list.map((g) => g.name), ['Newer', 'Older']);
     });
   });
 }

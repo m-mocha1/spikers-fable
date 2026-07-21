@@ -2,15 +2,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/firebase/firebase_providers.dart';
 import 'package:spikers_app/features/sessions/domain/attendance_prompt.dart';
+import 'package:spikers_app/features/sessions/domain/entities/player_group_model.dart';
 import 'package:spikers_app/features/sessions/domain/entities/recurring_session_model.dart';
 import 'package:spikers_app/features/sessions/domain/entities/session_model.dart';
 import 'package:spikers_app/features/sessions/domain/entities/session_template_model.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../data/datasources/sessions_remote_datasource.dart';
+import '../../data/repositories/player_groups_repository_impl.dart';
 import '../../data/repositories/recurring_sessions_repository_impl.dart';
 import '../../data/repositories/session_chat_repository_impl.dart';
 import '../../data/repositories/sessions_repository_impl.dart';
 import '../../data/repositories/templates_repository_impl.dart';
+import '../../domain/repositories/player_groups_repository.dart';
 import '../../domain/repositories/recurring_sessions_repository.dart';
 import '../../domain/repositories/session_chat_repository.dart';
 import '../../domain/repositories/sessions_repository.dart';
@@ -33,6 +36,10 @@ final sessionChatRepositoryProvider = Provider<SessionChatRepository>(
 
 final templatesRepositoryProvider = Provider<TemplatesRepository>(
   (ref) => TemplatesRepositoryImpl(ref.watch(_sessionsDataSourceProvider)),
+);
+
+final playerGroupsRepositoryProvider = Provider<PlayerGroupsRepository>(
+  (ref) => PlayerGroupsRepositoryImpl(ref.watch(_sessionsDataSourceProvider)),
 );
 
 final recurringSessionsRepositoryProvider =
@@ -124,6 +131,17 @@ final templatesProvider =
   final uid = ref.watch(currentUserProvider).value?.uid;
   if (uid == null) return Stream.value(const []);
   return ref.watch(templatesRepositoryProvider).watch(uid);
+});
+
+/// The shared team library of player groups, most-recently-updated first.
+/// Empty for players / signed-out users (reads require coach/admin — see
+/// firestore.rules). Drives the quick-group rail in the create-session flow
+/// and the member picker.
+final playerGroupsProvider =
+    StreamProvider.autoDispose<List<PlayerGroup>>((ref) {
+  final user = ref.watch(currentUserProvider).value;
+  if (user == null || !user.isCoach) return Stream.value(const []);
+  return ref.watch(playerGroupsRepositoryProvider).watch();
 });
 
 final recurringSessionsProvider =

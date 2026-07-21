@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../../../core/constants/app_assets.dart';
 import 'package:spikers_app/features/sessions/domain/entities/chat_message_model.dart';
+import 'package:spikers_app/features/sessions/domain/entities/player_group_model.dart';
 import 'package:spikers_app/features/sessions/domain/entities/recurring_session_model.dart';
 import 'package:spikers_app/features/sessions/domain/entities/session_model.dart';
 import 'package:spikers_app/features/sessions/domain/entities/session_template_model.dart';
@@ -398,6 +399,27 @@ class SessionsRemoteDataSource {
 
   Future<void> deleteTemplate(String coachUid, String templateId) =>
       _templates(coachUid).doc(templateId).delete();
+
+  // --- player groups ---------------------------------------------------
+  // Shared team library — a single top-level collection all staff draw from.
+
+  CollectionReference<Map<String, dynamic>> get _playerGroups =>
+      _db.collection('player_groups');
+
+  Stream<List<PlayerGroup>> watchPlayerGroups() => _playerGroups
+      .orderBy('updatedAt', descending: true)
+      .snapshots()
+      .map((snap) => snap.docs.map(PlayerGroup.fromDoc).toList());
+
+  /// Adds a new group when [group].id is empty; otherwise updates the existing
+  /// doc (rename and/or new member list) via its id.
+  Future<void> savePlayerGroup(PlayerGroup group) {
+    if (group.id.isEmpty) return _playerGroups.add(group.toCreateMap());
+    return _playerGroups.doc(group.id).update(group.toUpdateMap());
+  }
+
+  Future<void> deletePlayerGroup(String groupId) =>
+      _playerGroups.doc(groupId).delete();
 
   // --- recurring sessions ----------------------------------------------
 

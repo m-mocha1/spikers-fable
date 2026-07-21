@@ -139,6 +139,70 @@ class AppLocalizationsAr extends AppLocalizations {
   String get selectMembersError => 'اختر عضوًا واحدًا على الأقل';
 
   @override
+  String get quickGroups => 'مجموعات سريعة';
+
+  @override
+  String get newGroup => 'مجموعة جديدة';
+
+  @override
+  String get saveAsGroup => 'حفظ كمجموعة';
+
+  @override
+  String get groupName => 'اسم المجموعة';
+
+  @override
+  String get groupNameHint => 'مثال: الأساسيون، تحت 18';
+
+  @override
+  String get groupNameRequired => 'أدخل اسم المجموعة';
+
+  @override
+  String get renameGroup => 'إعادة تسمية المجموعة';
+
+  @override
+  String get deleteGroup => 'حذف المجموعة';
+
+  @override
+  String get updateGroupMembers => 'تحديث بالتحديد الحالي';
+
+  @override
+  String get deleteGroupTitle => 'حذف المجموعة؟';
+
+  @override
+  String deleteGroupMessage(String name) {
+    return 'حذف “$name”؟ لن يؤثر ذلك على أي لاعب.';
+  }
+
+  @override
+  String groupSaved(String name) {
+    return 'تم حفظ “$name”';
+  }
+
+  @override
+  String get groupUpdated => 'تم تحديث المجموعة';
+
+  @override
+  String get groupDeleted => 'تم حذف المجموعة';
+
+  @override
+  String groupMembersCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count عضو',
+      many: '$count عضواً',
+      few: '$count أعضاء',
+      two: 'عضوان',
+      one: 'عضو واحد',
+      zero: '$count أعضاء',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get noGroupsYet => 'لا توجد مجموعات محفوظة بعد';
+
+  @override
   String get adminTesting => 'المشرف · اختبار';
 
   @override

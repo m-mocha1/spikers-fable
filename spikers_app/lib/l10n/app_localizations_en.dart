@@ -129,6 +129,66 @@ class AppLocalizationsEn extends AppLocalizations {
   String get selectMembersError => 'Select at least one member';
 
   @override
+  String get quickGroups => 'Quick groups';
+
+  @override
+  String get newGroup => 'New group';
+
+  @override
+  String get saveAsGroup => 'Save as group';
+
+  @override
+  String get groupName => 'Group name';
+
+  @override
+  String get groupNameHint => 'e.g. Starters, U18';
+
+  @override
+  String get groupNameRequired => 'Enter a group name';
+
+  @override
+  String get renameGroup => 'Rename group';
+
+  @override
+  String get deleteGroup => 'Delete group';
+
+  @override
+  String get updateGroupMembers => 'Update to current selection';
+
+  @override
+  String get deleteGroupTitle => 'Delete group?';
+
+  @override
+  String deleteGroupMessage(String name) {
+    return 'Delete “$name”? This won’t affect any players.';
+  }
+
+  @override
+  String groupSaved(String name) {
+    return '“$name” saved';
+  }
+
+  @override
+  String get groupUpdated => 'Group updated';
+
+  @override
+  String get groupDeleted => 'Group deleted';
+
+  @override
+  String groupMembersCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count members',
+      one: '1 member',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get noGroupsYet => 'No saved groups yet';
+
+  @override
   String get adminTesting => 'Admin · Testing';
 
   @override

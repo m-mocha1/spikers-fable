@@ -185,6 +185,18 @@ service cloud.firestore {
                     && resource.data.coachId == uid();
     }
 
+    // Shared team library of player groups for building custom sessions. Any
+    // coach/admin may read, edit, or delete any group (full staff parity, like
+    // announcements). createdBy is stamped to the caller on create for auditing.
+    match /player_groups/{groupId} {
+      allow read:   if isVerified() && isCoach();
+
+      allow create: if isVerified() && isCoach()
+                    && request.resource.data.createdBy == uid();
+
+      allow update, delete: if isVerified() && isCoach();
+    }
+
     match /announcements/{announcementId} {
       allow read: if isVerified();
 

@@ -14,10 +14,15 @@ import 'package:spikers_app/core/widgets/animations.dart';
 import 'package:spikers_app/core/widgets/app_choice_chips.dart';
 import 'package:spikers_app/core/widgets/branded_button.dart';
 import 'package:spikers_app/core/widgets/branded_text_field.dart';
+import 'package:spikers_app/features/sessions/domain/entities/player_group_model.dart';
+import 'package:spikers_app/features/sessions/domain/player_group_selection.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
+import '../../../players/presentation/providers/players_providers.dart';
 import '../providers/sessions_providers.dart';
 import '../widgets/coach_select_chips.dart';
 import '../widgets/member_picker_sheet.dart';
+import '../widgets/player_group_actions.dart';
+import '../widgets/player_group_rail.dart';
 import '../widgets/session_art_picker.dart';
 import '../../../../core/theme/app_spacing.dart';
 
@@ -48,6 +53,11 @@ class _CreateSessionScreenState extends ConsumerState<CreateSessionScreen> {
   final Set<String> _selectedCoachIds = {};
   bool _isCustom = false;
   final Set<String> _selectedMemberIds = {};
+
+  // Groups the coach has explicitly applied — the rail's gold-highlight state.
+  // Tracked, not derived from the member set, so an overlapping group never
+  // lights up just because its members are covered.
+  final Set<String> _appliedGroupIds = {};
 
   // Admin-only testing controls. [_notify] off creates the session silently
   // (no push); [_designIndex] pins a specific card art (null = random).
@@ -107,11 +117,87 @@ class _CreateSessionScreenState extends ConsumerState<CreateSessionScreen> {
     final picked =
         await showMemberPicker(context, initial: _selectedMemberIds);
     if (picked == null || !mounted) return;
+    final groups = ref.read(playerGroupsProvider).valueOrNull ?? const [];
+    final validUids =
+        ref.read(playersProvider).valueOrNull?.map((p) => p.uid).toSet();
     setState(() {
       _selectedMemberIds
         ..clear()
         ..addAll(picked);
+      // A manual edit in the picker may have broken a group's coverage — drop
+      // any applied group no longer fully selected (never adds one).
+      _syncAppliedGroups(groups, validUids);
     });
+  }
+
+  /// Toggles a saved group in/out of the selection, updating both the member
+  /// set and the applied-group highlight. [validUids] drops members who no
+  /// longer exist (null while the roster loads).
+  void _applyGroup(
+      PlayerGroup group, List<PlayerGroup> groups, Set<String>? validUids) {
+    final result = toggleGroup(
+      group: group,
+      allGroups: groups,
+      selected: _selectedMemberIds,
+      appliedGroupIds: _appliedGroupIds,
+      validUids: validUids,
+    );
+    setState(() {
+      _selectedMemberIds
+        ..clear()
+        ..addAll(result.selected);
+      _appliedGroupIds
+        ..clear()
+        ..addAll(result.appliedGroupIds);
+    });
+  }
+
+  void _syncAppliedGroups(
+      List<PlayerGroup> groups, Set<String>? validUids) {
+    final reconciled = reconcileAppliedGroups(
+      allGroups: groups,
+      appliedGroupIds: _appliedGroupIds,
+      selected: _selectedMemberIds,
+      validUids: validUids,
+    );
+    _appliedGroupIds
+      ..clear()
+      ..addAll(reconciled);
+  }
+
+  /// Opens the member picker seeded with [group]'s current roster and saves the
+  /// edited selection back to the group.
+  Future<void> _editGroupMembers(PlayerGroup group) async {
+    final updated =
+        await showMemberPicker(context, initial: group.memberIds.toSet());
+    if (updated == null || !mounted) return;
+    await saveGroupMembers(context, ref, group, updated);
+  }
+
+  /// The "Quick groups" rail — a one-tap way to fill the roster from a saved
+  /// group. Hidden until the coach has saved at least one (first group is
+  /// created from the member picker's "Save as group" action).
+  Widget _quickGroups(AppLocalizations l) {
+    final groups = ref.watch(playerGroupsProvider).valueOrNull ?? const [];
+    if (groups.isEmpty) return const SizedBox.shrink();
+    final players = ref.watch(playersProvider).valueOrNull;
+    final validUids = players?.map((p) => p.uid).toSet();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 16),
+        Text(l.quickGroups.toUpperCase(), style: AppTextStyles.eyebrow),
+        const SizedBox(height: 8),
+        PlayerGroupRail(
+          groups: groups,
+          appliedGroupIds: _appliedGroupIds,
+          onApply: (g) => _applyGroup(g, groups, validUids),
+          onManage: (g) => manageGroup(context, ref, g,
+              onEditMembers: () => _editGroupMembers(g)),
+          onNew: _pickMembers,
+        ),
+      ],
+    );
   }
 
   Future<void> _submit() async {
@@ -303,6 +389,7 @@ class _CreateSessionScreenState extends ConsumerState<CreateSessionScreen> {
                 contentPadding: EdgeInsets.zero,
               ),
               if (_isCustom) ...[
+                _quickGroups(l),
                 const SizedBox(height: 8),
                 OutlinedButton.icon(
                   onPressed: _pickMembers,
