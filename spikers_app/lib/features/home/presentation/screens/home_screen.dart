@@ -110,24 +110,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             ListTile(
               leading: const CircleAvatar(
                 backgroundColor: AppColors.navyBlue,
-                child: Icon(Icons.flash_on_outlined, color: AppColors.gold),
-              ),
-              title: Text(
-                l.quickSession,
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-              subtitle: Text(
-                l.selectTemplate,
-                style: const TextStyle(color: AppColors.grey, fontSize: 12),
-              ),
-              onTap: () {
-                Navigator.of(context).pop();
-                context.push(Routes.quickSession);
-              },
-            ),
-            ListTile(
-              leading: const CircleAvatar(
-                backgroundColor: AppColors.navyBlue,
                 child: Icon(Icons.repeat, color: AppColors.gold),
               ),
               title: Text(

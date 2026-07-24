@@ -21,7 +21,6 @@ import '../../features/sessions/domain/entities/recurring_session_model.dart';
 import '../../features/sessions/domain/entities/session_model.dart';
 import '../../features/sessions/presentation/screens/create_recurring_session_screen.dart';
 import '../../features/sessions/presentation/screens/create_session_screen.dart';
-import '../../features/sessions/presentation/screens/quick_session_screen.dart';
 import '../../features/sessions/presentation/screens/recurring_sessions_screen.dart';
 import '../../features/sessions/presentation/screens/session_chat_screen.dart';
 import '../../features/sessions/presentation/screens/session_detail_screen.dart';
@@ -37,7 +36,6 @@ abstract class Routes {
   static const home = '/home';
   static const sessionDetail = '/session-detail';
   static const createSession = '/create-session';
-  static const quickSession = '/quick-session';
   static const sessionChat = '/session-chat';
   static const playerProfile = '/player-profile';
   static const announcements = '/announcements';
@@ -95,11 +93,6 @@ final appRouter = GoRouter(
       path: Routes.createSession,
       redirect: _coachOnly,
       builder: (_, _) => const CreateSessionScreen(),
-    ),
-    GoRoute(
-      path: Routes.quickSession,
-      redirect: _coachOnly,
-      builder: (_, _) => const QuickSessionScreen(),
     ),
     GoRoute(
       path: Routes.sessionChat,

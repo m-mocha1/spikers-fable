@@ -536,24 +536,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get errorOccurred => 'حدث خطأ';
 
   @override
-  String get quickSession => 'جلسة سريعة';
-
-  @override
-  String get selectTemplate => 'اختر نموذجاً';
-
-  @override
-  String get saveAsTemplate => 'حفظ كنموذج';
-
-  @override
-  String get noTemplates => 'لا توجد نماذج بعد';
-
-  @override
-  String get noTemplatesDesc => 'أنشئ جلسة وفعّل خيار حفظ كنموذج لحفظها هنا';
-
-  @override
-  String get templateSaved => 'تم حفظ النموذج';
-
-  @override
   String get chat => 'الدردشة';
 
   @override

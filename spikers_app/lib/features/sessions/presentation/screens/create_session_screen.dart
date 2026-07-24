@@ -9,7 +9,6 @@ import '../../../../core/utils/app_snackbar.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'package:spikers_app/features/sessions/domain/entities/session_model.dart';
-import 'package:spikers_app/features/sessions/domain/entities/session_template_model.dart';
 import 'package:spikers_app/core/widgets/animations.dart';
 import 'package:spikers_app/core/widgets/app_choice_chips.dart';
 import 'package:spikers_app/core/widgets/branded_button.dart';
@@ -48,7 +47,6 @@ class _CreateSessionScreenState extends ConsumerState<CreateSessionScreen> {
   String _gender = 'mixed';
   DateTime? _startTime;
   DateTime? _endTime;
-  bool _saveAsTemplate = false;
 
   final Set<String> _selectedCoachIds = {};
   bool _isCustom = false;
@@ -232,24 +230,6 @@ class _CreateSessionScreenState extends ConsumerState<CreateSessionScreen> {
     final maxAge = _isCustom ? 99 : (int.tryParse(_maxAgeCtrl.text) ?? 99);
 
     try {
-      // The template checkbox is hidden (not reset) when custom is toggled
-      // on, so _saveAsTemplate may still hold a stale true.
-      if (_saveAsTemplate && !_isCustom) {
-        await ref.read(templatesRepositoryProvider).save(
-            user.uid,
-            SessionTemplate(
-              id: '',
-              title: _titleCtrl.text.trim(),
-              location: _locationCtrl.text.trim(),
-              gender: gender,
-              minAge: minAge,
-              maxAge: maxAge,
-              maxPlayers: int.tryParse(_maxPlayersCtrl.text) ?? 10,
-              waitlistSize: int.tryParse(_waitlistSizeCtrl.text) ?? 0,
-              createdAt: DateTime.now(),
-            ));
-      }
-
       final session = SessionModel(
         id: '',
         title: _titleCtrl.text.trim(),
@@ -514,20 +494,6 @@ class _CreateSessionScreenState extends ConsumerState<CreateSessionScreen> {
                 const SizedBox(height: 24),
               ],
 
-              // Templates capture the gender/age audience, which a custom
-              // session overrides — so hide the option when custom.
-              if (!_isCustom)
-                CheckboxListTile(
-                  value: _saveAsTemplate,
-                  onChanged: (v) =>
-                      setState(() => _saveAsTemplate = v ?? false),
-                  title: Text(l.saveAsTemplate,
-                      style: const TextStyle(fontWeight: FontWeight.w500)),
-                  activeColor: AppColors.gold,
-                  checkColor: AppColors.navyBlue,
-                  controlAffinity: ListTileControlAffinity.leading,
-                  contentPadding: EdgeInsets.zero,
-                ),
               const SizedBox(height: 8),
 
               BrandedButton(

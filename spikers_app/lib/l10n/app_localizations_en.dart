@@ -511,25 +511,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errorOccurred => 'An error occurred';
 
   @override
-  String get quickSession => 'Quick Session';
-
-  @override
-  String get selectTemplate => 'Pick a template';
-
-  @override
-  String get saveAsTemplate => 'Save as Template';
-
-  @override
-  String get noTemplates => 'No templates yet';
-
-  @override
-  String get noTemplatesDesc =>
-      'Create a session and check \"Save as Template\" to save it here';
-
-  @override
-  String get templateSaved => 'Template saved';
-
-  @override
   String get chat => 'Chat';
 
   @override

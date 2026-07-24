@@ -986,42 +986,6 @@ abstract class AppLocalizations {
   /// **'An error occurred'**
   String get errorOccurred;
 
-  /// No description provided for @quickSession.
-  ///
-  /// In en, this message translates to:
-  /// **'Quick Session'**
-  String get quickSession;
-
-  /// No description provided for @selectTemplate.
-  ///
-  /// In en, this message translates to:
-  /// **'Pick a template'**
-  String get selectTemplate;
-
-  /// No description provided for @saveAsTemplate.
-  ///
-  /// In en, this message translates to:
-  /// **'Save as Template'**
-  String get saveAsTemplate;
-
-  /// No description provided for @noTemplates.
-  ///
-  /// In en, this message translates to:
-  /// **'No templates yet'**
-  String get noTemplates;
-
-  /// No description provided for @noTemplatesDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Create a session and check \"Save as Template\" to save it here'**
-  String get noTemplatesDesc;
-
-  /// No description provided for @templateSaved.
-  ///
-  /// In en, this message translates to:
-  /// **'Template saved'**
-  String get templateSaved;
-
   /// No description provided for @chat.
   ///
   /// In en, this message translates to:

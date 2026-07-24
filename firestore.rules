@@ -103,10 +103,6 @@ service cloud.firestore {
                         && request.resource.data.photoUrl is string);
       allow delete: if false;
 
-      match /templates/{templateId} {
-        allow read, write: if uid() == userId;
-      }
-
       match /payments/{paymentId} {
         allow create: if isCoach();
         allow read:   if isCoach() || uid() == userId;

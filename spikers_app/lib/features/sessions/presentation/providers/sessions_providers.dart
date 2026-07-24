@@ -5,19 +5,16 @@ import 'package:spikers_app/features/sessions/domain/attendance_prompt.dart';
 import 'package:spikers_app/features/sessions/domain/entities/player_group_model.dart';
 import 'package:spikers_app/features/sessions/domain/entities/recurring_session_model.dart';
 import 'package:spikers_app/features/sessions/domain/entities/session_model.dart';
-import 'package:spikers_app/features/sessions/domain/entities/session_template_model.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../data/datasources/sessions_remote_datasource.dart';
 import '../../data/repositories/player_groups_repository_impl.dart';
 import '../../data/repositories/recurring_sessions_repository_impl.dart';
 import '../../data/repositories/session_chat_repository_impl.dart';
 import '../../data/repositories/sessions_repository_impl.dart';
-import '../../data/repositories/templates_repository_impl.dart';
 import '../../domain/repositories/player_groups_repository.dart';
 import '../../domain/repositories/recurring_sessions_repository.dart';
 import '../../domain/repositories/session_chat_repository.dart';
 import '../../domain/repositories/sessions_repository.dart';
-import '../../domain/repositories/templates_repository.dart';
 
 final _sessionsDataSourceProvider = Provider<SessionsRemoteDataSource>(
   (ref) => SessionsRemoteDataSource(
@@ -32,10 +29,6 @@ final sessionsRepositoryProvider = Provider<SessionsRepository>(
 
 final sessionChatRepositoryProvider = Provider<SessionChatRepository>(
   (ref) => SessionChatRepositoryImpl(ref.watch(_sessionsDataSourceProvider)),
-);
-
-final templatesRepositoryProvider = Provider<TemplatesRepository>(
-  (ref) => TemplatesRepositoryImpl(ref.watch(_sessionsDataSourceProvider)),
 );
 
 final playerGroupsRepositoryProvider = Provider<PlayerGroupsRepository>(
@@ -124,13 +117,6 @@ final coachAttendanceTodoProvider =
     uid: viewer.uid,
     now: DateTime.now(),
   );
-});
-
-final templatesProvider =
-    StreamProvider.autoDispose<List<SessionTemplate>>((ref) {
-  final uid = ref.watch(currentUserProvider).value?.uid;
-  if (uid == null) return Stream.value(const []);
-  return ref.watch(templatesRepositoryProvider).watch(uid);
 });
 
 /// The shared team library of player groups, most-recently-updated first.

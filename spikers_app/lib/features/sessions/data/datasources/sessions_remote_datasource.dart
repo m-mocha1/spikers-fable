@@ -9,7 +9,6 @@ import 'package:spikers_app/features/sessions/domain/entities/chat_message_model
 import 'package:spikers_app/features/sessions/domain/entities/player_group_model.dart';
 import 'package:spikers_app/features/sessions/domain/entities/recurring_session_model.dart';
 import 'package:spikers_app/features/sessions/domain/entities/session_model.dart';
-import 'package:spikers_app/features/sessions/domain/entities/session_template_model.dart';
 import 'package:spikers_app/features/auth/domain/entities/user_model.dart';
 import '../../domain/repositories/sessions_repository.dart'
     show PublicProfile;
@@ -383,22 +382,6 @@ class SessionsRemoteDataSource {
         'createdAt': FieldValue.serverTimestamp(),
       });
 
-  // --- templates -------------------------------------------------------
-
-  CollectionReference<Map<String, dynamic>> _templates(String uid) =>
-      _db.collection('users').doc(uid).collection('templates');
-
-  Stream<List<SessionTemplate>> watchTemplates(String coachUid) =>
-      _templates(coachUid)
-          .orderBy('createdAt', descending: true)
-          .snapshots()
-          .map((snap) => snap.docs.map(SessionTemplate.fromDoc).toList());
-
-  Future<void> saveTemplate(String coachUid, SessionTemplate template) =>
-      _templates(coachUid).add(template.toMap());
-
-  Future<void> deleteTemplate(String coachUid, String templateId) =>
-      _templates(coachUid).doc(templateId).delete();
 
   // --- player groups ---------------------------------------------------
   // Shared team library — a single top-level collection all staff draw from.

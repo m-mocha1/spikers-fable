@@ -8,11 +8,9 @@ import 'package:spikers_app/features/sessions/data/datasources/sessions_remote_d
 import 'package:spikers_app/features/sessions/data/repositories/player_groups_repository_impl.dart';
 import 'package:spikers_app/features/sessions/data/repositories/session_chat_repository_impl.dart';
 import 'package:spikers_app/features/sessions/data/repositories/sessions_repository_impl.dart';
-import 'package:spikers_app/features/sessions/data/repositories/templates_repository_impl.dart';
 import 'package:spikers_app/features/sessions/domain/repositories/sessions_repository.dart';
 import 'package:spikers_app/features/sessions/domain/entities/player_group_model.dart';
 import 'package:spikers_app/features/sessions/domain/entities/session_model.dart';
-import 'package:spikers_app/features/sessions/domain/entities/session_template_model.dart';
 import 'package:spikers_app/features/auth/domain/entities/user_model.dart';
 
 class _MockFunctions extends Mock implements FirebaseFunctions {}
@@ -673,31 +671,6 @@ void main() {
       expect(msgs.length, 2);
       expect(msgs.first.text, 'second');
       expect(msgs.last.senderId, 'u1');
-    });
-  });
-
-  group('templates repository', () {
-    test('save/watch/delete lifecycle', () async {
-      final templates = TemplatesRepositoryImpl(ds);
-      await templates.save(
-          'c1',
-          SessionTemplate(
-            id: '',
-            title: 'T',
-            location: 'L',
-            gender: 'mixed',
-            minAge: 16,
-            maxAge: 40,
-            maxPlayers: 12,
-            createdAt: DateTime(2026),
-          ));
-
-      var list = await templates.watch('c1').first;
-      expect(list.single.title, 'T');
-
-      await templates.delete('c1', list.single.id);
-      list = await templates.watch('c1').first;
-      expect(list, isEmpty);
     });
   });
 

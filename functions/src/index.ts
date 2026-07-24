@@ -717,7 +717,7 @@ async function removeUserFromAllSessions(userId: string): Promise<void> {
 
 // Permanently erases every trace of a user account: session memberships (with
 // waitlist promotion), profile photo, the Firestore user doc + subcollections
-// (payments, templates, private/fcm — and the mirrorUserPublic trigger then
+// (payments, private/fcm — and the mirrorUserPublic trigger then
 // drops users_public/{userId}), and the Firebase Auth login. Storage and Auth
 // deletes are best-effort so the rest still completes. Shared by the staff-gated
 // adminDeleteUser and the self-service deleteMyAccount callables.
@@ -739,7 +739,7 @@ async function purgeUserAccount(userId: string): Promise<void> {
       return undefined;
     });
 
-  // User doc + subcollections (payments, templates, private). The
+  // User doc + subcollections (payments, private). The
   // mirrorUserPublic trigger deletes users_public/{userId} afterwards.
   await db.recursiveDelete(db.collection("users").doc(userId));
 
