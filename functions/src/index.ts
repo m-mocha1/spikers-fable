@@ -1719,8 +1719,9 @@ export const endorsePlayer = onCall({ region: REGION }, async (request) => {
 // none of the mirrored fields actually changed.
 // ---------------------------------------------------------------------------
 // ---------------------------------------------------------------------------
-// createRecurringSessions — runs nightly at 21:00 Jerusalem time, creates
-// tomorrow's sessions from enabled recurring_sessions docs.
+// createRecurringSessions — runs daily at 09:00 Jerusalem time, creates
+// tomorrow's sessions from enabled recurring_sessions docs (so they surface in
+// the app on the morning of the day before each session).
 // ---------------------------------------------------------------------------
 function getJerusalemDateParts(date: Date): { str: string; dayOfWeek: number } {
   const str = date.toLocaleDateString("en-CA", { timeZone: "Asia/Jerusalem" });
@@ -1745,12 +1746,19 @@ function jerusalemDateToUtcMs(dateStr: string, hour: number, minute: number): nu
   const get = (t: string) => parseInt(parts.find((p) => p.type === t)!.value);
   const localH = get("hour");
   const localM = get("minute");
-  const diffMin = (localH * 60 + localM) - (hour * 60 + minute);
+  // Difference between the Jerusalem-rendered wall clock and the requested one.
+  // When the UTC offset pushes the rendered time across a midnight boundary
+  // (e.g. a requested 21:00 rendered as 00:00 the next day in summer), an
+  // hour+minute-only comparison lands ~24h off. A real UTC offset is within
+  // ±14h, so fold the difference back into ±12h to drop the spurious day.
+  let diffMin = (localH * 60 + localM) - (hour * 60 + minute);
+  if (diffMin > 720) diffMin -= 1440;
+  else if (diffMin < -720) diffMin += 1440;
   return utcGuess.getTime() - diffMin * 60_000;
 }
 
 export const createRecurringSessions = onSchedule(
-  { schedule: "every day 21:00", region: REGION, timeZone: "Asia/Jerusalem" },
+  { schedule: "every day 09:00", region: REGION, timeZone: "Asia/Jerusalem" },
   async () => {
     const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
     const { str: tomorrowStr, dayOfWeek } = getJerusalemDateParts(tomorrow);

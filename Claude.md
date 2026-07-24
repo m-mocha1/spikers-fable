@@ -70,7 +70,7 @@ The Functions region (`europe-west1`) must stay in sync between `functions/src/i
 
 **Public vs private user data.** The full `users/{uid}` doc is readable only by the owner and coaches. The `mirrorUserPublic` trigger maintains `users_public/{uid}` with just the safe fields (`name`, `photoUrl`, `role`, `gender`, `attendanceCount`) for any verified user to read. FCM tokens live at `users/{uid}/private/fcm` specifically so token refreshes don't fan out to the many client listeners on the `users` collection.
 
-**Scheduled / trigger functions:** `cleanupUnverifiedUsers` (every 5 min — deletes registrations unverified after 30 min, self-heals ones that actually verified), `sessionCleanup` (archives ended sessions into `sessions_history`), `createRecurringSessions` (nightly 21:00 Asia/Jerusalem, materializes tomorrow's sessions from `recurring_sessions`), `onSessionCreated` / `onAnnouncementCreated` (FCM fan-out, audience-aware).
+**Scheduled / trigger functions:** `cleanupUnverifiedUsers` (every 5 min — deletes registrations unverified after 30 min, self-heals ones that actually verified), `sessionCleanup` (archives ended sessions into `sessions_history`), `createRecurringSessions` (daily 09:00 Asia/Jerusalem, materializes tomorrow's sessions from `recurring_sessions`), `onSessionCreated` / `onAnnouncementCreated` (FCM fan-out, audience-aware).
 
 **Notifications:** Functions send FCM multicasts; the client `NotificationsService` (`features/notifications/application/`) shows foreground banners via local notifications and routes taps (`sessionId` → session detail, `kind:'announcement'` → announcements). It is disabled under `kDebugMode`.
 

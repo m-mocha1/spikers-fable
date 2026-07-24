@@ -133,6 +133,14 @@ class _CreateRecurringSessionScreenState
       showAppSnackbar(l.selectMembersError);
       return;
     }
+    // End must be after start (same-day wall clock); the materializer schedules
+    // both times on the session's date, so a cross-midnight range is invalid.
+    final startMinutes = _startTime.hour * 60 + _startTime.minute;
+    final endMinutes = _endTime.hour * 60 + _endTime.minute;
+    if (endMinutes <= startMinutes) {
+      showAppSnackbar(l.endTimeError);
+      return;
+    }
 
     final user = ref.read(currentUserProvider).value;
     if (user == null) return;
