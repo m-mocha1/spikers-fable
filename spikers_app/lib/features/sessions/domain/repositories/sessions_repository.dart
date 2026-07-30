@@ -111,6 +111,11 @@ abstract class SessionsRepository {
   /// added by mistake). Owner-coach or staff. Throws [SessionActionException].
   Future<void> updateSessionMembers(String sessionId, List<String> memberIds);
 
+  /// Replaces the "available coaches" list of a session after creation (e.g.
+  /// coaches swapped shifts). An empty list is allowed — it just clears the
+  /// tag. Owner-coach or staff. Throws [SessionActionException].
+  Future<void> updateSessionCoaches(String sessionId, List<String> coachIds);
+
   /// Throws [SessionActionException].
   Future<void> markAttended(String sessionId, String userId, bool attended);
 

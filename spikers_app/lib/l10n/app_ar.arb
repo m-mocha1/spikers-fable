@@ -34,6 +34,10 @@
   "profile": "الملف الشخصي",
   "createSession": "إنشاء جلسة",
   "availableCoaches": "المدربون المتاحون",
+  "chooseCoaches": "اختيار المدربين",
+  "editCoaches": "تعديل المدربين",
+  "addCoaches": "إضافة مدربين",
+  "coachesUpdated": "تم تحديث المدربين",
   "customSession": "جلسة مخصصة",
   "customSessionSubtitle": "الأعضاء المحددون فقط يمكنهم رؤية هذه الجلسة",
   "chooseMembers": "اختيار الأعضاء",
@@ -260,6 +264,9 @@
   "noPlayers": "لا يوجد لاعبون",
   "noPlayersMatch": "لا يوجد لاعبون مطابقون لبحثك",
   "searchPlayers": "ابحث عن لاعبين",
+  "sortByMembership": "الترتيب حسب الاشتراك",
+  "sortActiveFirst": "الأعضاء النشطون أولاً",
+  "sortInactiveFirst": "الأعضاء غير النشطين أولاً",
   "noCoaches": "لا يوجد مدربون",
   "coachesCount": "{count, plural, zero{لا مدربين} one{مدرب واحد} two{مدربان} few{{count} مدربين} many{{count} مدربًا} other{{count} مدرب}}",
   "@coachesCount": {
@@ -276,16 +283,86 @@
   "payment": "العضوية",
   "paymentRequired": "العضوية غير نشطة",
   "paymentRequiredDesc": "عضويتك في النادي غير نشطة. تواصل مع المدرب للتجديد.",
-  "confirmMarkPaid": "تفعيل عضوية {name}؟",
-  "@confirmMarkPaid": {
-    "placeholders": {
-      "name": { "type": "String" }
-    }
-  },
   "confirmMarkUnpaid": "إلغاء تفعيل عضوية {name}؟",
   "@confirmMarkUnpaid": {
     "placeholders": {
       "name": { "type": "String" }
+    }
+  },
+  "membershipSheetTitle": "العضوية · {name}",
+  "@membershipSheetTitle": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "membershipActiveUntil": "{days, plural, =1{نشط · يتبقى يوم واحد} =2{نشط · يتبقى يومان} few{نشط · يتبقى {days} أيام} many{نشط · يتبقى {days} يومًا} other{نشط · يتبقى {days} يوم}}",
+  "@membershipActiveUntil": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+  "adjustMembership": "تعديل العضوية",
+  "addDays": "إضافة أيام",
+  "removeDays": "إزالة أيام",
+  "daysRemoved": "أيام مُزالة",
+  "membershipWillEnd": "ستنتهي العضوية",
+  "membershipEnded": "انتهت العضوية",
+  "daysShort": "{days} يوم",
+  "@daysShort": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+  "custom": "مخصص",
+  "customDaysLabel": "الأيام",
+  "invalidDayCount": "أدخل من 1 إلى 365 يومًا",
+  "newExpiry": "تاريخ الانتهاء الجديد",
+  "daysTotal": "{days, plural, =1{يوم واحد إجمالاً} =2{يومان إجمالاً} few{{days} أيام إجمالاً} many{{days} يومًا إجمالاً} other{{days} يوم إجمالاً}}",
+  "@daysTotal": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+  "addDaysCta": "{days, plural, =1{إضافة يوم واحد} =2{إضافة يومين} few{إضافة {days} أيام} many{إضافة {days} يومًا} other{إضافة {days} يوم}}",
+  "@addDaysCta": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+  "removeDaysCta": "{days, plural, =1{إزالة يوم واحد} =2{إزالة يومين} few{إزالة {days} أيام} many{إزالة {days} يومًا} other{إزالة {days} يوم}}",
+  "@removeDaysCta": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+  "activateMembership": "تفعيل العضوية",
+  "deactivateMembership": "إلغاء تفعيل العضوية",
+  "membershipExtended": "{days, plural, =1{تمت إضافة يوم واحد · نشط حتى {date}} =2{تمت إضافة يومين · نشط حتى {date}} few{تمت إضافة {days} أيام · نشط حتى {date}} many{تمت إضافة {days} يومًا · نشط حتى {date}} other{تمت إضافة {days} يوم · نشط حتى {date}}}",
+  "@membershipExtended": {
+    "placeholders": {
+      "days": { "type": "int" },
+      "date": { "type": "String" }
+    }
+  },
+  "membershipReduced": "{days, plural, =1{تمت إزالة يوم واحد · نشط حتى {date}} =2{تمت إزالة يومين · نشط حتى {date}} few{تمت إزالة {days} أيام · نشط حتى {date}} many{تمت إزالة {days} يومًا · نشط حتى {date}} other{تمت إزالة {days} يوم · نشط حتى {date}}}",
+  "@membershipReduced": {
+    "placeholders": {
+      "days": { "type": "int" },
+      "date": { "type": "String" }
+    }
+  },
+  "renewedForDays": "{days, plural, =1{+يوم واحد · حتى {date}} =2{+يومان · حتى {date}} few{+{days} أيام · حتى {date}} many{+{days} يومًا · حتى {date}} other{+{days} يوم · حتى {date}}}",
+  "@renewedForDays": {
+    "placeholders": {
+      "days": { "type": "int" },
+      "date": { "type": "String" }
+    }
+  },
+  "removedForDays": "{days, plural, =1{−يوم واحد · حتى {date}} =2{−يومان · حتى {date}} few{−{days} أيام · حتى {date}} many{−{days} يومًا · حتى {date}} other{−{days} يوم · حتى {date}}}",
+  "@removedForDays": {
+    "placeholders": {
+      "days": { "type": "int" },
+      "date": { "type": "String" }
     }
   },
   "delete": "حذف",

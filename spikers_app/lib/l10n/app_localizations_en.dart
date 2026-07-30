@@ -111,6 +111,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get availableCoaches => 'Available Coaches';
 
   @override
+  String get chooseCoaches => 'Choose coaches';
+
+  @override
+  String get editCoaches => 'Edit coaches';
+
+  @override
+  String get addCoaches => 'Add coaches';
+
+  @override
+  String get coachesUpdated => 'Coaches updated';
+
+  @override
   String get customSession => 'Custom session';
 
   @override
@@ -622,6 +634,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchPlayers => 'Search players';
 
   @override
+  String get sortByMembership => 'Sort by membership';
+
+  @override
+  String get sortActiveFirst => 'Active members first';
+
+  @override
+  String get sortInactiveFirst => 'Inactive members first';
+
+  @override
   String get noCoaches => 'No coaches found';
 
   @override
@@ -664,13 +685,142 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your club membership isn\'t active. Contact your coach to renew.';
 
   @override
-  String confirmMarkPaid(String name) {
-    return 'Activate membership for $name?';
+  String confirmMarkUnpaid(String name) {
+    return 'Deactivate membership for $name?';
   }
 
   @override
-  String confirmMarkUnpaid(String name) {
-    return 'Deactivate membership for $name?';
+  String membershipSheetTitle(String name) {
+    return 'Membership · $name';
+  }
+
+  @override
+  String membershipActiveUntil(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Active · $days days left',
+      one: 'Active · 1 day left',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get adjustMembership => 'Adjust membership';
+
+  @override
+  String get addDays => 'Add days';
+
+  @override
+  String get removeDays => 'Remove days';
+
+  @override
+  String get daysRemoved => 'Days removed';
+
+  @override
+  String get membershipWillEnd => 'Membership will end';
+
+  @override
+  String get membershipEnded => 'Membership ended';
+
+  @override
+  String daysShort(int days) {
+    return '${days}d';
+  }
+
+  @override
+  String get custom => 'Custom';
+
+  @override
+  String get customDaysLabel => 'Days';
+
+  @override
+  String get invalidDayCount => 'Enter 1–365 days';
+
+  @override
+  String get newExpiry => 'New expiry';
+
+  @override
+  String daysTotal(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days days total',
+      one: '1 day total',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String addDaysCta(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Add $days days',
+      one: 'Add 1 day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String removeDaysCta(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Remove $days days',
+      one: 'Remove 1 day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get activateMembership => 'Activate membership';
+
+  @override
+  String get deactivateMembership => 'Deactivate membership';
+
+  @override
+  String membershipExtended(int days, String date) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Added $days days · active until $date',
+      one: 'Added 1 day · active until $date',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String membershipReduced(int days, String date) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Removed $days days · active until $date',
+      one: 'Removed 1 day · active until $date',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String renewedForDays(int days, String date) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '+$days days · until $date',
+      one: '+1 day · until $date',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String removedForDays(int days, String date) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '−$days days · until $date',
+      one: '−1 day · until $date',
+    );
+    return '$_temp0';
   }
 
   @override

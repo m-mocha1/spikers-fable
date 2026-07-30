@@ -13,10 +13,15 @@ abstract class PlayersRepository {
   /// Live user document for the profile screen; null when missing.
   Stream<UserModel?> watchPlayer(String uid);
 
-  /// Marks 30 days paid from now, with an audit-trail entry. No-op for
-  /// lifetime members.
-  Future<void> markPaid(String playerUid,
-      {required String coachUid, required String coachName});
+  /// Moves the player's membership expiry by [days] (negative takes time
+  /// back), stacking on top of any days that are still left, with an
+  /// audit-trail entry. Returns the new expiry, or null when no active
+  /// membership remains — a lifetime member (a no-op) or a reduction that
+  /// consumed everything that was left.
+  Future<DateTime?> adjustMembership(String playerUid,
+      {required int days,
+      required String coachUid,
+      required String coachName});
 
   /// Clears payment fields, with an audit-trail entry. No-op for lifetime
   /// members.

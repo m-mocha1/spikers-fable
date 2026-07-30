@@ -23,7 +23,7 @@ import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../home/presentation/providers/profile_providers.dart';
 import '../../../home/presentation/widgets/achievements_card.dart';
 import '../../../home/presentation/widgets/profile_stat_cards.dart';
-import '../widgets/payment_confirm_dialog.dart';
+import '../widgets/membership_sheet.dart';
 import '../providers/players_providers.dart';
 
 class PlayerProfileScreen extends ConsumerWidget {
@@ -332,30 +332,30 @@ class _PaymentActionButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final markingPaid = !user.isPaid;
-    final color = markingPaid ? AppColors.success : AppColors.errorRed;
-    final icon = markingPaid
-        ? Icons.check_circle_outline
-        : Icons.highlight_off_rounded;
-    final label = markingPaid ? l.paid : l.unpaid;
+    // Both states open the same sheet; the label only says whether the coach
+    // is starting a membership or topping up a running one.
+    final active = user.isPaid;
+    final color = active ? AppColors.gold : AppColors.success;
+    final icon =
+        active ? Icons.add_circle_outline : Icons.check_circle_outline;
+    final label = active ? l.addDays : l.activateMembership;
+    // Navy reads on gold; white would wash out.
+    final onColor = active ? AppColors.navyBlue : AppColors.white;
 
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton.icon(
-        onPressed: () => confirmTogglePayment(
+        onPressed: () => showMembershipSheet(
           context,
-          ref,
           uid: user.uid,
           name: user.name,
           paidUntil: user.paidUntil,
+          isLifetime: user.lifetimeMember,
         ),
-        icon: Icon(icon, color: AppColors.white),
+        icon: Icon(icon, color: onColor),
         label: Text(
           label,
-          style: const TextStyle(
-            color: AppColors.white,
-            fontWeight: FontWeight.w700,
-          ),
+          style: TextStyle(color: onColor, fontWeight: FontWeight.w700),
         ),
         style: ElevatedButton.styleFrom(
           backgroundColor: color,

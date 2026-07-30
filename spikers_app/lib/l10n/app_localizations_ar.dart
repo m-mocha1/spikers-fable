@@ -111,6 +111,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get availableCoaches => 'المدربون المتاحون';
 
   @override
+  String get chooseCoaches => 'اختيار المدربين';
+
+  @override
+  String get editCoaches => 'تعديل المدربين';
+
+  @override
+  String get addCoaches => 'إضافة مدربين';
+
+  @override
+  String get coachesUpdated => 'تم تحديث المدربين';
+
+  @override
   String get customSession => 'جلسة مخصصة';
 
   @override
@@ -659,6 +671,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get searchPlayers => 'ابحث عن لاعبين';
 
   @override
+  String get sortByMembership => 'الترتيب حسب الاشتراك';
+
+  @override
+  String get sortActiveFirst => 'الأعضاء النشطون أولاً';
+
+  @override
+  String get sortInactiveFirst => 'الأعضاء غير النشطين أولاً';
+
+  @override
   String get noCoaches => 'لا يوجد مدربون';
 
   @override
@@ -705,13 +726,166 @@ class AppLocalizationsAr extends AppLocalizations {
       'عضويتك في النادي غير نشطة. تواصل مع المدرب للتجديد.';
 
   @override
-  String confirmMarkPaid(String name) {
-    return 'تفعيل عضوية $name؟';
+  String confirmMarkUnpaid(String name) {
+    return 'إلغاء تفعيل عضوية $name؟';
   }
 
   @override
-  String confirmMarkUnpaid(String name) {
-    return 'إلغاء تفعيل عضوية $name؟';
+  String membershipSheetTitle(String name) {
+    return 'العضوية · $name';
+  }
+
+  @override
+  String membershipActiveUntil(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'نشط · يتبقى $days يوم',
+      many: 'نشط · يتبقى $days يومًا',
+      few: 'نشط · يتبقى $days أيام',
+      two: 'نشط · يتبقى يومان',
+      one: 'نشط · يتبقى يوم واحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get adjustMembership => 'تعديل العضوية';
+
+  @override
+  String get addDays => 'إضافة أيام';
+
+  @override
+  String get removeDays => 'إزالة أيام';
+
+  @override
+  String get daysRemoved => 'أيام مُزالة';
+
+  @override
+  String get membershipWillEnd => 'ستنتهي العضوية';
+
+  @override
+  String get membershipEnded => 'انتهت العضوية';
+
+  @override
+  String daysShort(int days) {
+    return '$days يوم';
+  }
+
+  @override
+  String get custom => 'مخصص';
+
+  @override
+  String get customDaysLabel => 'الأيام';
+
+  @override
+  String get invalidDayCount => 'أدخل من 1 إلى 365 يومًا';
+
+  @override
+  String get newExpiry => 'تاريخ الانتهاء الجديد';
+
+  @override
+  String daysTotal(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days يوم إجمالاً',
+      many: '$days يومًا إجمالاً',
+      few: '$days أيام إجمالاً',
+      two: 'يومان إجمالاً',
+      one: 'يوم واحد إجمالاً',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String addDaysCta(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'إضافة $days يوم',
+      many: 'إضافة $days يومًا',
+      few: 'إضافة $days أيام',
+      two: 'إضافة يومين',
+      one: 'إضافة يوم واحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String removeDaysCta(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'إزالة $days يوم',
+      many: 'إزالة $days يومًا',
+      few: 'إزالة $days أيام',
+      two: 'إزالة يومين',
+      one: 'إزالة يوم واحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get activateMembership => 'تفعيل العضوية';
+
+  @override
+  String get deactivateMembership => 'إلغاء تفعيل العضوية';
+
+  @override
+  String membershipExtended(int days, String date) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'تمت إضافة $days يوم · نشط حتى $date',
+      many: 'تمت إضافة $days يومًا · نشط حتى $date',
+      few: 'تمت إضافة $days أيام · نشط حتى $date',
+      two: 'تمت إضافة يومين · نشط حتى $date',
+      one: 'تمت إضافة يوم واحد · نشط حتى $date',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String membershipReduced(int days, String date) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'تمت إزالة $days يوم · نشط حتى $date',
+      many: 'تمت إزالة $days يومًا · نشط حتى $date',
+      few: 'تمت إزالة $days أيام · نشط حتى $date',
+      two: 'تمت إزالة يومين · نشط حتى $date',
+      one: 'تمت إزالة يوم واحد · نشط حتى $date',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String renewedForDays(int days, String date) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '+$days يوم · حتى $date',
+      many: '+$days يومًا · حتى $date',
+      few: '+$days أيام · حتى $date',
+      two: '+يومان · حتى $date',
+      one: '+يوم واحد · حتى $date',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String removedForDays(int days, String date) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '−$days يوم · حتى $date',
+      many: '−$days يومًا · حتى $date',
+      few: '−$days أيام · حتى $date',
+      two: '−يومان · حتى $date',
+      one: '−يوم واحد · حتى $date',
+    );
+    return '$_temp0';
   }
 
   @override

@@ -14,8 +14,6 @@ class PlayersRemoteDataSource {
 
   PlayersRemoteDataSource(this._db, this._functions, this._storage);
 
-  static const _paymentPeriodDays = 30;
-
   // Roster queries stay unlimited on purpose: the club roster is small and
   // a server-side limit would need an orderBy + composite index we can't
   // deploy from this experimental copy. Revisit before real growth.
@@ -60,27 +58,77 @@ class PlayersRemoteDataSource {
     return (snap.data()?['lifetimeMember'] ?? false) as bool;
   }
 
-  Future<void> markPaid(String playerUid,
-      {required String coachUid, required String coachName}) async {
-    if (await isLifetimeMember(playerUid)) return;
-
+  /// Moves the player's membership expiry by [days] — positive to add time,
+  /// negative to take it back. Time stacks on top of whatever is left: a
+  /// player with 10 days remaining who is given 20 ends up with 30, not 20,
+  /// and taking 5 back leaves 5. Expired and never-paid players start from now.
+  ///
+  /// Taking away at least as many days as were left ends the membership
+  /// outright — the fields are cleared exactly as [markUnpaid] does, rather
+  /// than leaving a stale past expiry on the document.
+  ///
+  /// Runs in a transaction so the lifetime check, the current-expiry read and
+  /// the write are atomic — two coaches adjusting at once both apply their
+  /// change instead of one silently overwriting the other. The current expiry
+  /// is read from Firestore rather than taken from the caller for the same
+  /// reason.
+  ///
+  /// Returns the new expiry, or null when the player has no active membership
+  /// afterwards: a lifetime member (a no-op, their membership never lapses) or
+  /// a reduction that consumed everything that was left.
+  Future<DateTime?> adjustMembership(
+    String playerUid, {
+    required int days,
+    required String coachUid,
+    required String coachName,
+  }) async {
     final now = DateTime.now();
-    final until = now.add(const Duration(days: _paymentPeriodDays));
     final userRef = _db.collection('users').doc(playerUid);
     final auditRef = userRef.collection('payments').doc();
 
-    final batch = _db.batch();
-    batch.update(userRef, {
-      'paidUntil': Timestamp.fromDate(until),
-      'paidAt': Timestamp.fromDate(now),
+    return _db.runTransaction<DateTime?>((tx) async {
+      final snap = await tx.get(userRef);
+      final data = snap.data();
+      if ((data?['lifetimeMember'] ?? false) as bool) return null;
+
+      final paidUntil = (data?['paidUntil'] as Timestamp?)?.toDate();
+      final base =
+          (paidUntil != null && paidUntil.isAfter(now)) ? paidUntil : now;
+      final until = base.add(Duration(days: days));
+      final ended = !until.isAfter(now);
+
+      tx.update(
+        userRef,
+        ended
+            ? {
+                'paidUntil': FieldValue.delete(),
+                'paidAt': FieldValue.delete(),
+              }
+            : {
+                'paidUntil': Timestamp.fromDate(until),
+                // Only a renewal is a payment; a reduction leaves the record of
+                // when the player last actually paid alone.
+                if (days > 0) 'paidAt': Timestamp.fromDate(now),
+              },
+      );
+      // `days` (signed) and `paidUntil` let the history screen show what was
+      // actually granted or taken back; older records predate both fields and
+      // render without that line. Reductions use their own status so they
+      // don't count as payments in the "last paid" lookup.
+      tx.set(auditRef, {
+        'status': ended
+            ? 'unpaid'
+            : days < 0
+                ? 'adjusted'
+                : 'paid',
+        'days': days,
+        if (!ended) 'paidUntil': Timestamp.fromDate(until),
+        'changedAt': Timestamp.fromDate(now),
+        'changedBy': coachUid,
+        'changedByName': coachName,
+      });
+      return ended ? null : until;
     });
-    batch.set(auditRef, {
-      'status': 'paid',
-      'changedAt': Timestamp.fromDate(now),
-      'changedBy': coachUid,
-      'changedByName': coachName,
-    });
-    await batch.commit();
   }
 
   Future<void> markUnpaid(String playerUid,

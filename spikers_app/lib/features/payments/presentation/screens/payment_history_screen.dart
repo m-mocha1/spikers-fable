@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/theme/app_semantic_colors.dart';
 import '../../../../core/widgets/animations.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -56,11 +57,27 @@ class _PaymentRecordCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     final fmt = DateFormat('MMM d, yyyy · HH:mm');
-    final color = record.isPaid ? AppColors.success : AppColors.errorRed;
-    final icon = record.isPaid
-        ? Icons.check_circle_outline
-        : Icons.highlight_off_rounded;
-    final label = record.isPaid ? l.paid : l.unpaid;
+    // The expiry an adjustment leaves behind is a date, not a moment.
+    final dayFmt = DateFormat('MMM d, yyyy');
+    // Three states: days added (green), days taken back off a membership that
+    // stayed active (amber), and deactivation (red).
+    final semantic = context.semanticColors;
+    final Color color;
+    final IconData icon;
+    final String label;
+    if (record.isReduction) {
+      color = semantic.warning;
+      icon = Icons.remove_circle_outline;
+      label = l.daysRemoved;
+    } else if (record.isPaid) {
+      color = semantic.success;
+      icon = Icons.check_circle_outline;
+      label = l.paid;
+    } else {
+      color = semantic.danger;
+      icon = Icons.highlight_off_rounded;
+      label = l.unpaid;
+    }
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -80,6 +97,22 @@ class _PaymentRecordCard extends StatelessWidget {
                 Text(label,
                     style: TextStyle(
                         color: color, fontWeight: FontWeight.w700)),
+                // Only adjustments made since coaches could choose the length
+                // carry a day count; older records skip straight to the date.
+                if (record.days != null && record.until != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    record.days! < 0
+                        ? l.removedForDays(
+                            -record.days!, dayFmt.format(record.until!))
+                        : l.renewedForDays(
+                            record.days!, dayFmt.format(record.until!)),
+                    style: TextStyle(
+                        color: color,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600),
+                  ),
+                ],
                 const SizedBox(height: 4),
                 Text(fmt.format(record.changedAt),
                     style: const TextStyle(

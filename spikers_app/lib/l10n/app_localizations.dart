@@ -302,6 +302,30 @@ abstract class AppLocalizations {
   /// **'Available Coaches'**
   String get availableCoaches;
 
+  /// No description provided for @chooseCoaches.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose coaches'**
+  String get chooseCoaches;
+
+  /// No description provided for @editCoaches.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit coaches'**
+  String get editCoaches;
+
+  /// No description provided for @addCoaches.
+  ///
+  /// In en, this message translates to:
+  /// **'Add coaches'**
+  String get addCoaches;
+
+  /// No description provided for @coachesUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Coaches updated'**
+  String get coachesUpdated;
+
   /// No description provided for @customSession.
   ///
   /// In en, this message translates to:
@@ -1160,6 +1184,24 @@ abstract class AppLocalizations {
   /// **'Search players'**
   String get searchPlayers;
 
+  /// No description provided for @sortByMembership.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort by membership'**
+  String get sortByMembership;
+
+  /// No description provided for @sortActiveFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Active members first'**
+  String get sortActiveFirst;
+
+  /// No description provided for @sortInactiveFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Inactive members first'**
+  String get sortInactiveFirst;
+
   /// No description provided for @noCoaches.
   ///
   /// In en, this message translates to:
@@ -1226,17 +1268,143 @@ abstract class AppLocalizations {
   /// **'Your club membership isn\'t active. Contact your coach to renew.'**
   String get paymentRequiredDesc;
 
-  /// No description provided for @confirmMarkPaid.
-  ///
-  /// In en, this message translates to:
-  /// **'Activate membership for {name}?'**
-  String confirmMarkPaid(String name);
-
   /// No description provided for @confirmMarkUnpaid.
   ///
   /// In en, this message translates to:
   /// **'Deactivate membership for {name}?'**
   String confirmMarkUnpaid(String name);
+
+  /// No description provided for @membershipSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Membership · {name}'**
+  String membershipSheetTitle(String name);
+
+  /// No description provided for @membershipActiveUntil.
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{Active · 1 day left} other{Active · {days} days left}}'**
+  String membershipActiveUntil(int days);
+
+  /// No description provided for @adjustMembership.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjust membership'**
+  String get adjustMembership;
+
+  /// No description provided for @addDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Add days'**
+  String get addDays;
+
+  /// No description provided for @removeDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove days'**
+  String get removeDays;
+
+  /// No description provided for @daysRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Days removed'**
+  String get daysRemoved;
+
+  /// No description provided for @membershipWillEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Membership will end'**
+  String get membershipWillEnd;
+
+  /// No description provided for @membershipEnded.
+  ///
+  /// In en, this message translates to:
+  /// **'Membership ended'**
+  String get membershipEnded;
+
+  /// No description provided for @daysShort.
+  ///
+  /// In en, this message translates to:
+  /// **'{days}d'**
+  String daysShort(int days);
+
+  /// No description provided for @custom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get custom;
+
+  /// No description provided for @customDaysLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Days'**
+  String get customDaysLabel;
+
+  /// No description provided for @invalidDayCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter 1–365 days'**
+  String get invalidDayCount;
+
+  /// No description provided for @newExpiry.
+  ///
+  /// In en, this message translates to:
+  /// **'New expiry'**
+  String get newExpiry;
+
+  /// No description provided for @daysTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{1 day total} other{{days} days total}}'**
+  String daysTotal(int days);
+
+  /// No description provided for @addDaysCta.
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{Add 1 day} other{Add {days} days}}'**
+  String addDaysCta(int days);
+
+  /// No description provided for @removeDaysCta.
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{Remove 1 day} other{Remove {days} days}}'**
+  String removeDaysCta(int days);
+
+  /// No description provided for @activateMembership.
+  ///
+  /// In en, this message translates to:
+  /// **'Activate membership'**
+  String get activateMembership;
+
+  /// No description provided for @deactivateMembership.
+  ///
+  /// In en, this message translates to:
+  /// **'Deactivate membership'**
+  String get deactivateMembership;
+
+  /// No description provided for @membershipExtended.
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{Added 1 day · active until {date}} other{Added {days} days · active until {date}}}'**
+  String membershipExtended(int days, String date);
+
+  /// No description provided for @membershipReduced.
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{Removed 1 day · active until {date}} other{Removed {days} days · active until {date}}}'**
+  String membershipReduced(int days, String date);
+
+  /// No description provided for @renewedForDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{+1 day · until {date}} other{+{days} days · until {date}}}'**
+  String renewedForDays(int days, String date);
+
+  /// No description provided for @removedForDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{−1 day · until {date}} other{−{days} days · until {date}}}'**
+  String removedForDays(int days, String date);
 
   /// No description provided for @delete.
   ///

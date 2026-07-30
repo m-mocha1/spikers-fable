@@ -499,6 +499,55 @@ void main() {
     });
   });
 
+  group('updateSessionCoaches', () {
+    test('calls the callable with the coach list', () async {
+      final callable = _MockCallable();
+      Map<String, dynamic>? sent;
+      when(() => callable.call<dynamic>(any())).thenAnswer((invocation) async {
+        sent = invocation.positionalArguments.first as Map<String, dynamic>;
+        return _FakeResult({'success': true});
+      });
+      when(() => fns.httpsCallable('updateSessionCoaches')).thenReturn(callable);
+
+      await repo.updateSessionCoaches('s1', ['c2', 'c3']);
+
+      expect(sent, {
+        'sessionId': 's1',
+        'coachIds': ['c2', 'c3'],
+      });
+    });
+
+    test('sends an empty list through — clearing the tag is a valid edit',
+        () async {
+      final callable = _MockCallable();
+      Map<String, dynamic>? sent;
+      when(() => callable.call<dynamic>(any())).thenAnswer((invocation) async {
+        sent = invocation.positionalArguments.first as Map<String, dynamic>;
+        return _FakeResult({'success': true});
+      });
+      when(() => fns.httpsCallable('updateSessionCoaches')).thenReturn(callable);
+
+      await repo.updateSessionCoaches('s1', const []);
+
+      expect(sent, {'sessionId': 's1', 'coachIds': <String>[]});
+    });
+
+    test('wraps FirebaseFunctionsException into SessionActionException',
+        () async {
+      final callable = _MockCallable();
+      when(() => callable.call<dynamic>(any())).thenThrow(
+          FirebaseFunctionsException(
+              message: 'not your session', code: 'permission-denied'));
+      when(() => fns.httpsCallable('updateSessionCoaches')).thenReturn(callable);
+
+      await expectLater(
+        repo.updateSessionCoaches('s1', ['c2']),
+        throwsA(isA<SessionActionException>()
+            .having((e) => e.code, 'code', 'permission-denied')),
+      );
+    });
+  });
+
   group('endorse', () {
     test('calls the endorsePlayer callable on success', () async {
       final callable = _MockCallable();

@@ -20,9 +20,12 @@ class PlayersRepositoryImpl implements PlayersRepository {
   Stream<UserModel?> watchPlayer(String uid) => _remote.watchPlayer(uid);
 
   @override
-  Future<void> markPaid(String playerUid,
-          {required String coachUid, required String coachName}) =>
-      _remote.markPaid(playerUid, coachUid: coachUid, coachName: coachName);
+  Future<DateTime?> adjustMembership(String playerUid,
+          {required int days,
+          required String coachUid,
+          required String coachName}) =>
+      _remote.adjustMembership(playerUid,
+          days: days, coachUid: coachUid, coachName: coachName);
 
   @override
   Future<void> markUnpaid(String playerUid,

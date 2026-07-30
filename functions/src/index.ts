@@ -1423,6 +1423,73 @@ export const updateSessionMembers = onCall({ region: REGION }, async (request) =
 });
 
 // ---------------------------------------------------------------------------
+// updateSessionCoaches — owner-coach or staff edits the "available coaches"
+// list of a session after it was created (coaches swap shifts, someone was
+// added by mistake). This is an informational tag on the session, not an
+// assignment: it does not affect attendance, capacity or ownership, so it
+// needs no transaction and sends no push. An empty list is legal — clearing
+// the tag is a valid edit (unlike memberIds, which would orphan a session).
+// ---------------------------------------------------------------------------
+const MAX_SESSION_COACHES = 20;
+
+export const updateSessionCoaches = onCall(
+  { region: REGION },
+  async (request) => {
+    const uid = request.auth?.uid;
+    if (!uid) throw new HttpsError("unauthenticated", "Not authenticated");
+    if (request.auth?.token?.email_verified !== true) {
+      throw new HttpsError("permission-denied", "Email not verified");
+    }
+
+    const sessionId = request.data?.["sessionId"] as string | undefined;
+    const rawCoaches = request.data?.["coachIds"];
+    if (!sessionId)
+      throw new HttpsError("invalid-argument", "sessionId required");
+    if (!Array.isArray(rawCoaches)) {
+      throw new HttpsError("invalid-argument", "coachIds required");
+    }
+    const coachIds = [
+      ...new Set(rawCoaches.filter((x): x is string => typeof x === "string")),
+    ];
+    if (coachIds.length > MAX_SESSION_COACHES) {
+      throw new HttpsError("invalid-argument", "Too many coaches");
+    }
+
+    const sessionRef = db.collection("sessions").doc(sessionId);
+    const sessionDoc = await sessionRef.get();
+    if (!sessionDoc.exists)
+      throw new HttpsError("not-found", "Session not found");
+
+    const session = sessionDoc.data()!;
+    if (session["coachId"] !== uid && !(await isStaffUid(uid))) {
+      throw new HttpsError("permission-denied", "Not your session");
+    }
+
+    // Only real staff accounts may be listed. The create path never validated
+    // this, so the callable is the first place that does.
+    if (coachIds.length > 0) {
+      const docs = await db.getAll(
+        ...coachIds.map((id) => db.collection("users").doc(id))
+      );
+      for (const doc of docs) {
+        const role = doc.data()?.["role"];
+        if (role !== "coach" && role !== "admin") {
+          throw new HttpsError("invalid-argument", "Not a coach");
+        }
+      }
+    }
+
+    await sessionRef.update({ coachIds });
+
+    logger.info("updateSessionCoaches ok", {
+      sessionId,
+      count: coachIds.length,
+    });
+    return { success: true };
+  }
+);
+
+// ---------------------------------------------------------------------------
 // markAttended — transactional toggle of a user's presence at a session.
 // Only the owning coach can call. attendanceCount on the user doc and
 // attendedIds on the session are written together; idempotent so two

@@ -12,12 +12,16 @@ import '../../../../core/widgets/gender_filter_chips.dart';
 import '../../../../core/widgets/membership_chip.dart';
 import '../../../../core/widgets/retracting_header.dart';
 import '../../../../core/widgets/state_views.dart';
+import '../../../../core/theme/app_spacing.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../providers/players_providers.dart';
-import '../widgets/payment_confirm_dialog.dart';
+import '../widgets/membership_sheet.dart';
 import '../widgets/player_card.dart';
+import '../widgets/player_sort_chip.dart';
 
 final _genderFilterProvider = StateProvider.autoDispose<String>((ref) => 'all');
+final _sortProvider =
+    StateProvider.autoDispose<PlayerSort>((ref) => PlayerSort.name);
 
 class PlayersTab extends ConsumerStatefulWidget {
   const PlayersTab({super.key});
@@ -41,6 +45,7 @@ class _PlayersTabState extends ConsumerState<PlayersTab> {
     final l = AppLocalizations.of(context)!;
     final playersAsync = ref.watch(playersProvider);
     final genderFilter = ref.watch(_genderFilterProvider);
+    final sort = ref.watch(_sortProvider);
 
     return playersAsync.when(
       loading: () => const ListShimmer(itemHeight: 86),
@@ -48,12 +53,12 @@ class _PlayersTabState extends ConsumerState<PlayersTab> {
           ErrorView(onRetry: () => ref.invalidate(playersProvider)),
       data: (players) {
         final q = _query.trim().toLowerCase();
-        final filtered = players.where((p) {
+        final filtered = sort.apply(players.where((p) {
           final matchesGender =
               genderFilter == 'all' || p.gender == genderFilter;
           final matchesQuery = q.isEmpty || p.name.toLowerCase().contains(q);
           return matchesGender && matchesQuery;
-        }).toList();
+        }).toList());
 
         // Search + filters retract on scroll-down and return on scroll-up so
         // the roster gets the full screen height once the user starts browsing.
@@ -90,6 +95,11 @@ class _PlayersTabState extends ConsumerState<PlayersTab> {
                           ref.read(_genderFilterProvider.notifier).state = v,
                     ),
                   ),
+                  PlayerSortChip(
+                    value: sort,
+                    onChanged: (v) => ref.read(_sortProvider.notifier).state = v,
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
                   _ResultCountPill(count: filtered.length, l: l),
                 ],
               ),
@@ -131,9 +141,8 @@ class _PlayersTabState extends ConsumerState<PlayersTab> {
                           isLifetime: p.lifetimeMember,
                           // LIFETIME is this screen's one glowing element.
                           emphasized: true,
-                          onTap: () => confirmTogglePayment(
+                          onTap: () => showMembershipSheet(
                             context,
-                            ref,
                             uid: p.uid,
                             name: p.name,
                             paidUntil: p.paidUntil,

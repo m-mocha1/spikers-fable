@@ -34,6 +34,10 @@
   "profile": "Profile",
   "createSession": "Create Session",
   "availableCoaches": "Available Coaches",
+  "chooseCoaches": "Choose coaches",
+  "editCoaches": "Edit coaches",
+  "addCoaches": "Add coaches",
+  "coachesUpdated": "Coaches updated",
   "customSession": "Custom session",
   "customSessionSubtitle": "Only selected members can see this session",
   "chooseMembers": "Choose members",
@@ -260,6 +264,9 @@
   "noPlayers": "No players found",
   "noPlayersMatch": "No players match your search",
   "searchPlayers": "Search players",
+  "sortByMembership": "Sort by membership",
+  "sortActiveFirst": "Active members first",
+  "sortInactiveFirst": "Inactive members first",
   "noCoaches": "No coaches found",
   "coachesCount": "{count, plural, one{{count} coach} other{{count} coaches}}",
   "@coachesCount": {
@@ -276,16 +283,86 @@
   "payment": "Membership",
   "paymentRequired": "Membership inactive",
   "paymentRequiredDesc": "Your club membership isn't active. Contact your coach to renew.",
-  "confirmMarkPaid": "Activate membership for {name}?",
-  "@confirmMarkPaid": {
-    "placeholders": {
-      "name": { "type": "String" }
-    }
-  },
   "confirmMarkUnpaid": "Deactivate membership for {name}?",
   "@confirmMarkUnpaid": {
     "placeholders": {
       "name": { "type": "String" }
+    }
+  },
+  "membershipSheetTitle": "Membership · {name}",
+  "@membershipSheetTitle": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "membershipActiveUntil": "{days, plural, =1{Active · 1 day left} other{Active · {days} days left}}",
+  "@membershipActiveUntil": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+  "adjustMembership": "Adjust membership",
+  "addDays": "Add days",
+  "removeDays": "Remove days",
+  "daysRemoved": "Days removed",
+  "membershipWillEnd": "Membership will end",
+  "membershipEnded": "Membership ended",
+  "daysShort": "{days}d",
+  "@daysShort": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+  "custom": "Custom",
+  "customDaysLabel": "Days",
+  "invalidDayCount": "Enter 1–365 days",
+  "newExpiry": "New expiry",
+  "daysTotal": "{days, plural, =1{1 day total} other{{days} days total}}",
+  "@daysTotal": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+  "addDaysCta": "{days, plural, =1{Add 1 day} other{Add {days} days}}",
+  "@addDaysCta": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+  "removeDaysCta": "{days, plural, =1{Remove 1 day} other{Remove {days} days}}",
+  "@removeDaysCta": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+  "activateMembership": "Activate membership",
+  "deactivateMembership": "Deactivate membership",
+  "membershipExtended": "{days, plural, =1{Added 1 day · active until {date}} other{Added {days} days · active until {date}}}",
+  "@membershipExtended": {
+    "placeholders": {
+      "days": { "type": "int" },
+      "date": { "type": "String" }
+    }
+  },
+  "membershipReduced": "{days, plural, =1{Removed 1 day · active until {date}} other{Removed {days} days · active until {date}}}",
+  "@membershipReduced": {
+    "placeholders": {
+      "days": { "type": "int" },
+      "date": { "type": "String" }
+    }
+  },
+  "renewedForDays": "{days, plural, =1{+1 day · until {date}} other{+{days} days · until {date}}}",
+  "@renewedForDays": {
+    "placeholders": {
+      "days": { "type": "int" },
+      "date": { "type": "String" }
+    }
+  },
+  "removedForDays": "{days, plural, =1{−1 day · until {date}} other{−{days} days · until {date}}}",
+  "@removedForDays": {
+    "placeholders": {
+      "days": { "type": "int" },
+      "date": { "type": "String" }
     }
   },
   "delete": "Delete",

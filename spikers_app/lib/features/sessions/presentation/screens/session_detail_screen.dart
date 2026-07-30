@@ -33,6 +33,7 @@ import '../../../coaches/presentation/providers/coaches_providers.dart';
 import '../../domain/repositories/sessions_repository.dart';
 import '../providers/sessions_providers.dart';
 import '../utils/session_error_l10n.dart';
+import '../widgets/coach_picker_sheet.dart';
 import '../widgets/member_picker_sheet.dart';
 
 /// What the viewer's membership optimistically becomes the instant they tap
@@ -590,6 +591,37 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
     }
   }
 
+  /// Coaches/admins retag which coaches are available for this session after
+  /// it was created (shift swaps, someone added by mistake).
+  Future<void> _editCoaches(AppLocalizations l) async {
+    final session = _session!;
+    final picked =
+        await showCoachPicker(context, initial: session.coachIds.toSet());
+    if (!mounted || picked == null) return;
+
+    // No change — skip the round-trip.
+    if (picked.length == session.coachIds.length &&
+        picked.containsAll(session.coachIds)) {
+      return;
+    }
+    // Unlike the member list, an empty coach list is legal — it just clears
+    // the tag, so there is no empty-guard here.
+
+    try {
+      await _repo.updateSessionCoaches(session.id, picked.toList());
+      if (!mounted) return;
+      showAppSnackbar(l.coachesUpdated);
+    } on SessionActionException catch (e) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        showAppSnackbar(cancelErrorMessage(l, e.code));
+      });
+    } catch (_) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        showAppSnackbar(l.unknownError);
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final session = _session;
@@ -680,6 +712,11 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
                       l: l,
                       coachName: _coachName,
                       coach: _userMap[session.coachId],
+                      // Archived sessions live in sessions_history, which the
+                      // callable does not write — no edit affordance there.
+                      onEditCoaches: (isCoach && !_isArchived)
+                          ? () => _editCoaches(l)
+                          : null,
                     ),
                     const SizedBox(height: 18),
                     // Coach controls for a custom (members-only) session:
@@ -1218,11 +1255,17 @@ class _InfoSection extends ConsumerWidget {
   final AppLocalizations l;
   final String coachName;
   final PublicProfile? coach;
+
+  /// Non-null when the viewer may change the available-coach list (coach or
+  /// admin, on a session that still lives in `sessions`). Null = read-only.
+  final VoidCallback? onEditCoaches;
+
   const _InfoSection({
     required this.session,
     required this.l,
     required this.coachName,
     required this.coach,
+    required this.onEditCoaches,
   });
 
   @override
@@ -1239,6 +1282,10 @@ class _InfoSection extends ConsumerWidget {
           .toList();
       if (names.isNotEmpty) availableCoachNames = names.join(', ');
     }
+    // Staff always get the row — with an "add coaches" placeholder when the
+    // list is empty — so there is something to tap. Players keep today's
+    // behaviour: the row only appears when there is something to show.
+    final showCoachesRow = availableCoachNames != null || onEditCoaches != null;
 
     final time = DateFormat('HH:mm');
     final duration = session.endTime.difference(session.startTime);
@@ -1313,12 +1360,15 @@ class _InfoSection extends ConsumerWidget {
           ),
           const SizedBox(height: 14),
           _CoachTileRow(label: l.coachLabel, name: coachName, coach: coach),
-          if (availableCoachNames != null) ...[
+          if (showCoachesRow) ...[
             const SizedBox(height: 14),
             _InfoTileRow(
               icon: Icons.groups_outlined,
               label: l.availableCoaches,
-              value: availableCoachNames,
+              value: availableCoachNames ?? l.addCoaches,
+              valueIsPlaceholder: availableCoachNames == null,
+              onEdit: onEditCoaches,
+              editTooltip: l.editCoaches,
             ),
           ],
           const SizedBox(height: 16),
@@ -1363,15 +1413,29 @@ class _InfoTileRow extends StatelessWidget {
   final IconData icon;
   final String label;
   final String value;
+
+  /// When set, the row becomes an editable control: the whole row is tappable
+  /// and a trailing pencil marks it as such. Null keeps the row read-only.
+  final VoidCallback? onEdit;
+
+  /// Tooltip/semantic label for the pencil. Required when [onEdit] is set.
+  final String? editTooltip;
+
+  /// Dims [value] — used for the "nothing set yet, tap to add" placeholder.
+  final bool valueIsPlaceholder;
+
   const _InfoTileRow({
     required this.icon,
     required this.label,
     required this.value,
+    this.onEdit,
+    this.editTooltip,
+    this.valueIsPlaceholder = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    final row = Row(
       children: [
         Container(
           width: 38,
@@ -1399,13 +1463,39 @@ class _InfoTileRow extends StatelessWidget {
               const SizedBox(height: 3),
               Text(
                 value,
-                style:
-                    const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w600),
+                style: TextStyle(
+                  fontSize: 14.5,
+                  fontWeight: FontWeight.w600,
+                  color: valueIsPlaceholder ? AppColors.grey : null,
+                ),
               ),
             ],
           ),
         ),
+        if (onEdit != null) ...[
+          const SizedBox(width: 8),
+          // Decorative: the whole row is already the tap target and carries
+          // the semantics, so the icon itself stays out of the a11y tree.
+          ExcludeSemantics(
+            child: Icon(Icons.edit_outlined, size: 18, color: AppColors.gold),
+          ),
+        ],
       ],
+    );
+
+    if (onEdit == null) return row;
+
+    return Semantics(
+      button: true,
+      label: editTooltip,
+      child: InkWell(
+        onTap: onEdit,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: row,
+        ),
+      ),
     );
   }
 }

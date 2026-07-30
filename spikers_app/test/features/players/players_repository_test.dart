@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+﻿import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -90,29 +90,136 @@ void main() {
     });
   });
 
-  group('markPaid / markUnpaid', () {
-    test('markPaid sets paidUntil ~30 days out and writes an audit entry',
-        () async {
+  group('adjustMembership / markUnpaid', () {
+    Future<DateTime> readPaidUntil(String uid) async {
+      final doc = await db.collection('users').doc(uid).get();
+      return (doc.data()!['paidUntil'] as Timestamp).toDate();
+    }
+
+    Future<void> setPaidUntil(String uid, DateTime until) =>
+        db.collection('users').doc(uid).update(
+            {'paidUntil': Timestamp.fromDate(until)});
+
+    test('starts from today when the player has never paid', () async {
       await seedPlayer('p1', 'Player');
 
-      await repo.markPaid('p1', coachUid: 'c1', coachName: 'Coach');
+      await repo.adjustMembership('p1',
+          days: 30, coachUid: 'c1', coachName: 'Coach');
 
-      final doc = await db.collection('users').doc('p1').get();
-      final paidUntil = (doc.data()!['paidUntil'] as Timestamp).toDate();
-      expect(
-          paidUntil.difference(DateTime.now()).inDays, inInclusiveRange(29, 30));
+      expect((await readPaidUntil('p1')).difference(DateTime.now()).inDays,
+          inInclusiveRange(29, 30));
+    });
+
+    // The whole point of the feature: 10 days left + 20 added = 30, not 20.
+    test('stacks onto the days a still-active member has left', () async {
+      await seedPlayer('p1', 'Player');
+      await setPaidUntil('p1', DateTime.now().add(const Duration(days: 10)));
+
+      await repo.adjustMembership('p1',
+          days: 20, coachUid: 'c1', coachName: 'Coach');
+
+      expect((await readPaidUntil('p1')).difference(DateTime.now()).inDays,
+          inInclusiveRange(29, 30));
+    });
+
+    test('restarts from today when the membership already lapsed', () async {
+      await seedPlayer('p1', 'Player');
+      await setPaidUntil('p1', DateTime.now().subtract(const Duration(days: 40)));
+
+      await repo.adjustMembership('p1',
+          days: 30, coachUid: 'c1', coachName: 'Coach');
+
+      expect((await readPaidUntil('p1')).difference(DateTime.now()).inDays,
+          inInclusiveRange(29, 30));
+    });
+
+    test('returns the new expiry and audits the days granted', () async {
+      await seedPlayer('p1', 'Player');
+
+      final until = await repo.adjustMembership('p1',
+          days: 45, coachUid: 'c1', coachName: 'Coach');
+
+      expect(until, await readPaidUntil('p1'));
 
       final audit =
           await db.collection('users').doc('p1').collection('payments').get();
       expect(audit.docs.length, 1);
-      expect(audit.docs.single.data()['status'], 'paid');
-      expect(audit.docs.single.data()['changedBy'], 'c1');
+      final entry = audit.docs.single.data();
+      expect(entry['status'], 'paid');
+      expect(entry['days'], 45);
+      expect((entry['paidUntil'] as Timestamp).toDate(), until);
+      expect(entry['changedBy'], 'c1');
+    });
+
+    test('takes days back off a still-active membership', () async {
+      await seedPlayer('p1', 'Player');
+      await setPaidUntil('p1', DateTime.now().add(const Duration(days: 30)));
+
+      final until = await repo.adjustMembership('p1',
+          days: -20, coachUid: 'c1', coachName: 'Coach');
+
+      expect(until, isNotNull);
+      expect((await readPaidUntil('p1')).difference(DateTime.now()).inDays,
+          inInclusiveRange(9, 10));
+
+      // Its own status, so the "last paid" lookup can't mistake a reduction
+      // for a payment.
+      final entry = (await db
+              .collection('users')
+              .doc('p1')
+              .collection('payments')
+              .get())
+          .docs
+          .single
+          .data();
+      expect(entry['status'], 'adjusted');
+      expect(entry['days'], -20);
+    });
+
+    test('a reduction leaves the last-paid date alone', () async {
+      await seedPlayer('p1', 'Player');
+      await repo.adjustMembership('p1',
+          days: 30, coachUid: 'c1', coachName: 'Coach');
+      final paidAt =
+          (await db.collection('users').doc('p1').get()).data()!['paidAt'];
+
+      await repo.adjustMembership('p1',
+          days: -5, coachUid: 'c1', coachName: 'Coach');
+
+      expect((await db.collection('users').doc('p1').get()).data()!['paidAt'],
+          paidAt);
+    });
+
+    test('taking back more days than are left ends the membership', () async {
+      await seedPlayer('p1', 'Player');
+      await setPaidUntil('p1', DateTime.now().add(const Duration(days: 10)));
+
+      final until = await repo.adjustMembership('p1',
+          days: -30, coachUid: 'c1', coachName: 'Coach');
+
+      // Ended outright rather than left with a stale past expiry.
+      expect(until, isNull);
+      final doc = await db.collection('users').doc('p1').get();
+      expect(doc.data()!.containsKey('paidUntil'), isFalse);
+      expect(doc.data()!.containsKey('paidAt'), isFalse);
+
+      final entry = (await db
+              .collection('users')
+              .doc('p1')
+              .collection('payments')
+              .get())
+          .docs
+          .single
+          .data();
+      expect(entry['status'], 'unpaid');
+      expect(entry.containsKey('paidUntil'), isFalse);
     });
 
     test('markUnpaid clears payment fields and writes an audit entry',
         () async {
       await seedPlayer('p1', 'Player');
-      await repo.markPaid('p1', coachUid: 'c1', coachName: 'Coach');
+      await repo.adjustMembership('p1',
+          days: 30, coachUid: 'c1', coachName: 'Coach');
 
       await repo.markUnpaid('p1', coachUid: 'c1', coachName: 'Coach');
 
@@ -128,9 +235,11 @@ void main() {
     test('both are no-ops for lifetime members', () async {
       await seedPlayer('p1', 'Player', lifetime: true);
 
-      await repo.markPaid('p1', coachUid: 'c1', coachName: 'Coach');
+      final until = await repo.adjustMembership('p1',
+          days: 30, coachUid: 'c1', coachName: 'Coach');
       await repo.markUnpaid('p1', coachUid: 'c1', coachName: 'Coach');
 
+      expect(until, isNull);
       final doc = await db.collection('users').doc('p1').get();
       expect(doc.data()!.containsKey('paidUntil'), isFalse);
       final audit =
