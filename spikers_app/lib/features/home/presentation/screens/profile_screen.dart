@@ -21,7 +21,7 @@ import 'package:spikers_app/core/widgets/branded_text_field.dart';
 import 'package:spikers_app/core/widgets/confirm_dialog.dart';
 import 'package:spikers_app/core/widgets/edit_body_metrics_dialog.dart';
 import 'package:spikers_app/core/widgets/edit_name_dialog.dart';
-import 'package:spikers_app/core/widgets/floating_nav_bar.dart';
+import 'package:spikers_app/core/widgets/gradient_background.dart';
 import 'package:spikers_app/core/widgets/profile_hero_avatar.dart';
 import 'package:spikers_app/core/widgets/membership_chip.dart';
 import 'package:spikers_app/core/widgets/profile_info.dart';
@@ -33,14 +33,21 @@ import '../providers/profile_providers.dart';
 import '../widgets/achievements_card.dart';
 import '../widgets/profile_stat_cards.dart';
 
-class ProfileTab extends ConsumerStatefulWidget {
-  const ProfileTab({super.key});
+/// The signed-in user's own profile, reached from the avatar at the end of the
+/// home app bar.
+///
+/// It is a pushed page rather than a bottom-nav tab: the avatar is the profile
+/// entry point (the Google/Gmail pattern), so a tab for it would have been a
+/// second door to the same room — and the nav slot it freed went to the
+/// leaderboard, which had been an app-bar icon.
+class ProfileScreen extends ConsumerStatefulWidget {
+  const ProfileScreen({super.key});
 
   @override
-  ConsumerState<ProfileTab> createState() => _ProfileTabState();
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileTabState extends ConsumerState<ProfileTab> {
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   bool _uploading = false;
   bool _deleting = false;
 
@@ -149,7 +156,19 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
     final user = ref.watch(currentUserProvider).value;
     final email = ref.watch(authRepositoryProvider).currentEmail;
 
-    if (user == null) return const SizedBox.shrink();
+    // The chrome is built even with no user in hand, so a session that drops
+    // out from under this page still leaves a way back.
+    //
+    // The gradient stays edge-to-edge and the SafeArea sits inside it: with no
+    // nav bar down there any more, the last button would otherwise land under
+    // the iOS home indicator.
+    Widget page(Widget body) => Scaffold(
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(title: Text(l.profile)),
+      body: GradientBackground(child: SafeArea(top: false, child: body)),
+    );
+
+    if (user == null) return page(const SizedBox.shrink());
 
     // Milestone watch: fires when the games-played fetch lands (app open /
     // profile revisit). The prefs baseline inside keeps it one-shot per tier.
@@ -170,13 +189,10 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
         attendance != null && !(user.isCoach && attendance == 0);
     final tier = AttendanceTiers.tierIndex(attendance ?? 0);
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(
-        24,
-        24,
-        24,
-        FloatingNavBar.scrollClearance,
-      ),
+    final body = SingleChildScrollView(
+      // No nav-bar clearance to leave: this is a page of its own now, not a
+      // tab sliding under the floating bar.
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
       child: Column(
         children:
             [
@@ -321,6 +337,8 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
                 .slideY(begin: 0.12, end: 0, curve: AppMotion.enter),
       ),
     );
+
+    return page(body);
   }
 }
 

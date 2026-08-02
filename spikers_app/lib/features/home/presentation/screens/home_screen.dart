@@ -5,9 +5,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_gradients.dart';
 import '../../../../core/constants/app_motion.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../l10n/app_localizations.dart';
+import 'package:spikers_app/core/widgets/app_avatar.dart';
+import 'package:spikers_app/core/widgets/app_logo.dart';
 import 'package:spikers_app/core/widgets/app_upgrade_alert.dart';
 import 'package:spikers_app/core/widgets/floating_nav_bar.dart';
 import 'package:spikers_app/core/widgets/gradient_background.dart';
@@ -15,13 +18,13 @@ import 'package:spikers_app/core/widgets/retracting_app_bar.dart';
 import 'package:spikers_app/core/widgets/scroll_retraction.dart';
 import '../../../announcements/presentation/widgets/announcements_bell.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
+import '../../../leaderboard/presentation/screens/leaderboard_tab.dart';
 import '../../../notifications/application/notifications_service.dart';
 import '../../../players/presentation/screens/players_peer_tab.dart';
 import '../../../players/presentation/screens/players_tab.dart';
 import '../../../sessions/presentation/screens/sessions_tab.dart';
 import '../../../sessions/presentation/widgets/coach_attendance_gate.dart';
 import '../../../sessions/presentation/widgets/shout_out_gate.dart';
-import 'profile_tab.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -66,6 +69,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     _pageController.dispose();
     _barsController.dispose();
     super.dispose();
+  }
+
+  /// Slides to [i] the same way a swipe does, so tapping the nav bar or the
+  /// app bar's avatar reads as the same gesture. `onPageChanged` picks
+  /// `_index` up from there.
+  void _goToTab(int i) {
+    HapticFeedback.selectionClick();
+    _pageController.animateToPage(
+      i,
+      duration: AppMotion.normal,
+      curve: AppMotion.enter,
+    );
   }
 
   void _showSessionOptions(BuildContext context, AppLocalizations l) {
@@ -144,12 +159,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       // The roster (full users collection) is staff-only readable, so players
       // get the peer tab instead.
       isCoach ? const PlayersTab() : const PlayersPeerTab(),
-      const ProfileTab(),
+      // Took the nav slot the profile tab gave up: the leaderboard is a place
+      // players go back to, which is what a nav destination is for — it was
+      // reachable only through an app-bar icon before.
+      const LeaderboardTab(),
     ];
 
     final appBar = AppBar(
-      title: Text(l.appName),
+      // The crest replaces the app-name text: it identifies the club faster
+      // than the words do, and gives the (now busier) action row its width
+      // back. The name still reaches screen readers via [Semantics].
+      titleSpacing: 16,
+      title: Semantics(
+        label: l.appName,
+        image: true,
+        // The crest is square, so the height is also its width: 40 of the
+        // toolbar's 56 leaves it 8px of air top and bottom.
+        child: const ExcludeSemantics(child: AppLogo(height: 40)),
+      ),
+      // The current tab's actions first, then the two that belong to the app
+      // rather than the tab (alerts, you) — those two are always last, and
+      // since `actions` packs against the trailing edge they never move as the
+      // tab-specific ones come and go.
       actions: [
+        // ── This tab's actions ─────────────────────────────────────────────
         // History is open to everyone: players view past sessions to give
         // endorsements (only allowed once a session has ended).
         if (_index == 0)
@@ -158,8 +191,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             icon: const Icon(Icons.history),
             onPressed: () => context.push(Routes.sessionsHistory),
           ),
-        // The roster (full users collection) is only readable by staff, so
-        // the export is coach-gated; players get the peer tab instead.
+        // The roster's actions stay as icons rather than collapsing into an
+        // overflow menu — one tap each, nothing hidden behind a kebab. It puts
+        // a coach's Players tab at four trailing items, one past the usual cap.
+        // The roster (full users collection) is only readable by staff, so the
+        // export is coach-gated; players get the peer tab instead.
         if (_index == 1 && isCoach)
           IconButton(
             tooltip: l.exportAttendance,
@@ -172,17 +208,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             icon: const Icon(Icons.sports_outlined),
             onPressed: () => context.push(Routes.coachesList),
           ),
-        IconButton(
-          tooltip: l.leaderboard,
-          icon: const Icon(Icons.emoji_events_outlined),
-          onPressed: () => context.push(Routes.leaderboard),
-        ),
+        // ── The app's own, on every tab ────────────────────────────────────
         const AnnouncementsBell(),
+        // Far end of the bar: the user's own face. It is the way into their
+        // profile — there is no profile tab under it to duplicate.
+        const _ProfileAvatarAction(),
       ],
     );
 
     // The gradient sits outside the pager so it stays put while the tabs
-    // slide across it. Swiping runs Sessions → Players → Profile; direction
+    // slide across it. Swiping runs Sessions → Players → Leaderboard; direction
     // mirrors itself under RTL along with the nav bar.
     //
     // Every tab's list feeds the bars from here, so scrolling any of them down
@@ -220,16 +255,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       position: _navSlide,
       child: FloatingNavBar(
         currentIndex: _index,
-        // Tapping slides the same way a swipe does, so both gestures read as
-        // one thing. `onPageChanged` picks up `_index` from here.
-        onTap: (i) {
-          HapticFeedback.selectionClick();
-          _pageController.animateToPage(
-            i,
-            duration: AppMotion.normal,
-            curve: AppMotion.enter,
-          );
-        },
+        onTap: _goToTab,
         items: [
           FloatingNavItem(
             icon: Icons.sports_volleyball_outlined,
@@ -242,9 +268,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             label: l.playersTab,
           ),
           FloatingNavItem(
-            icon: Icons.person_outline,
-            activeIcon: Icons.person,
-            label: l.profile,
+            icon: Icons.emoji_events_outlined,
+            activeIcon: Icons.emoji_events,
+            label: l.leaderboard,
           ),
         ],
       ),
@@ -276,6 +302,75 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               body: body,
               floatingActionButton: fab,
               bottomNavigationBar: navBar,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The signed-in user's photo at the end of the app bar — the way into their
+/// own profile.
+///
+/// It is its own [ConsumerWidget] so a photo or name change repaints just the
+/// avatar — the home shell rebuilds every frame while the bars retract, and
+/// watching the user up there would drag that work along with it.
+class _ProfileAvatarAction extends ConsumerWidget {
+  const _ProfileAvatarAction();
+
+  /// Diameter of the visible disc. The tap target around it is deliberately
+  /// larger — see [_tapTarget].
+  static const double _size = 34;
+
+  /// Matches the neighbouring [IconButton]s and clears both platforms' floors
+  /// for a touch target (48dp Material, 44pt iOS), which the 34dp disc alone
+  /// would not.
+  static const double _tapTarget = 48;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
+    final user = ref.watch(currentUserProvider).value;
+
+    return Padding(
+      padding: const EdgeInsetsDirectional.only(end: 4),
+      child: Tooltip(
+        message: l.profile,
+        child: InkResponse(
+          onTap: () => context.push(Routes.profile),
+          radius: _tapTarget / 2,
+          child: SizedBox(
+            width: _tapTarget,
+            height: _tapTarget,
+            child: Center(
+              // Lit gold ring, the same gradient stroke every other avatar in
+              // the app wears (profile hero, leaderboard rows) — with a navy
+              // gap inside it so it reads as a ring rather than a border, and
+              // so a photoless player's gold-tinted fallback disc can't merge
+              // into it.
+              child: Container(
+                width: _size,
+                height: _size,
+                padding: const EdgeInsets.all(2),
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: AppGradients.goldCta,
+                ),
+                child: Container(
+                  padding: const EdgeInsets.all(1.5),
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppColors.navyBlue,
+                  ),
+                  child: AppAvatar(
+                    name: user?.name ?? '',
+                    photoUrl: user?.photoUrl,
+                    // Fills whatever the ring and its gap leave.
+                    radius: _size / 2 - 3.5,
+                  ),
+                ),
+              ),
             ),
           ),
         ),

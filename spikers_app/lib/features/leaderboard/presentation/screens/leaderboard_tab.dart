@@ -11,7 +11,7 @@ import '../../../../core/utils/bidi.dart';
 import '../../../../core/widgets/animations.dart';
 import '../../../../core/widgets/app_avatar.dart';
 import '../../../../core/widgets/app_choice_chips.dart';
-import '../../../../core/widgets/gradient_background.dart';
+import '../../../../core/widgets/floating_nav_bar.dart';
 import '../../../../core/widgets/retracting_header.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -23,8 +23,12 @@ import '../providers/leaderboard_providers.dart';
 /// their own gender by the repository.
 final _genderFilterProvider = StateProvider.autoDispose<String>((ref) => 'all');
 
-class LeaderboardScreen extends ConsumerWidget {
-  const LeaderboardScreen({super.key});
+/// The leaderboard, as the home shell's third tab.
+///
+/// It renders body-only — no [Scaffold], app bar or background of its own: the
+/// home shell owns all three, the same way the sessions and players tabs work.
+class LeaderboardTab extends ConsumerWidget {
+  const LeaderboardTab({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -111,95 +115,89 @@ class LeaderboardScreen extends ConsumerWidget {
       ],
     ];
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      appBar: AppBar(title: Text(l.leaderboard)),
-      body: GradientBackground(
-        // One compact control strip — board switch plus the coach-only gender
-        // filter — retracts on scroll-down and returns on scroll-up so the
-        // board gets the full height once the user starts browsing.
-        child: RetractingHeader(
-          header: Padding(
-            padding: const EdgeInsets.only(top: 10, bottom: 6),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(children: controls),
-            ),
-          ),
-          child: entriesAsync.when(
-              loading: () => const ListShimmer(
-                  itemHeight: 68,
-                  padding: EdgeInsets.fromLTRB(16, 4, 16, 16)),
-              error: (e, _) =>
-                  ErrorView(icon: Icons.error_outline, onRetry: refresh),
-              data: (allEntries) {
-                final entries = !isCoach || genderFilter == 'all'
-                    ? allEntries
-                    : allEntries
-                        .where((e) => e.gender == genderFilter)
-                        .toList();
-                if (entries.isEmpty) {
-                  return EmptyStateView(
-                    icon: isEndorsements
-                        ? Icons.thumb_up_outlined
-                        : Icons.emoji_events_outlined,
-                    title: l.noLeaderboardData,
+    // One compact control strip — board switch plus the coach-only gender
+    // filter — retracts on scroll-down and returns on scroll-up so the board
+    // gets the full height once the user starts browsing.
+    return RetractingHeader(
+      header: Padding(
+        padding: const EdgeInsets.only(top: 10, bottom: 6),
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(children: controls),
+        ),
+      ),
+      child: entriesAsync.when(
+        loading: () => const ListShimmer(
+            itemHeight: 68,
+            padding: EdgeInsets.fromLTRB(
+                16, 4, 16, FloatingNavBar.scrollClearance)),
+        error: (e, _) => ErrorView(icon: Icons.error_outline, onRetry: refresh),
+        data: (allEntries) {
+          final entries = !isCoach || genderFilter == 'all'
+              ? allEntries
+              : allEntries.where((e) => e.gender == genderFilter).toList();
+          if (entries.isEmpty) {
+            return EmptyStateView(
+              icon: isEndorsements
+                  ? Icons.thumb_up_outlined
+                  : Icons.emoji_events_outlined,
+              title: l.noLeaderboardData,
+            );
+          }
+          final myUid = ref.watch(currentUserProvider).value?.uid ?? '';
+          // Standard competition ranking: equal counts share a rank, the next
+          // distinct count skips past them — so ties never look like arbitrary
+          // ordering.
+          final ranks = List<int>.filled(entries.length, 0);
+          for (var i = 0; i < entries.length; i++) {
+            ranks[i] = i > 0 && entries[i].count == entries[i - 1].count
+                ? ranks[i - 1]
+                : i + 1;
+          }
+          final rankTallies = <int, int>{};
+          for (final r in ranks) {
+            rankTallies[r] = (rankTallies[r] ?? 0) + 1;
+          }
+          bool isTied(int i) => (rankTallies[ranks[i]] ?? 0) > 1;
+          // With a full podium (≥3), the top three become a podium header and
+          // the remaining ranks (4+) list below it. Otherwise every entry stays
+          // a plain tile.
+          final hasPodium = entries.length >= 3;
+          final restCount = hasPodium ? entries.length - 3 : entries.length;
+          return RefreshIndicator(
+            onRefresh: refresh,
+            color: AppColors.gold,
+            child: ListView.builder(
+              // Clears the floating nav bar this tab now scrolls under.
+              padding: const EdgeInsets.fromLTRB(
+                  16, 8, 16, FloatingNavBar.scrollClearance),
+              itemCount: (hasPodium ? 1 : 0) + restCount,
+              itemBuilder: (_, i) {
+                if (hasPodium && i == 0) {
+                  return _Podium(
+                    top3: entries.sublist(0, 3),
+                    ranks: ranks.sublist(0, 3),
+                    tied: [isTied(0), isTied(1), isTied(2)],
+                    currentUid: myUid,
+                    scoreIcon: scoreIcon,
                   );
                 }
-                final myUid = ref.watch(currentUserProvider).value?.uid ?? '';
-                // Standard competition ranking: equal counts share a rank, the
-                // next distinct count skips past them — so ties never look like
-                // arbitrary ordering.
-                final ranks = List<int>.filled(entries.length, 0);
-                for (var i = 0; i < entries.length; i++) {
-                  ranks[i] = i > 0 && entries[i].count == entries[i - 1].count
-                      ? ranks[i - 1]
-                      : i + 1;
-                }
-                final rankTallies = <int, int>{};
-                for (final r in ranks) {
-                  rankTallies[r] = (rankTallies[r] ?? 0) + 1;
-                }
-                bool isTied(int i) => (rankTallies[ranks[i]] ?? 0) > 1;
-                // With a full podium (≥3), the top three become a podium header
-                // and the remaining ranks (4+) list below it. Otherwise every
-                // entry stays a plain tile.
-                final hasPodium = entries.length >= 3;
-                final restCount = hasPodium ? entries.length - 3 : entries.length;
-                return RefreshIndicator(
-                  onRefresh: refresh,
-                  color: AppColors.gold,
-                  child: ListView.builder(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                    itemCount: (hasPodium ? 1 : 0) + restCount,
-                    itemBuilder: (_, i) {
-                      if (hasPodium && i == 0) {
-                        return _Podium(
-                          top3: entries.sublist(0, 3),
-                          ranks: ranks.sublist(0, 3),
-                          tied: [isTied(0), isTied(1), isTied(2)],
-                          currentUid: myUid,
-                          scoreIcon: scoreIcon,
-                        );
-                      }
-                      final idx = hasPodium ? i + 2 : i;
-                      return AppStaggeredItem(
-                        index: i,
-                        child: _LeaderboardTile(
-                          rank: ranks[idx],
-                          isTied: isTied(idx),
-                          entry: entries[idx],
-                          isMe: entries[idx].uid == myUid,
-                          scoreIcon: scoreIcon,
-                        ),
-                      );
-                    },
+                final idx = hasPodium ? i + 2 : i;
+                return AppStaggeredItem(
+                  index: i,
+                  child: _LeaderboardTile(
+                    rank: ranks[idx],
+                    isTied: isTied(idx),
+                    entry: entries[idx],
+                    isMe: entries[idx].uid == myUid,
+                    scoreIcon: scoreIcon,
                   ),
                 );
               },
             ),
-        ),
+          );
+        },
       ),
     );
   }

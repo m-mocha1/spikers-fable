@@ -13,7 +13,7 @@ import '../../features/auth/presentation/screens/splash_screen.dart';
 import '../../features/auth/presentation/screens/verify_email_screen.dart';
 import '../../features/coaches/presentation/screens/coaches_list_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
-import '../../features/leaderboard/presentation/screens/leaderboard_screen.dart';
+import '../../features/home/presentation/screens/profile_screen.dart';
 import '../../features/payments/presentation/screens/payment_history_screen.dart';
 import '../../features/players/presentation/screens/export_options_screen.dart';
 import '../../features/players/presentation/screens/player_profile_screen.dart';
@@ -41,7 +41,7 @@ abstract class Routes {
   static const announcements = '/announcements';
   static const createAnnouncement = '/create-announcement';
   static const sessionsHistory = '/sessions-history';
-  static const leaderboard = '/leaderboard';
+  static const profile = '/profile';
   static const recurringSessions = '/recurring-sessions';
   static const createRecurring = '/create-recurring';
   static const coachesList = '/coaches-list';
@@ -132,10 +132,10 @@ final appRouter = GoRouter(
       path: Routes.sessionsHistory,
       builder: (_, _) => const SessionsHistoryScreen(),
     ),
-    GoRoute(
-      path: Routes.leaderboard,
-      builder: (_, _) => const LeaderboardScreen(),
-    ),
+    // The signed-in user's own profile — pushed from the home app bar's
+    // avatar. (The leaderboard used to live here as a pushed page; it is a
+    // home tab now, so it no longer needs a route of its own.)
+    GoRoute(path: Routes.profile, builder: (_, _) => const ProfileScreen()),
     GoRoute(
       path: Routes.recurringSessions,
       redirect: _coachOnly,
