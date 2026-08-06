@@ -57,6 +57,11 @@ class AuthRemoteDataSource {
         SetOptions(merge: true),
       );
 
+  /// Unbinds this user from the device's push token. Must run while the user
+  /// is still signed in — the /private rules only allow the owner to write.
+  Future<void> deleteFcmToken(String uid) =>
+      db.collection('users').doc(uid).collection('private').doc('fcm').delete();
+
   // TEMP DIAGNOSTIC — remove once iOS FCM token registration is verified.
   // Records where the FCM token path got to on this device so it can be read
   // straight from the Firestore console at users/{uid}/private/fcm_debug

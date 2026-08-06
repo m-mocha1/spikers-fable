@@ -259,6 +259,71 @@ async function sendFcmToUids(
 }
 
 // ---------------------------------------------------------------------------
+// unbindStaleFcmTokens — enforces "one device token belongs to exactly one
+// user". When a token is written for a uid, any OTHER user's fcm doc holding
+// the same token is deleted.
+//
+// A device token identifies the *device*, not the account. When someone signs
+// out and a different account signs in on the same phone, both users' fcm docs
+// end up holding the identical token, and every send aimed at the previous
+// account still lands on that phone — a coach signs out, a player signs in,
+// and the player keeps receiving coach-audience notifications.
+//
+// The client now deletes its token doc on sign-out, but this trigger is what
+// heals devices whose stale binding was written by an earlier build: the next
+// app launch rewrites the token and the wrong owner is unbound here.
+// ---------------------------------------------------------------------------
+export const unbindStaleFcmTokens = onDocumentWritten(
+  { document: "users/{uid}/private/fcm", region: REGION },
+  async (event) => {
+    const after = event.data?.after;
+    // Deletes (including the ones this trigger performs) need no follow-up —
+    // that's also what stops it from re-triggering itself.
+    if (!after?.exists) return;
+
+    const token = after.data()?.["token"];
+    if (typeof token !== "string" || token === "") return;
+    const uid = event.params["uid"];
+
+    let snap: FirebaseFirestore.QuerySnapshot;
+    try {
+      snap = await db
+        .collectionGroup("private")
+        .where("token", "==", token)
+        .get();
+    } catch (e) {
+      logger.error("unbindStaleFcmTokens: lookup failed", { uid, error: e });
+      return;
+    }
+
+    // Same token, different owner. The id check keeps sibling /private docs
+    // (fcm_debug) out of it even if they ever gain a `token` field.
+    const stale = snap.docs.filter(
+      (d) => d.id === "fcm" && d.ref.parent.parent?.id !== uid
+    );
+    if (stale.length === 0) return;
+
+    logger.info("unbindStaleFcmTokens: unbinding token from previous owners", {
+      uid,
+      previousOwners: stale.map((d) => d.ref.parent.parent?.id),
+    });
+
+    await Promise.all(
+      stale.map((d) =>
+        d.ref
+          .delete()
+          .catch((e) =>
+            logger.warn("unbindStaleFcmTokens: delete failed", {
+              path: d.ref.path,
+              error: e,
+            })
+          )
+      )
+    );
+  }
+);
+
+// ---------------------------------------------------------------------------
 // autoVerifyNewUsers — email verification is DISABLED: every new registration
 // is marked verified server-side. The shipped client gate
 // (currentUser.emailVerified), the firestore.rules isVerified() check, and

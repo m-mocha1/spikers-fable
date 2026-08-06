@@ -45,6 +45,7 @@ void main() {
     when(() => remote.auth).thenReturn(mockAuth);
     when(() => remote.userDocStream(any())).thenAnswer(
         (inv) => db.collection('users').doc(inv.positionalArguments[0] as String).snapshots());
+    when(() => remote.deleteFcmToken(any())).thenAnswer((_) async {});
   });
 
   Future<void> seedUserDoc(String uid) => db.collection('users').doc(uid).set({
@@ -135,6 +136,32 @@ void main() {
 
       expect(credentials.stored, isNull);
       expect(repo.currentUserNow, isNull);
+    });
+
+    // Regression: the device's push token used to survive sign-out, so the
+    // next account on the same phone kept receiving the previous account's
+    // notifications (a player getting coach-audience pushes). The unbind has
+    // to happen BEFORE remote.signOut() — the /private rules only let the
+    // still-signed-in owner delete the doc.
+    test('unbinds the device push token before signing out', () async {
+      mockAuth = MockFirebaseAuth(mockUser: MockUser(uid: 'u1', email: 'a@b.c'));
+      when(() => remote.auth).thenReturn(mockAuth);
+      credentials.stored = const StoredCredentials('a@b.c', 'secret');
+      when(() => remote.signIn(any(), any())).thenAnswer((_) async {
+        await mockAuth.signInWithEmailAndPassword(
+            email: 'a@b.c', password: 'secret');
+      });
+      when(() => remote.signOut()).thenAnswer((_) async {});
+      await seedUserDoc('u1');
+      final repo = makeRepo();
+      await repo.init();
+
+      await repo.signOut();
+
+      verifyInOrder([
+        () => remote.deleteFcmToken('u1'),
+        () => remote.signOut(),
+      ]);
     });
   });
 

@@ -341,8 +341,47 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
+  /// Unbinds this device from the signed-in account's push channel.
+  ///
+  /// Without this the device token stays at users/{uid}/private/fcm after
+  /// sign-out, so the NEXT account on the same device receives that account's
+  /// pushes too: sign out of a coach account, sign in as a player, and the
+  /// player keeps getting coach-audience notifications. Both steps matter:
+  ///  1. delete the token doc — must happen while still authenticated,
+  ///     because the /private rules only allow the owner to write; and
+  ///  2. deleteToken() — the next account gets a brand-new token, so any
+  ///     copy of the old one left behind by an earlier build (or by a
+  ///     failed step 1) stops resolving to this device. The server prunes
+  ///     it on the first failed send (registration-token-not-registered).
+  ///
+  /// Both steps are best-effort and time-bounded: a slow or throwing
+  /// messaging call must never leave the user stuck on the sign-out button.
+  Future<void> _releaseFcmToken() async {
+    await _tokenRefreshSub?.cancel();
+    _tokenRefreshSub = null;
+
+    final uid = _remote.auth.currentUser?.uid;
+    if (uid != null) {
+      try {
+        await _remote
+            .deleteFcmToken(uid)
+            .timeout(const Duration(seconds: 5));
+      } catch (e) {
+        debugPrint('[FCM] token doc delete FAILED — $e');
+      }
+    }
+
+    try {
+      await _messaging?.deleteToken().timeout(const Duration(seconds: 5));
+      debugPrint('[FCM] device token deleted on sign-out');
+    } catch (e) {
+      debugPrint('[FCM] deleteToken FAILED — $e');
+    }
+  }
+
   @override
   Future<void> signOut() async {
+    await _releaseFcmToken();
     await _credentials.clear();
     await _remote.signOut();
     _emit(null);
