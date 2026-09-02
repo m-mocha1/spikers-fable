@@ -151,6 +151,33 @@ class AppLocalizationsAr extends AppLocalizations {
   String get selectMembersError => 'اختر عضوًا واحدًا على الأقل';
 
   @override
+  String get addPlayers => 'إضافة لاعبين';
+
+  @override
+  String get filterByGroup => 'تصفية حسب المجموعة';
+
+  @override
+  String get allPlayersAlreadyAdded => 'الجميع موجودون بالفعل في القائمة';
+
+  @override
+  String get notASessionMember => 'يمكن إضافة أعضاء هذه الجلسة فقط';
+
+  @override
+  String playersAdded(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'تمت إضافة $count لاعب',
+      many: 'تمت إضافة $count لاعبًا',
+      few: 'تمت إضافة $count لاعبين',
+      two: 'تمت إضافة لاعبين',
+      one: 'تمت إضافة لاعب',
+      zero: 'لم يتم إضافة لاعبين',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get quickGroups => 'مجموعات سريعة';
 
   @override

@@ -48,6 +48,16 @@
     }
   },
   "selectMembersError": "Select at least one member",
+  "addPlayers": "Add players",
+  "filterByGroup": "Filter by group",
+  "allPlayersAlreadyAdded": "Everyone is already on the roster",
+  "notASessionMember": "Only this session's members can be added",
+  "playersAdded": "{count, plural, one{1 player added} other{{count} players added}}",
+  "@playersAdded": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "quickGroups": "Quick groups",
   "newGroup": "New group",
   "saveAsGroup": "Save as group",

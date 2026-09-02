@@ -14,12 +14,24 @@ import '../../../../core/widgets/retracting_header.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../sessions/domain/entities/player_group_model.dart';
+import '../../../sessions/domain/player_group_selection.dart';
+import '../../../sessions/presentation/providers/sessions_providers.dart';
+import '../../../sessions/presentation/widgets/player_group_actions.dart';
+import '../../../sessions/presentation/widgets/member_picker_sheet.dart';
+import '../../../sessions/presentation/widgets/player_group_rail.dart';
 import '../providers/players_providers.dart';
 import '../widgets/membership_sheet.dart';
 import '../widgets/player_card.dart';
 import '../widgets/player_sort_chip.dart';
 
 final _genderFilterProvider = StateProvider.autoDispose<String>((ref) => 'all');
+
+/// Ids of the saved player groups the coach has applied as a filter. Combinable:
+/// several groups layer into one union, matching how the same chips behave when
+/// building a custom session.
+final _groupFilterProvider =
+    StateProvider.autoDispose<Set<String>>((ref) => const {});
 final _sortProvider =
     StateProvider.autoDispose<PlayerSort>((ref) => PlayerSort.name);
 
@@ -40,12 +52,26 @@ class _PlayersTabState extends ConsumerState<PlayersTab> {
     super.dispose();
   }
 
+  /// Reopens the member picker seeded with the group, then saves the result —
+  /// the same edit the create-session rail offers, so a coach can correct a
+  /// group's roster from wherever they notice it is wrong.
+  Future<void> _editGroupMembers(PlayerGroup group) async {
+    final updated =
+        await showMemberPicker(context, initial: group.memberIds.toSet());
+    if (updated == null || !mounted) return;
+    await saveGroupMembers(context, ref, group, updated);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     final playersAsync = ref.watch(playersProvider);
     final genderFilter = ref.watch(_genderFilterProvider);
     final sort = ref.watch(_sortProvider);
+    // Empty for anyone who isn't staff (the provider gates on isCoach), so the
+    // rail can't render for a player even if this tab were somehow reached.
+    final groups = ref.watch(playerGroupsProvider).valueOrNull ?? const [];
+    final groupFilter = ref.watch(_groupFilterProvider);
 
     return playersAsync.when(
       loading: () => const ListShimmer(itemHeight: 86),
@@ -53,11 +79,17 @@ class _PlayersTabState extends ConsumerState<PlayersTab> {
           ErrorView(onRetry: () => ref.invalidate(playersProvider)),
       data: (players) {
         final q = _query.trim().toLowerCase();
+        // Resolved against the live roster so a group still listing a deleted
+        // player doesn't filter the list down to nothing.
+        final rosterUids = players.map((p) => p.uid).toSet();
+        final groupUids = unionMembers(groups, groupFilter, rosterUids);
         final filtered = sort.apply(players.where((p) {
           final matchesGender =
               genderFilter == 'all' || p.gender == genderFilter;
           final matchesQuery = q.isEmpty || p.name.toLowerCase().contains(q);
-          return matchesGender && matchesQuery;
+          final matchesGroup =
+              groupFilter.isEmpty || groupUids.contains(p.uid);
+          return matchesGender && matchesQuery && matchesGroup;
         }).toList());
 
         // Search + filters retract on scroll-down and return on scroll-up so
@@ -104,6 +136,30 @@ class _PlayersTabState extends ConsumerState<PlayersTab> {
                 ],
               ),
             ),
+            // Saved groups get their own row: the row above is already four
+            // controls wide at 360dp. One scrolling line rather than a wrap, so
+            // the strip keeps the same left edge as the search field above it
+            // however many groups there are. Long-press manages a group —
+            // rename, edit members, or delete.
+            if (groups.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 10),
+                child: Semantics(
+                  label: l.filterByGroup,
+                  child: PlayerGroupRail(
+                    groups: groups,
+                    appliedGroupIds: groupFilter,
+                    scrollable: true,
+                    onApply: (g) {
+                      final next = {...groupFilter};
+                      if (!next.remove(g.id)) next.add(g.id);
+                      ref.read(_groupFilterProvider.notifier).state = next;
+                    },
+                    onManage: (g) => manageGroup(context, ref, g,
+                        onEditMembers: () => _editGroupMembers(g)),
+                  ),
+                ),
+              ),
           ],
         );
 

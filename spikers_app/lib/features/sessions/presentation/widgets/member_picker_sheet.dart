@@ -15,12 +15,25 @@ import '../providers/sessions_providers.dart';
 import 'player_group_actions.dart';
 import 'player_group_rail.dart';
 
-/// Opens a modal bottom sheet that lets a coach pick members (players) for a
-/// custom session. Returns the chosen uid set, or null if dismissed without
-/// confirming. [initial] pre-selects members.
+/// Opens a modal bottom sheet that lets a coach pick players. Returns the
+/// chosen uid set, or null if dismissed without confirming. [initial]
+/// pre-selects members.
+///
+/// Defaults to its original job — choosing the members of a custom session.
+/// The optional parameters let the same sheet serve the coach-side "add
+/// players to this session" flow instead: [restrictTo] closes the pool to a
+/// fixed set of uids (a custom session's members, so a late add can't smuggle
+/// in an outsider), [excludeUids] hides players already on the roster, and
+/// [title]/[confirmLabel]/[allowSaveAsGroup] re-word the sheet for that
+/// context.
 Future<Set<String>?> showMemberPicker(
   BuildContext context, {
   required Set<String> initial,
+  Set<String>? restrictTo,
+  Set<String> excludeUids = const {},
+  String? title,
+  String? confirmLabel,
+  bool allowSaveAsGroup = true,
 }) {
   return showModalBottomSheet<Set<String>>(
     context: context,
@@ -29,13 +42,32 @@ Future<Set<String>?> showMemberPicker(
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
-    builder: (_) => _MemberPickerSheet(initial: initial),
+    builder: (_) => _MemberPickerSheet(
+      initial: initial,
+      restrictTo: restrictTo,
+      excludeUids: excludeUids,
+      title: title,
+      confirmLabel: confirmLabel,
+      allowSaveAsGroup: allowSaveAsGroup,
+    ),
   );
 }
 
 class _MemberPickerSheet extends ConsumerStatefulWidget {
   final Set<String> initial;
-  const _MemberPickerSheet({required this.initial});
+  final Set<String>? restrictTo;
+  final Set<String> excludeUids;
+  final String? title;
+  final String? confirmLabel;
+  final bool allowSaveAsGroup;
+  const _MemberPickerSheet({
+    required this.initial,
+    this.restrictTo,
+    this.excludeUids = const {},
+    this.title,
+    this.confirmLabel,
+    this.allowSaveAsGroup = true,
+  });
 
   @override
   ConsumerState<_MemberPickerSheet> createState() => _MemberPickerSheetState();
@@ -92,12 +124,24 @@ class _MemberPickerSheetState extends ConsumerState<_MemberPickerSheet> {
       ..addAll(reconciled);
   }
 
+  /// Whether [p] may be offered by this sheet at all. Separate from the
+  /// search/gender filters: those narrow what is shown, this decides what
+  /// exists here.
+  bool _inPool(PlayerSummary p) {
+    final restrict = widget.restrictTo;
+    if (restrict != null && !restrict.contains(p.uid)) return false;
+    return !widget.excludeUids.contains(p.uid);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     final playersAsync = ref.watch(playersProvider);
     final groups = ref.watch(playerGroupsProvider).valueOrNull ?? const [];
-    final validUids = playersAsync.valueOrNull?.map((p) => p.uid).toSet();
+    // Group chips resolve against the pool, not the whole roster, so tapping a
+    // group can never pull in someone the pool excludes.
+    final pool = playersAsync.valueOrNull?.where(_inPool).toList();
+    final validUids = pool?.map((p) => p.uid).toSet();
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
     return Padding(
@@ -121,7 +165,7 @@ class _MemberPickerSheetState extends ConsumerState<_MemberPickerSheet> {
                 children: [
                   Expanded(
                     child: Text(
-                      l.chooseMembers,
+                      widget.title ?? l.chooseMembers,
                       style: const TextStyle(
                         color: AppColors.white,
                         fontSize: 17,
@@ -148,8 +192,12 @@ class _MemberPickerSheetState extends ConsumerState<_MemberPickerSheet> {
                   groups: groups,
                   appliedGroupIds: _appliedGroupIds,
                   onApply: (g) => _applyGroup(g, groups, validUids),
+                  // "Update to current selection" only makes sense while the
+                  // selection *is* a member list; in the add-players flow it is
+                  // a throwaway pick, so the group keeps its own roster.
                   onManage: (g) => manageGroup(context, ref, g,
-                      currentSelection: _selected),
+                      currentSelection:
+                          widget.allowSaveAsGroup ? _selected : null),
                 ),
               ),
             Padding(
@@ -202,7 +250,8 @@ class _MemberPickerSheetState extends ConsumerState<_MemberPickerSheet> {
                     ErrorView(onRetry: () => ref.invalidate(playersProvider)),
                 data: (players) {
                   final q = _query.trim().toLowerCase();
-                  final filtered = players.where((p) {
+                  final inPool = players.where(_inPool).toList();
+                  final filtered = inPool.where((p) {
                     final matchesGender =
                         _genderFilter == 'all' || p.gender == _genderFilter;
                     final matchesQuery =
@@ -210,9 +259,15 @@ class _MemberPickerSheetState extends ConsumerState<_MemberPickerSheet> {
                     return matchesGender && matchesQuery;
                   }).toList();
                   if (filtered.isEmpty) {
+                    // An empty pool and an empty search are different dead
+                    // ends: the first means there is no one left to add.
                     return EmptyStateView(
                       icon: Icons.group_outlined,
-                      title: q.isEmpty ? l.noPlayers : l.noPlayersMatch,
+                      title: inPool.isEmpty && players.isNotEmpty
+                          ? l.allPlayersAlreadyAdded
+                          : q.isEmpty
+                              ? l.noPlayers
+                              : l.noPlayersMatch,
                     );
                   }
                   return ListView.builder(
@@ -241,7 +296,7 @@ class _MemberPickerSheetState extends ConsumerState<_MemberPickerSheet> {
                 child: Row(
                   children: [
                     // Save the current selection as a reusable named group.
-                    if (_selected.isNotEmpty) ...[
+                    if (widget.allowSaveAsGroup && _selected.isNotEmpty) ...[
                       Expanded(
                         child: OutlinedButton.icon(
                           onPressed: () => saveNewGroup(context, ref,
@@ -264,7 +319,7 @@ class _MemberPickerSheetState extends ConsumerState<_MemberPickerSheet> {
                     ],
                     Expanded(
                       child: BrandedButton(
-                        label: l.done,
+                        label: widget.confirmLabel ?? l.done,
                         onPressed: () => Navigator.of(context).pop(_selected),
                       ),
                     ),

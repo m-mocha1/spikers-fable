@@ -70,3 +70,19 @@ Set<String> reconcileAppliedGroups({
     return live.isNotEmpty && live.every(selected.contains);
   }).toSet();
 }
+
+/// Union of the still-valid members of every applied group — the selector
+/// behind the Players-tab group filter, where several groups combine into one
+/// roster slice. Ids in [appliedGroupIds] that no longer name a group (deleted
+/// while its chip was on) contribute nothing rather than throwing.
+Set<String> unionMembers(
+  List<PlayerGroup> groups,
+  Set<String> appliedGroupIds,
+  Set<String>? validUids,
+) {
+  final out = <String>{};
+  for (final g in groups) {
+    if (appliedGroupIds.contains(g.id)) out.addAll(liveMembers(g, validUids));
+  }
+  return out;
+}

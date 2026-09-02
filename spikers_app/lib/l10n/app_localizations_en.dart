@@ -141,6 +141,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get selectMembersError => 'Select at least one member';
 
   @override
+  String get addPlayers => 'Add players';
+
+  @override
+  String get filterByGroup => 'Filter by group';
+
+  @override
+  String get allPlayersAlreadyAdded => 'Everyone is already on the roster';
+
+  @override
+  String get notASessionMember => 'Only this session\'s members can be added';
+
+  @override
+  String playersAdded(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count players added',
+      one: '1 player added',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get quickGroups => 'Quick groups';
 
   @override

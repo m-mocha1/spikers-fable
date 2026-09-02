@@ -1208,6 +1208,160 @@ export const removeAttendee = onCall({ region: REGION }, async (request) => {
 });
 
 // ---------------------------------------------------------------------------
+// addAttendees — owner-coach or staff seats one or more players on a session
+// they did not join themselves. This is the only path into attendeeIds that
+// is neither self-service (joinSession) nor a waitlist promotion, and it is
+// deliberately allowed for the whole life of a session: a latecomer can be
+// seated mid-play, and a player the coach forgot can be added after the
+// session ended (the doc is then resolved out of sessions_history, the same
+// way markAttended does it).
+//
+// Batched on purpose — parallel transactions against one session doc exhaust
+// their retries, so the whole add is a single transaction.
+//
+// Capacity is NOT enforced: the coach is the authority on who was physically
+// in the gym, so staff may seat a player past maxPlayers. Attendance is left
+// alone — being on the roster is not the same as being marked present, and
+// the coach still uses markAttended/confirmAttendance for that.
+// ---------------------------------------------------------------------------
+const MAX_ADD_ATTENDEES = 50;
+
+export const addAttendees = onCall({ region: REGION }, async (request) => {
+  const uid = requireVerified(request);
+
+  const sessionId = request.data?.["sessionId"] as string | undefined;
+  const rawUserIds = request.data?.["userIds"];
+  if (!sessionId) {
+    throw new HttpsError("invalid-argument", "sessionId required");
+  }
+  if (!Array.isArray(rawUserIds)) {
+    throw new HttpsError("invalid-argument", "userIds must be an array");
+  }
+  const userIds = [
+    ...new Set(
+      rawUserIds.filter((x): x is string => typeof x === "string" && x !== "")
+    ),
+  ];
+  if (userIds.length === 0) {
+    throw new HttpsError("invalid-argument", "userIds must not be empty");
+  }
+  if (userIds.length > MAX_ADD_ATTENDEES) {
+    throw new HttpsError(
+      "invalid-argument",
+      `At most ${MAX_ADD_ATTENDEES} players can be added at once`
+    );
+  }
+
+  logger.info("addAttendees called", { uid, sessionId, count: userIds.length });
+
+  const callerIsStaff = await isStaffUid(uid);
+  const sessionRef = db.collection("sessions").doc(sessionId);
+  const historyRef = db.collection("sessions_history").doc(sessionId);
+
+  let added: string[] = [];
+  let sessionTitle = "";
+  let startsInFuture = false;
+
+  await db.runTransaction(async (tx) => {
+    // Live session first, archived one second — adding to a finished session
+    // is supported (see the header comment).
+    const sessionDoc = await tx.get(sessionRef);
+    let ref: FirebaseFirestore.DocumentReference;
+    let session: FirebaseFirestore.DocumentData;
+
+    if (sessionDoc.exists) {
+      ref = sessionRef;
+      session = sessionDoc.data()!;
+    } else {
+      const historyDoc = await tx.get(historyRef);
+      if (!historyDoc.exists) {
+        throw new HttpsError("not-found", "Session not found");
+      }
+      ref = historyRef;
+      session = historyDoc.data()!;
+    }
+
+    // The owning coach or any staff member (coach/admin) may seat a player.
+    if (session["coachId"] !== uid && !callerIsStaff) {
+      throw new HttpsError("permission-denied", "Not allowed");
+    }
+
+    // Custom (members-only) sessions keep a closed pool: seating a non-member
+    // would be a back door around the same restriction joinSession enforces.
+    const memberIds: string[] = Array.isArray(session["memberIds"])
+      ? (session["memberIds"] as string[])
+      : [];
+    if (memberIds.length > 0) {
+      const outsider = userIds.find((id) => !memberIds.includes(id));
+      if (outsider) {
+        throw new HttpsError(
+          "failed-precondition",
+          "Only members of this session can be added"
+        );
+      }
+    }
+
+    sessionTitle = (session["title"] as string) ?? "";
+    const startTime = session["startTime"] as
+      | admin.firestore.Timestamp
+      | undefined;
+    startsInFuture = startTime ? startTime.toMillis() > Date.now() : false;
+
+    const attendeeIds: string[] = session["attendeeIds"] ?? [];
+    const waitlistIds: string[] = session["waitlistIds"] ?? [];
+
+    const nextAttendees = [...attendeeIds];
+    const seated = new Set(attendeeIds);
+    const promotedFromWaitlist = new Set<string>();
+    // Built fresh inside the transaction: the callback is re-run on contention,
+    // and a shared accumulator would double-count across attempts.
+    const seatedNow: string[] = [];
+
+    for (const target of userIds) {
+      // Already on the roster — skip, so the call stays idempotent.
+      if (seated.has(target)) continue;
+      // Seating someone who was waiting is a hand promotion: they must not end
+      // up on both lists.
+      if (waitlistIds.includes(target)) promotedFromWaitlist.add(target);
+      nextAttendees.push(target);
+      seated.add(target);
+      seatedNow.push(target);
+    }
+
+    added = seatedNow;
+    if (added.length === 0) return;
+
+    const update: Record<string, unknown> = { attendeeIds: nextAttendees };
+    if (promotedFromWaitlist.size > 0) {
+      // Rewrite the array rather than arrayRemove so the remaining waitlist
+      // keeps its FIFO order, as leaveSession/removeAttendee do.
+      update["waitlistIds"] = waitlistIds.filter(
+        (x) => !promotedFromWaitlist.has(x)
+      );
+    }
+    tx.update(ref, update);
+  });
+
+  // Only worth a push while the session is still ahead of the player — a
+  // notification about a session already under way or finished is noise.
+  if (added.length > 0 && startsInFuture) {
+    await sendFcmToUids(
+      added,
+      {
+        notification: {
+          title: sessionTitle,
+          body: "A coach added you to this session",
+        },
+        data: { sessionId, kind: "added_to_session" },
+      },
+      "notifyAddedToSession"
+    );
+  }
+
+  return { added };
+});
+
+// ---------------------------------------------------------------------------
 // updateSessionCapacity — coach-only. Increases maxPlayers and/or
 // waitlistSize (never decreases). Promotes head-of-waitlist UIDs into newly
 // freed attendee spots and notifies them.

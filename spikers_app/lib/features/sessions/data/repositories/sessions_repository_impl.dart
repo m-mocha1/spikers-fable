@@ -163,6 +163,10 @@ class SessionsRepositoryImpl implements SessionsRepository {
       _wrap(() => _remote.removeAttendee(sessionId, userId));
 
   @override
+  Future<void> addAttendees(String sessionId, List<String> userIds) =>
+      _wrap(() => _remote.addAttendees(sessionId, userIds));
+
+  @override
   Future<void> confirmAttendance(String sessionId, List<String> presentUids) =>
       _wrap(() => _remote.confirmAttendance(sessionId, presentUids));
 

@@ -323,6 +323,12 @@ class SessionsRemoteDataSource {
         'userId': userId,
       });
 
+  Future<void> addAttendees(String sessionId, List<String> userIds) =>
+      _fns.httpsCallable('addAttendees').call({
+        'sessionId': sessionId,
+        'userIds': userIds,
+      });
+
   Future<void> confirmAttendance(String sessionId, List<String> presentUids) =>
       _fns.httpsCallable('confirmAttendance').call({
         'sessionId': sessionId,

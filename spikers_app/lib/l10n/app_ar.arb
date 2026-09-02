@@ -48,6 +48,16 @@
     }
   },
   "selectMembersError": "اختر عضوًا واحدًا على الأقل",
+  "addPlayers": "إضافة لاعبين",
+  "filterByGroup": "تصفية حسب المجموعة",
+  "allPlayersAlreadyAdded": "الجميع موجودون بالفعل في القائمة",
+  "notASessionMember": "يمكن إضافة أعضاء هذه الجلسة فقط",
+  "playersAdded": "{count, plural, zero{لم يتم إضافة لاعبين} one{تمت إضافة لاعب} two{تمت إضافة لاعبين} few{تمت إضافة {count} لاعبين} many{تمت إضافة {count} لاعبًا} other{تمت إضافة {count} لاعب}}",
+  "@playersAdded": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "quickGroups": "مجموعات سريعة",
   "newGroup": "مجموعة جديدة",
   "saveAsGroup": "حفظ كمجموعة",

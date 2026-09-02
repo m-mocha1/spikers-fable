@@ -356,6 +356,36 @@ abstract class AppLocalizations {
   /// **'Select at least one member'**
   String get selectMembersError;
 
+  /// No description provided for @addPlayers.
+  ///
+  /// In en, this message translates to:
+  /// **'Add players'**
+  String get addPlayers;
+
+  /// No description provided for @filterByGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter by group'**
+  String get filterByGroup;
+
+  /// No description provided for @allPlayersAlreadyAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Everyone is already on the roster'**
+  String get allPlayersAlreadyAdded;
+
+  /// No description provided for @notASessionMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Only this session\'s members can be added'**
+  String get notASessionMember;
+
+  /// No description provided for @playersAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 player added} other{{count} players added}}'**
+  String playersAdded(int count);
+
   /// No description provided for @quickGroups.
   ///
   /// In en, this message translates to:

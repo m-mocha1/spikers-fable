@@ -123,6 +123,16 @@ abstract class SessionsRepository {
   /// waitlist). Throws [SessionActionException].
   Future<void> removeAttendee(String sessionId, String userId);
 
+  /// Owner-coach or staff seats [userIds] on the session — the coach-side
+  /// counterpart to [join], for players who turned up without joining in the
+  /// app. Allowed for the whole life of a session, including after it started
+  /// and after it ended (the callable falls back to sessions_history), and it
+  /// may take the roster past maxPlayers: the coach is the authority on who
+  /// was actually there. On a custom (members-only) session only that
+  /// session's members may be added. Idempotent; does not mark anyone
+  /// present. Throws [SessionActionException].
+  Future<void> addAttendees(String sessionId, List<String> userIds);
+
   /// Coach "take attendance" in one shot: [presentUids] are the players who
   /// actually showed up. Reconciles the session's attended set and every
   /// affected player's lifetime count server-side, and flags the session as

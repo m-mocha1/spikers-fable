@@ -131,4 +131,33 @@ void main() {
       expect(result, isEmpty);
     });
   });
+
+  group('unionMembers', () {
+    test('is empty when no group is applied', () {
+      final a = _group('a', ['p1', 'p2']);
+      expect(unionMembers([a], {}, null), isEmpty);
+    });
+
+    test('unions overlapping groups without duplicating', () {
+      final a = _group('a', ['p1', 'p2']);
+      final b = _group('b', ['p2', 'p3']);
+      expect(unionMembers([a, b], {'a', 'b'}, null), {'p1', 'p2', 'p3'});
+    });
+
+    test('only the applied groups contribute', () {
+      final a = _group('a', ['p1']);
+      final b = _group('b', ['p2']);
+      expect(unionMembers([a, b], {'b'}, null), {'p2'});
+    });
+
+    test('drops members who are no longer on the roster', () {
+      final a = _group('a', ['p1', 'gone']);
+      expect(unionMembers([a], {'a'}, {'p1', 'p2'}), {'p1'});
+    });
+
+    test('an applied id naming a deleted group contributes nothing', () {
+      final a = _group('a', ['p1']);
+      expect(unionMembers([a], {'a', 'deleted'}, null), {'p1'});
+    });
+  });
 }

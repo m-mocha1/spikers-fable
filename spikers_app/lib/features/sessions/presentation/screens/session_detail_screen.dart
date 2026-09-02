@@ -462,6 +462,39 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
     }
   }
 
+  /// Coach-side counterpart to joining: seats players who turned up without
+  /// joining in the app. Deliberately available for the whole life of a
+  /// session — mid-play for a latecomer, and after it ended for someone the
+  /// coach forgot — and on a custom session the picker is closed to that
+  /// session's own members.
+  Future<void> _addPlayers(AppLocalizations l) async {
+    final session = _session!;
+    final picked = await showMemberPicker(
+      context,
+      initial: const {},
+      restrictTo: session.isCustom ? session.memberIds.toSet() : null,
+      excludeUids: {...session.attendeeIds, ...session.waitlistIds},
+      title: l.addPlayers,
+      confirmLabel: l.addPlayers,
+      allowSaveAsGroup: false,
+    );
+    if (!mounted || picked == null || picked.isEmpty) return;
+
+    try {
+      await _repo.addAttendees(session.id, picked.toList());
+      if (!mounted) return;
+      showAppSnackbar(l.playersAdded(picked.length));
+    } on SessionActionException catch (e) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        showAppSnackbar(addAttendeeErrorMessage(l, e.code));
+      });
+    } catch (_) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        showAppSnackbar(l.unknownError);
+      });
+    }
+  }
+
   Future<void> _confirmCancel(AppLocalizations l) async {
     if (_isCancelling) return;
     final confirm = await showDeleteConfirm(
@@ -780,6 +813,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
                       onRemove: _removeAttendee,
                       onEndorse: _endorse,
                       onEditCapacity: () => _editCapacity(l),
+                      onAddPlayers: () => _addPlayers(l),
                       onMarkAllAttended: () => _markAllAttended(
                         session.attendeeIds
                             .where((id) => !attendedIds.contains(id))
@@ -1629,6 +1663,7 @@ class _AttendeesSection extends StatelessWidget {
   final void Function(String uid, String name) onRemove;
   final void Function(String uid, String name) onEndorse;
   final VoidCallback onEditCapacity;
+  final VoidCallback onAddPlayers;
   final VoidCallback onMarkAllAttended;
   const _AttendeesSection({
     required this.session,
@@ -1646,6 +1681,7 @@ class _AttendeesSection extends StatelessWidget {
     required this.onRemove,
     required this.onEndorse,
     required this.onEditCapacity,
+    required this.onAddPlayers,
     required this.onMarkAllAttended,
   });
 
@@ -1682,6 +1718,11 @@ class _AttendeesSection extends StatelessWidget {
     // Destructive controls only ever exist in edit mode, and never on a
     // session that already happened.
     final showRemove = canManage && editMode && !isEnded;
+    // Adding, unlike removing, stays available for the whole life of the
+    // session: a latecomer gets seated mid-play, and a player the coach forgot
+    // can still be added afterwards (the callable reaches into
+    // sessions_history).
+    final showAdd = canManage && editMode;
 
     return Container(
       padding: const EdgeInsets.all(18),
@@ -1876,6 +1917,29 @@ class _AttendeesSection extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+          ],
+
+          // Full-width rather than a header chip: the header row is already
+          // carrying the capacity/mark-all chip and the edit toggle, and this
+          // is the one additive action on the roster.
+          if (showAdd) ...[
+            const SizedBox(height: 14),
+            OutlinedButton.icon(
+              onPressed: onAddPlayers,
+              icon: const Icon(Icons.person_add_alt_1_outlined,
+                  color: AppColors.gold, size: 18),
+              label: Text(
+                l.addPlayers,
+                style: const TextStyle(
+                  color: AppColors.gold,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size.fromHeight(46),
+                side: const BorderSide(color: AppColors.gold),
+              ),
             ),
           ],
 

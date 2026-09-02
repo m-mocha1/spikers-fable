@@ -499,6 +499,40 @@ void main() {
     });
   });
 
+  group('addAttendees', () {
+    test('calls the callable with the session and uid list', () async {
+      final callable = _MockCallable();
+      Map<String, dynamic>? sent;
+      when(() => callable.call<dynamic>(any())).thenAnswer((invocation) async {
+        sent = invocation.positionalArguments.first as Map<String, dynamic>;
+        return _FakeResult({'added': ['p1', 'p2']});
+      });
+      when(() => fns.httpsCallable('addAttendees')).thenReturn(callable);
+
+      await repo.addAttendees('s1', ['p1', 'p2']);
+
+      expect(sent, {
+        'sessionId': 's1',
+        'userIds': ['p1', 'p2'],
+      });
+    });
+
+    test('wraps FirebaseFunctionsException into SessionActionException',
+        () async {
+      final callable = _MockCallable();
+      when(() => callable.call<dynamic>(any())).thenThrow(
+          FirebaseFunctionsException(
+              message: 'not a member', code: 'failed-precondition'));
+      when(() => fns.httpsCallable('addAttendees')).thenReturn(callable);
+
+      await expectLater(
+        repo.addAttendees('s1', ['outsider']),
+        throwsA(isA<SessionActionException>()
+            .having((e) => e.code, 'code', 'failed-precondition')),
+      );
+    });
+  });
+
   group('updateSessionCoaches', () {
     test('calls the callable with the coach list', () async {
       final callable = _MockCallable();

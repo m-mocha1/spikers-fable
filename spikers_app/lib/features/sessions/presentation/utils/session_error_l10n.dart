@@ -29,6 +29,24 @@ String cancelErrorMessage(AppLocalizations l, String code) {
   }
 }
 
+/// Maps failures from the coach "add players to this session" path.
+String addAttendeeErrorMessage(AppLocalizations l, String code) {
+  switch (code) {
+    case 'permission-denied':
+      return l.notYourSession;
+    case 'failed-precondition':
+      return l.notASessionMember;
+    case 'not-found':
+      return l.sessionMissing;
+    case 'invalid-argument':
+      return l.nothingToUpdate;
+    case 'unauthenticated':
+      return l.notSignedIn;
+    default:
+      return '${l.unknownError} ($code)';
+  }
+}
+
 String capacityErrorMessage(AppLocalizations l, String code) {
   switch (code) {
     case 'failed-precondition':

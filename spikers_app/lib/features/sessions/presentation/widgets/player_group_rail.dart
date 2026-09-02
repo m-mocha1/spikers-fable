@@ -28,6 +28,13 @@ class PlayerGroupRail extends StatelessWidget {
   /// Optional trailing "New group" chip; hidden when null.
   final VoidCallback? onNew;
 
+  /// Lays the chips on one horizontally scrolling line instead of wrapping onto
+  /// several runs. Filter rows use it so the rail stays a single row whose left
+  /// edge lines up with the controls above it, instead of a centred block that
+  /// grows the header by a row per few groups. Forms keep the wrap, where
+  /// seeing every group at once matters more than height.
+  final bool scrollable;
+
   const PlayerGroupRail({
     super.key,
     required this.groups,
@@ -35,30 +42,52 @@ class PlayerGroupRail extends StatelessWidget {
     required this.onApply,
     required this.onManage,
     this.onNew,
+    this.scrollable = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    return Wrap(
-      spacing: AppSpacing.sm,
-      runSpacing: AppSpacing.sm,
-      children: [
-        for (final group in groups)
-          PlayerGroupChip(
-            label: group.name,
-            memberCount: group.memberCount,
-            applied: appliedGroupIds.contains(group.id),
-            onTap: () => onApply(group),
-            onLongPress: () => onManage(group),
-          ),
-        if (onNew != null)
-          PlayerGroupChip.action(
-            label: l.newGroup,
-            icon: Icons.add,
-            onTap: onNew!,
-          ),
-      ],
+    final chips = <Widget>[
+      for (final group in groups)
+        PlayerGroupChip(
+          label: group.name,
+          memberCount: group.memberCount,
+          applied: appliedGroupIds.contains(group.id),
+          onTap: () => onApply(group),
+          onLongPress: () => onManage(group),
+        ),
+      if (onNew != null)
+        PlayerGroupChip.action(
+          label: l.newGroup,
+          icon: Icons.add,
+          onTap: onNew!,
+        ),
+    ];
+
+    if (!scrollable) {
+      return Wrap(
+        spacing: AppSpacing.sm,
+        runSpacing: AppSpacing.sm,
+        children: chips,
+      );
+    }
+
+    // Horizontal padding lives on the scroll view, not around it, so the strip
+    // rests at the screen gutter but bleeds to the edge once scrolled — the
+    // same treatment as the leaderboard control strip.
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (var i = 0; i < chips.length; i++) ...[
+            if (i > 0) const SizedBox(width: AppSpacing.sm),
+            chips[i],
+          ],
+        ],
+      ),
     );
   }
 }
