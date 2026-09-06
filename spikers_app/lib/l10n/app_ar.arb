@@ -487,6 +487,19 @@
   "notSignedIn": "يرجى تسجيل الدخول مجددًا",
   "notYourSession": "فقط مدرّب الجلسة يمكنه فعل ذلك",
   "nothingToUpdate": "لا يوجد ما يتم تحديثه",
+  "editSessionTime": "تعديل الوقت",
+  "changeSessionTime": "تغيير وقت الجلسة",
+  "newStartTime": "وقت البداية الجديد",
+  "newEndTimePreview": "ينتهي {time}",
+  "@newEndTimePreview": {
+    "placeholders": {
+      "time": { "type": "String" }
+    }
+  },
+  "durationUnchanged": "المدة لم تتغير",
+  "sessionTimeUpdated": "تم تحديث وقت الجلسة",
+  "sessionAlreadyStarted": "بدأت هذه الجلسة بالفعل — لا يمكن تغيير وقتها",
+  "invalidSessionTime": "اختر وقتاً في المستقبل خلال السنة القادمة",
   "height": "الطول",
   "weight": "الوزن",
   "heightHint": "سم",

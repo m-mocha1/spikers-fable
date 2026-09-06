@@ -33,6 +33,7 @@ import '../../../coaches/presentation/providers/coaches_providers.dart';
 import '../../domain/repositories/sessions_repository.dart';
 import '../providers/sessions_providers.dart';
 import '../utils/session_error_l10n.dart';
+import '../utils/session_time_picker.dart';
 import '../widgets/coach_picker_sheet.dart';
 import '../widgets/member_picker_sheet.dart';
 
@@ -655,6 +656,44 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
     }
   }
 
+  /// Coaches and admins shift a not-yet-started session: they pick a new START
+  /// and the end moves with it, preserving the duration. The server recomputes
+  /// the end from the stored duration, so only the start is sent.
+  Future<void> _editTime(AppLocalizations l) async {
+    final session = _session!;
+    final picked = await showDialog<DateTime>(
+      context: context,
+      useRootNavigator: true,
+      builder: (_) => _EditTimeDialog(
+        currentStart: session.startTime,
+        duration: session.endTime.difference(session.startTime),
+        l: l,
+      ),
+    );
+    if (!mounted || picked == null) return;
+
+    // No change — skip the round-trip. The dialog already disables Save in this
+    // case; without this backstop the server would answer 'Nothing to update'
+    // and the coach would see an error for having changed nothing.
+    if (picked.isAtSameMomentAs(session.startTime)) return;
+
+    try {
+      await _repo.updateSessionTime(session.id, picked);
+      if (!mounted) return;
+      // Worth confirming out loud, unlike the capacity edit: this one fans out
+      // a push to everyone on the roster.
+      showAppSnackbar(l.sessionTimeUpdated);
+    } on SessionActionException catch (e) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        showAppSnackbar(timeErrorMessage(l, e.code));
+      });
+    } catch (_) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        showAppSnackbar(l.unknownError);
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final session = _session;
@@ -750,6 +789,15 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
                       onEditCoaches: (isCoach && !_isArchived)
                           ? () => _editCoaches(l)
                           : null,
+                      // Shifting the window only makes sense before kick-off —
+                      // the same gate as the Cancel button, and the same one
+                      // updateSessionTime enforces server-side. Gated on
+                      // isCoach, not isOwner: the callable lets any staff
+                      // member cover, and the UI must not be stricter.
+                      onEditTime:
+                          (isCoach && session.isUpcoming && !_isArchived)
+                              ? () => _editTime(l)
+                              : null,
                     ),
                     const SizedBox(height: 18),
                     // Coach controls for a custom (members-only) session:
@@ -1294,12 +1342,17 @@ class _InfoSection extends ConsumerWidget {
   /// admin, on a session that still lives in `sessions`). Null = read-only.
   final VoidCallback? onEditCoaches;
 
+  /// Non-null when the viewer may shift the session's window (coach or admin,
+  /// on a live session that has not started yet). Null = read-only.
+  final VoidCallback? onEditTime;
+
   const _InfoSection({
     required this.session,
     required this.l,
     required this.coachName,
     required this.coach,
     required this.onEditCoaches,
+    required this.onEditTime,
   });
 
   @override
@@ -1327,63 +1380,84 @@ class _InfoSection extends ConsumerWidget {
         ? l.countdownHoursMinutes(duration.inHours, duration.inMinutes % 60)
         : l.countdownMinutes(duration.inMinutes);
 
+    final timeRow = Row(
+      children: [
+        DateBlock(session.startTime, scale: 1.15),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                DateFormat('EEEE').format(session.startTime).toUpperCase(),
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.gold,
+                  letterSpacing: 1.3,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 5),
+              Text(
+                '${time.format(session.startTime)} – ${time.format(session.endTime)}',
+                style: const TextStyle(
+                  fontSize: 21,
+                  fontWeight: FontWeight.w800,
+                  height: 1.1,
+                ),
+              ),
+              const SizedBox(height: 5),
+              Row(
+                children: [
+                  const Icon(Icons.schedule, size: 13, color: AppColors.grey),
+                  const SizedBox(width: 4),
+                  Text(
+                    durationText,
+                    style: const TextStyle(
+                      color: AppColors.grey,
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        // Same edit language as _InfoTileRow: the pencil marks the row as
+        // tappable rather than adding another button to the footer.
+        if (onEditTime != null) ...[
+          const SizedBox(width: 8),
+          const ExcludeSemantics(
+            child: Icon(Icons.edit_outlined, size: 18, color: AppColors.gold),
+          ),
+        ],
+      ],
+    );
+
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: _panelDecoration(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              DateBlock(session.startTime, scale: 1.15),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      DateFormat('EEEE')
-                          .format(session.startTime)
-                          .toUpperCase(),
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.gold,
-                        letterSpacing: 1.3,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 5),
-                    Text(
-                      '${time.format(session.startTime)} – ${time.format(session.endTime)}',
-                      style: const TextStyle(
-                        fontSize: 21,
-                        fontWeight: FontWeight.w800,
-                        height: 1.1,
-                      ),
-                    ),
-                    const SizedBox(height: 5),
-                    Row(
-                      children: [
-                        const Icon(Icons.schedule,
-                            size: 13, color: AppColors.grey),
-                        const SizedBox(width: 4),
-                        Text(
-                          durationText,
-                          style: const TextStyle(
-                            color: AppColors.grey,
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+          if (onEditTime == null)
+            timeRow
+          else
+            Semantics(
+              button: true,
+              label: l.editSessionTime,
+              child: InkWell(
+                onTap: onEditTime,
+                borderRadius: BorderRadius.circular(12),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: timeRow,
                 ),
               ),
-            ],
-          ),
+            ),
           const SizedBox(height: 16),
           _hairline(),
           const SizedBox(height: 16),
@@ -2793,6 +2867,110 @@ class _EditCapacityDialogState extends State<_EditCapacityDialog> {
             l.changeEmailUpdate,
             style: const TextStyle(
               color: AppColors.gold,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Dialog for shifting a session's window before it starts. The coach picks a
+/// new START only; the preview line spells out the end time that moves with it,
+/// so the second half of the change is never a surprise. Returns the new start.
+class _EditTimeDialog extends StatefulWidget {
+  final DateTime currentStart;
+
+  /// The session's current length, preserved by the shift. Display only — the
+  /// server recomputes the end from its own stored values.
+  final Duration duration;
+  final AppLocalizations l;
+
+  const _EditTimeDialog({
+    required this.currentStart,
+    required this.duration,
+    required this.l,
+  });
+
+  @override
+  State<_EditTimeDialog> createState() => _EditTimeDialogState();
+}
+
+class _EditTimeDialogState extends State<_EditTimeDialog> {
+  late DateTime _picked = widget.currentStart;
+  late final TextEditingController _startCtrl = TextEditingController(
+    text: sessionDateTimeFormat.format(widget.currentStart),
+  );
+
+  @override
+  void dispose() {
+    _startCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pick() async {
+    final picked = await pickSessionDateTime(context, initial: _picked);
+    if (picked == null || !mounted) return;
+    setState(() {
+      _picked = picked;
+      _startCtrl.text = sessionDateTimeFormat.format(picked);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = widget.l;
+    final changed = !_picked.isAtSameMomentAs(widget.currentStart);
+
+    return AlertDialog(
+      backgroundColor: AppColors.navyLight,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: Text(
+        l.changeSessionTime,
+        style: const TextStyle(color: AppColors.white),
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // No Form/validator: the picker's own bounds mean it cannot hand
+          // back an invalid value, so there is nothing to validate.
+          BrandedTextField(
+            label: l.newStartTime,
+            controller: _startCtrl,
+            readOnly: true,
+            onTap: _pick,
+            // The dialog surface is navyLight — use the darker navy fill so
+            // the field stays visible.
+            fillColor: AppColors.navyBlue,
+            suffixIcon: const Icon(Icons.event_outlined),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            '${l.newEndTimePreview(sessionDateTimeFormat.format(_picked.add(widget.duration)))}'
+            ' · ${l.durationUnchanged}',
+            style: const TextStyle(
+              color: AppColors.grey,
+              fontSize: 12.5,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(l.cancel, style: const TextStyle(color: AppColors.grey)),
+        ),
+        TextButton(
+          // Disabled until the time actually moves, so the no-op the server
+          // rejects can never be submitted from here.
+          onPressed: changed ? () => Navigator.of(context).pop(_picked) : null,
+          child: Text(
+            l.save,
+            style: TextStyle(
+              color: changed ? AppColors.gold : AppColors.grey,
               fontWeight: FontWeight.w700,
             ),
           ),

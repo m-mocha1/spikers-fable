@@ -1051,6 +1051,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String get nothingToUpdate => 'Nothing to update';
 
   @override
+  String get editSessionTime => 'Edit time';
+
+  @override
+  String get changeSessionTime => 'Change session time';
+
+  @override
+  String get newStartTime => 'New start time';
+
+  @override
+  String newEndTimePreview(String time) {
+    return 'Ends $time';
+  }
+
+  @override
+  String get durationUnchanged => 'Duration unchanged';
+
+  @override
+  String get sessionTimeUpdated => 'Session time updated';
+
+  @override
+  String get sessionAlreadyStarted =>
+      'This session has already started — its time can\'t be changed';
+
+  @override
+  String get invalidSessionTime =>
+      'Pick a time in the future, within the next year';
+
+  @override
   String get height => 'Height';
 
   @override

@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
-import 'package:omni_datetime_picker/omni_datetime_picker.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -18,6 +16,7 @@ import 'package:spikers_app/features/sessions/domain/player_group_selection.dart
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../players/presentation/providers/players_providers.dart';
 import '../providers/sessions_providers.dart';
+import '../utils/session_time_picker.dart';
 import '../widgets/coach_select_chips.dart';
 import '../widgets/member_picker_sheet.dart';
 import '../widgets/player_group_actions.dart';
@@ -62,7 +61,7 @@ class _CreateSessionScreenState extends ConsumerState<CreateSessionScreen> {
   bool _notify = true;
   int? _designIndex;
 
-  final _fmt = DateFormat('MMM d, yyyy  HH:mm');
+  final _fmt = sessionDateTimeFormat;
 
   bool _isSubmitting = false;
 
@@ -84,16 +83,7 @@ class _CreateSessionScreenState extends ConsumerState<CreateSessionScreen> {
         ? DateTime.now().add(const Duration(hours: 1))
         : (_startTime ?? DateTime.now()).add(const Duration(hours: 2));
 
-    final picked = await showOmniDateTimePicker(
-      context: context,
-      initialDate: initial,
-      firstDate: DateTime.now().subtract(const Duration(minutes: 1)),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-      is24HourMode: true,
-      isShowSeconds: false,
-      minutesInterval: 5,
-      borderRadius: const BorderRadius.all(Radius.circular(16)),
-    );
+    final picked = await pickSessionDateTime(context, initial: initial);
 
     if (picked == null) return;
     setState(() {

@@ -310,6 +310,16 @@ class SessionsRemoteDataSource {
         'coachIds': coachIds,
       });
 
+  /// Sent as epoch millis: a callable payload is JSON, so it cannot carry a
+  /// Timestamp, and an absolute instant leaves the server nothing to parse.
+  /// Only the start crosses the wire — the end is recomputed server-side from
+  /// the stored duration.
+  Future<void> updateSessionTime(String sessionId, DateTime newStart) =>
+      _fns.httpsCallable('updateSessionTime').call({
+        'sessionId': sessionId,
+        'newStartMs': newStart.millisecondsSinceEpoch,
+      });
+
   Future<void> markAttended(String sessionId, String userId, bool attended) =>
       _fns.httpsCallable('markAttended').call({
         'sessionId': sessionId,

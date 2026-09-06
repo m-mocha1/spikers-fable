@@ -582,6 +582,77 @@ void main() {
     });
   });
 
+  group('updateSessionTime', () {
+    test('sends the session id and the new start as epoch millis', () async {
+      final callable = _MockCallable();
+      Map<String, dynamic>? sent;
+      when(() => callable.call<dynamic>(any())).thenAnswer((invocation) async {
+        sent = invocation.positionalArguments.first as Map<String, dynamic>;
+        return _FakeResult({'success': true});
+      });
+      when(() => fns.httpsCallable('updateSessionTime')).thenReturn(callable);
+
+      final newStart = DateTime.utc(2026, 9, 8, 20, 0);
+      await repo.updateSessionTime('s1', newStart);
+
+      // Only the start crosses the wire — the end is the server's business.
+      expect(sent, {
+        'sessionId': 's1',
+        'newStartMs': newStart.millisecondsSinceEpoch,
+      });
+    });
+
+    test('sends the same instant regardless of the DateTime zone', () async {
+      // The server reasons in absolute millis, so a local DateTime and its UTC
+      // equivalent must produce an identical payload.
+      final callable = _MockCallable();
+      final sentAll = <Map<String, dynamic>>[];
+      when(() => callable.call<dynamic>(any())).thenAnswer((invocation) async {
+        sentAll.add(invocation.positionalArguments.first as Map<String, dynamic>);
+        return _FakeResult({'success': true});
+      });
+      when(() => fns.httpsCallable('updateSessionTime')).thenReturn(callable);
+
+      final utc = DateTime.utc(2026, 9, 8, 20, 0);
+      await repo.updateSessionTime('s1', utc);
+      await repo.updateSessionTime('s1', utc.toLocal());
+
+      expect(sentAll[0]['newStartMs'], sentAll[1]['newStartMs']);
+    });
+
+    test('wraps a started-session rejection into SessionActionException',
+        () async {
+      final callable = _MockCallable();
+      when(() => callable.call<dynamic>(any())).thenThrow(
+          FirebaseFunctionsException(
+              message: 'Session already started',
+              code: 'failed-precondition'));
+      when(() => fns.httpsCallable('updateSessionTime')).thenReturn(callable);
+
+      await expectLater(
+        repo.updateSessionTime(
+            's1', DateTime.now().add(const Duration(hours: 2))),
+        throwsA(isA<SessionActionException>()
+            .having((e) => e.code, 'code', 'failed-precondition')),
+      );
+    });
+
+    test('wraps a permission rejection into SessionActionException', () async {
+      final callable = _MockCallable();
+      when(() => callable.call<dynamic>(any())).thenThrow(
+          FirebaseFunctionsException(
+              message: 'not your session', code: 'permission-denied'));
+      when(() => fns.httpsCallable('updateSessionTime')).thenReturn(callable);
+
+      await expectLater(
+        repo.updateSessionTime(
+            's1', DateTime.now().add(const Duration(hours: 2))),
+        throwsA(isA<SessionActionException>()
+            .having((e) => e.code, 'code', 'permission-denied')),
+      );
+    });
+  });
+
   group('endorse', () {
     test('calls the endorsePlayer callable on success', () async {
       final callable = _MockCallable();

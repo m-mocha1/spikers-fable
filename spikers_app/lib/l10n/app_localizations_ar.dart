@@ -1119,6 +1119,33 @@ class AppLocalizationsAr extends AppLocalizations {
   String get nothingToUpdate => 'لا يوجد ما يتم تحديثه';
 
   @override
+  String get editSessionTime => 'تعديل الوقت';
+
+  @override
+  String get changeSessionTime => 'تغيير وقت الجلسة';
+
+  @override
+  String get newStartTime => 'وقت البداية الجديد';
+
+  @override
+  String newEndTimePreview(String time) {
+    return 'ينتهي $time';
+  }
+
+  @override
+  String get durationUnchanged => 'المدة لم تتغير';
+
+  @override
+  String get sessionTimeUpdated => 'تم تحديث وقت الجلسة';
+
+  @override
+  String get sessionAlreadyStarted =>
+      'بدأت هذه الجلسة بالفعل — لا يمكن تغيير وقتها';
+
+  @override
+  String get invalidSessionTime => 'اختر وقتاً في المستقبل خلال السنة القادمة';
+
+  @override
   String get height => 'الطول';
 
   @override

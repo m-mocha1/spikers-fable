@@ -175,6 +175,23 @@ async function fetchStaffUids(): Promise<string[]> {
   return snap.docs.map((d) => d.id);
 }
 
+// Human date+time in the club's timezone, e.g. "07 Sep  19:30". cancelSession
+// hand-rolls this with getHours(), which renders UTC on a europe-west1 runtime
+// (2-3h off). There the string is decoration; in updateSessionTime it IS the
+// payload, so a wrong time would actively mislead every attendee.
+function formatJerusalem(date: Date): string {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Jerusalem",
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(date);
+  const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "";
+  return `${get("day")} ${get("month")}  ${get("hour")}:${get("minute")}`;
+}
+
 // FCM error codes that mean a token is permanently dead (app uninstalled,
 // token rotated by a reinstall/update, or otherwise unroutable). Tokens that
 // fail with one of these are pruned so they stop silently swallowing sends.
@@ -1705,6 +1722,155 @@ export const updateSessionCoaches = onCall(
       count: coachIds.length,
     });
     return { success: true };
+  }
+);
+
+// ---------------------------------------------------------------------------
+// updateSessionTime — owner-coach or staff shifts a session before it starts.
+// The caller picks a new START only; the END moves with it, preserving the
+// stored duration. The duration is recomputed server-side from the doc inside
+// the transaction and never taken from the client, so "the window keeps its
+// length" is structurally impossible to violate. Rejected once the stored start
+// has passed. The roster and waitlist get a push; the club schedule is not
+// otherwise touched (recurring templates are independent of their instances).
+// ---------------------------------------------------------------------------
+
+// The new start must still be in the future. This absorbs clock skew between
+// the coach's device and the server and, combined with the duration > 0 check,
+// guarantees the new end lands ahead of sessionCleanup's `endTime <= now - 1min`
+// sweep — which would otherwise archive and DELETE the live doc. Keep it small:
+// a coach legitimately pulls a session a few minutes earlier from courtside.
+const MIN_RESCHEDULE_LEAD_MS = 60 * 1000;
+// Mirrors the create/reschedule picker's lastDate (now + 365 days).
+const MAX_RESCHEDULE_AHEAD_MS = 365 * 24 * 60 * 60 * 1000;
+
+export const updateSessionTime = onCall(
+  { region: REGION },
+  async (request) => {
+    const uid = request.auth?.uid;
+    const sessionId = request.data?.["sessionId"] as string | undefined;
+    const newStartMs = request.data?.["newStartMs"] as number | undefined;
+    logger.info("updateSessionTime called", { uid, sessionId, newStartMs });
+
+    if (!uid) throw new HttpsError("unauthenticated", "Not authenticated");
+    if (request.auth?.token?.email_verified !== true) {
+      throw new HttpsError("permission-denied", "Email not verified");
+    }
+    if (!sessionId)
+      throw new HttpsError("invalid-argument", "sessionId required");
+    if (typeof newStartMs !== "number" || !Number.isFinite(newStartMs)) {
+      throw new HttpsError("invalid-argument", "newStartMs required");
+    }
+
+    const now = Date.now();
+    if (newStartMs < now + MIN_RESCHEDULE_LEAD_MS) {
+      throw new HttpsError(
+        "invalid-argument",
+        "New start must be in the future"
+      );
+    }
+    if (newStartMs > now + MAX_RESCHEDULE_AHEAD_MS) {
+      throw new HttpsError("invalid-argument", "New start too far ahead");
+    }
+
+    const sessionRef = db.collection("sessions").doc(sessionId);
+    // Outside the transaction on purpose: Admin-SDK transactions must not
+    // interleave non-transactional reads (same as updateSessionCapacity).
+    const callerIsStaff = await isStaffUid(uid);
+
+    // Captured in the transaction, used by the fan-out once it commits.
+    let sessionTitle = "";
+    let coachId = "";
+    let isSilent = false;
+    let oldStartMs = 0;
+    let newEndMs = 0;
+    let recipients: string[] = [];
+
+    await db.runTransaction(async (tx) => {
+      const doc = await tx.get(sessionRef);
+      // An already-archived session lives in sessions_history, which this ref
+      // never sees — an ended session's time is history, not a schedule.
+      if (!doc.exists) throw new HttpsError("not-found", "Session not found");
+      const session = doc.data()!;
+
+      if (session["coachId"] !== uid && !callerIsStaff) {
+        throw new HttpsError("permission-denied", "Not your session");
+      }
+
+      const start = session["startTime"] as admin.firestore.Timestamp;
+      const end = session["endTime"] as admin.firestore.Timestamp;
+      oldStartMs = start.toMillis();
+      // Read inside the transaction so the start boundary cannot slip past
+      // between the check and the write.
+      if (oldStartMs <= Date.now()) {
+        throw new HttpsError("failed-precondition", "Session already started");
+      }
+
+      const durationMs = end.toMillis() - oldStartMs;
+      if (durationMs <= 0) {
+        // Legacy data: create never validated end > start server-side. Logged
+        // distinctly because the client maps this code to "already started".
+        logger.error("updateSessionTime: non-positive duration", {
+          sessionId,
+          oldStartMs,
+          endMs: end.toMillis(),
+        });
+        throw new HttpsError("failed-precondition", "Invalid session duration");
+      }
+
+      if (newStartMs === oldStartMs) {
+        throw new HttpsError("invalid-argument", "Nothing to update");
+      }
+
+      newEndMs = newStartMs + durationMs;
+      sessionTitle = (session["title"] as string) ?? "";
+      coachId = (session["coachId"] as string) ?? "";
+      isSilent = session["silent"] === true;
+      // Roster + waitlist only — deliberately narrower than cancelSession's
+      // matchSessionPlayers audience. A reschedule changes a commitment only
+      // for people who made one; waitlisters are in because they may still be
+      // promoted into the session.
+      recipients = [
+        ...new Set([
+          ...((session["attendeeIds"] ?? []) as string[]),
+          ...((session["waitlistIds"] ?? []) as string[]),
+        ]),
+      ];
+
+      tx.update(sessionRef, {
+        startTime: admin.firestore.Timestamp.fromMillis(newStartMs),
+        endTime: admin.firestore.Timestamp.fromMillis(newEndMs),
+      });
+    });
+
+    // After the commit, like updateSessionCapacity/cancelSession.
+    if (!isSilent) {
+      const audience = recipients.filter((id) => id !== uid);
+      if (audience.length > 0) {
+        const coachName = await fetchUserName(coachId);
+        const oldStr = formatJerusalem(new Date(oldStartMs));
+        const newStr = formatJerusalem(new Date(newStartMs));
+        await sendFcmToUids(
+          audience,
+          {
+            notification: {
+              title: sessionTitle,
+              body: `${coachName} moved practice from ${oldStr} to ${newStr}`,
+            },
+            data: { sessionId, kind: "session_time_changed" },
+          },
+          "updateSessionTime"
+        );
+      }
+    }
+
+    logger.info("updateSessionTime ok", {
+      sessionId,
+      oldStartMs,
+      newStartMs,
+      newEndMs,
+    });
+    return { success: true, newStartMs, newEndMs };
   }
 );
 

@@ -63,3 +63,24 @@ String capacityErrorMessage(AppLocalizations l, String code) {
       return '${l.unknownError} ($code)';
   }
 }
+
+/// Failures from the coach "shift this session's time" path. Kept separate from
+/// [capacityErrorMessage] because the two disagree on what 'failed-precondition'
+/// and 'invalid-argument' mean.
+String timeErrorMessage(AppLocalizations l, String code) {
+  switch (code) {
+    // The session started — a deliberate rule, not a glitch, so say which.
+    case 'failed-precondition':
+      return l.sessionAlreadyStarted;
+    case 'invalid-argument':
+      return l.invalidSessionTime;
+    case 'permission-denied':
+      return l.notYourSession;
+    case 'not-found':
+      return l.sessionMissing;
+    case 'unauthenticated':
+      return l.notSignedIn;
+    default:
+      return '${l.unknownError} ($code)';
+  }
+}

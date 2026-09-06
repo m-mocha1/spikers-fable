@@ -116,6 +116,13 @@ abstract class SessionsRepository {
   /// tag. Owner-coach or staff. Throws [SessionActionException].
   Future<void> updateSessionCoaches(String sessionId, List<String> coachIds);
 
+  /// Shifts the whole session so it starts at [newStart]; the end moves with
+  /// it, preserving the current duration (recomputed server-side, never sent
+  /// by the client). Rejected once the session has started. Owner-coach or
+  /// staff; the roster and waitlist get a push.
+  /// Throws [SessionActionException].
+  Future<void> updateSessionTime(String sessionId, DateTime newStart);
+
   /// Throws [SessionActionException].
   Future<void> markAttended(String sessionId, String userId, bool attended);
 

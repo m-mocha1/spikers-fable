@@ -1802,6 +1802,54 @@ abstract class AppLocalizations {
   /// **'Nothing to update'**
   String get nothingToUpdate;
 
+  /// No description provided for @editSessionTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit time'**
+  String get editSessionTime;
+
+  /// No description provided for @changeSessionTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Change session time'**
+  String get changeSessionTime;
+
+  /// No description provided for @newStartTime.
+  ///
+  /// In en, this message translates to:
+  /// **'New start time'**
+  String get newStartTime;
+
+  /// No description provided for @newEndTimePreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Ends {time}'**
+  String newEndTimePreview(String time);
+
+  /// No description provided for @durationUnchanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration unchanged'**
+  String get durationUnchanged;
+
+  /// No description provided for @sessionTimeUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Session time updated'**
+  String get sessionTimeUpdated;
+
+  /// No description provided for @sessionAlreadyStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'This session has already started — its time can\'t be changed'**
+  String get sessionAlreadyStarted;
+
+  /// No description provided for @invalidSessionTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a time in the future, within the next year'**
+  String get invalidSessionTime;
+
   /// No description provided for @height.
   ///
   /// In en, this message translates to:

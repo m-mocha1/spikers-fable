@@ -487,6 +487,19 @@
   "notSignedIn": "Please sign in again",
   "notYourSession": "Only the session's coach can do that",
   "nothingToUpdate": "Nothing to update",
+  "editSessionTime": "Edit time",
+  "changeSessionTime": "Change session time",
+  "newStartTime": "New start time",
+  "newEndTimePreview": "Ends {time}",
+  "@newEndTimePreview": {
+    "placeholders": {
+      "time": { "type": "String" }
+    }
+  },
+  "durationUnchanged": "Duration unchanged",
+  "sessionTimeUpdated": "Session time updated",
+  "sessionAlreadyStarted": "This session has already started — its time can't be changed",
+  "invalidSessionTime": "Pick a time in the future, within the next year",
   "height": "Height",
   "weight": "Weight",
   "heightHint": "cm",
