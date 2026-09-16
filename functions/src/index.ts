@@ -836,8 +836,11 @@ async function purgeUserAccount(userId: string): Promise<void> {
 }
 
 // ---------------------------------------------------------------------------
-// adminDeleteUser — admin-only permanent deletion of a user account
-// (players and coaches are both /users docs).
+// adminDeleteUser — staff (coach/admin) permanent deletion of a user account
+// (players and coaches are both /users docs). Admin accounts and lifetime
+// members are protected: the client keeps its delete button, but the call
+// fails with failed-precondition. Self-service deletion (deleteMyAccount) is
+// deliberately not subject to this guard.
 // ---------------------------------------------------------------------------
 export const adminDeleteUser = onCall({ region: REGION }, async (request) => {
   const callerUid = await requireStaff(request);
@@ -846,6 +849,16 @@ export const adminDeleteUser = onCall({ region: REGION }, async (request) => {
   if (!userId) throw new HttpsError("invalid-argument", "userId required");
   if (userId === callerUid) {
     throw new HttpsError("permission-denied", "Cannot delete yourself");
+  }
+
+  const snap = await db.collection("users").doc(userId).get();
+  if (!snap.exists) throw new HttpsError("not-found", "User not found");
+  const target = snap.data() ?? {};
+  if (target["role"] === "admin") {
+    throw new HttpsError("failed-precondition", "Admin accounts cannot be deleted");
+  }
+  if (target["lifetimeMember"] === true) {
+    throw new HttpsError("failed-precondition", "Lifetime members cannot be deleted");
   }
 
   await purgeUserAccount(userId);

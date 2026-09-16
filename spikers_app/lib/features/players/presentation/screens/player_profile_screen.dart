@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_motion.dart';
+import '../../../../core/errors/account_action_exception.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/utils/app_snackbar.dart';
 import '../../../../core/utils/attendance_tiers.dart';
@@ -49,6 +50,11 @@ class PlayerProfileScreen extends ConsumerWidget {
       await ref.read(playersRepositoryProvider).deletePlayer(uid);
       showAppSnackbar(l.accountDeleted);
       if (context.mounted) context.pop();
+    } on AccountActionException catch (e) {
+      // failed-precondition = target is an admin or a lifetime member.
+      showAppSnackbar(e.code == 'failed-precondition'
+          ? l.protectedAccountCannotBeDeleted
+          : l.unknownError);
     } catch (_) {
       showAppSnackbar(l.unknownError);
     }

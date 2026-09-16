@@ -384,6 +384,7 @@
     }
   },
   "accountDeleted": "Account deleted",
+  "protectedAccountCannotBeDeleted": "Admin and lifetime-member accounts can't be deleted.",
   "deleteMyAccountTitle": "Delete my account",
   "deleteMyAccountConfirm": "Permanently delete your account? This removes your login and all your data and cannot be undone.",
   "deleteMyAccountError": "Couldn't delete your account. Please try again.",

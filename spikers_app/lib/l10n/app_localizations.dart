@@ -1460,6 +1460,12 @@ abstract class AppLocalizations {
   /// **'Account deleted'**
   String get accountDeleted;
 
+  /// No description provided for @protectedAccountCannotBeDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin and lifetime-member accounts can\'t be deleted.'**
+  String get protectedAccountCannotBeDeleted;
+
   /// No description provided for @deleteMyAccountTitle.
   ///
   /// In en, this message translates to:

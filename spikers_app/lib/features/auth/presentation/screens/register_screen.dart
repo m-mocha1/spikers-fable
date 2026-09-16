@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/utils/age_calculator.dart';
 import '../../../../core/utils/app_snackbar.dart';
 import '../../../../core/utils/media_permissions.dart';
 import '../../../../core/utils/validators.dart';
@@ -63,7 +64,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       context: context,
       initialDate: DateTime(now.year - 18),
       firstDate: DateTime(1950),
-      lastDate: DateTime(now.year - 5),
+      // Youngest allowed account, matching the isValidDob rule so the write
+      // can't be rejected after the Auth user is created.
+      lastDate: AgeCalculator.latestAllowedDob(now),
       builder: (ctx, child) => Theme(
         data: Theme.of(ctx).copyWith(
           colorScheme: const ColorScheme.dark(

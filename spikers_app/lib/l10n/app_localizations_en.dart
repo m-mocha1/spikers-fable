@@ -861,6 +861,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accountDeleted => 'Account deleted';
 
   @override
+  String get protectedAccountCannotBeDeleted =>
+      'Admin and lifetime-member accounts can\'t be deleted.';
+
+  @override
   String get deleteMyAccountTitle => 'Delete my account';
 
   @override

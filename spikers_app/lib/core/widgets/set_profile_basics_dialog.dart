@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_motion.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../core/utils/age_calculator.dart';
 import '../../core/utils/app_snackbar.dart';
 import '../../features/auth/presentation/providers/auth_providers.dart';
 import '../../l10n/app_localizations.dart';
@@ -53,9 +54,9 @@ class _SetProfileBasicsDialogState
       context: context,
       initialDate: DateTime(now.year - 18),
       firstDate: DateTime(1950),
-      // At least 13 years old, matching the isValidDob rule so the write
+      // Youngest allowed account, matching the isValidDob rule so the write
       // can't be rejected.
-      lastDate: DateTime(now.year - 13),
+      lastDate: AgeCalculator.latestAllowedDob(now),
       builder: (ctx, child) => Theme(
         data: Theme.of(ctx).copyWith(
           colorScheme: const ColorScheme.dark(

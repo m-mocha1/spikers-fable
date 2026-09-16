@@ -153,8 +153,9 @@ class PlayersRemoteDataSource {
     await batch.commit();
   }
 
-  /// Admin-only permanent account deletion. The callable enforces that the
-  /// caller is an admin server-side.
+  /// Staff-only permanent account deletion. The callable enforces that the
+  /// caller is a coach/admin server-side and refuses admin accounts and
+  /// lifetime members (failed-precondition).
   Future<void> deletePlayer(String uid) =>
       _functions.httpsCallable('adminDeleteUser').call({'userId': uid});
 

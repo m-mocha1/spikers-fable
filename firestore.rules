@@ -26,11 +26,12 @@ service cloud.firestore {
     function isValidGender(v) { return v == 'male' || v == 'female'; }
     function isValidHeight(v) { return v is int && v >= 100 && v <= 250; }
     function isValidWeight(v) { return v is int && v >= 20  && v <= 200; }
-    // Earliest plausible DOB ~1925-01-01; must be at least 13 years ago.
+    // Earliest plausible DOB ~1925-01-01; must be at least 8 years ago
+    // (keep in sync with AgeCalculator.minimumAgeYears in the app).
     function isValidDob(v) {
       return v is timestamp
              && v.toMillis() > -1420070400000
-             && v.toMillis() < request.time.toMillis() - 13 * 365 * 24 * 60 * 60 * 1000;
+             && v.toMillis() < request.time.toMillis() - 8 * 365 * 24 * 60 * 60 * 1000;
     }
     function hasField(data, key) { return key in data.keys(); }
 

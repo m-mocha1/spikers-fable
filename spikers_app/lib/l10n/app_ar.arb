@@ -384,6 +384,7 @@
     }
   },
   "accountDeleted": "تم حذف الحساب",
+  "protectedAccountCannotBeDeleted": "لا يمكن حذف حسابات المشرفين أو أصحاب العضوية الدائمة.",
   "deleteMyAccountTitle": "حذف حسابي",
   "deleteMyAccountConfirm": "حذف حسابك نهائياً؟ سيؤدي ذلك إلى إزالة تسجيل دخولك وجميع بياناتك ولا يمكن التراجع عن ذلك.",
   "deleteMyAccountError": "تعذّر حذف حسابك. يرجى المحاولة مرة أخرى.",

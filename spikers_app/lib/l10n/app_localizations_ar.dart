@@ -930,6 +930,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get accountDeleted => 'تم حذف الحساب';
 
   @override
+  String get protectedAccountCannotBeDeleted =>
+      'لا يمكن حذف حسابات المشرفين أو أصحاب العضوية الدائمة.';
+
+  @override
   String get deleteMyAccountTitle => 'حذف حسابي';
 
   @override

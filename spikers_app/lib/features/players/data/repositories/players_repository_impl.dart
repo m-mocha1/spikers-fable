@@ -1,3 +1,5 @@
+import 'package:cloud_functions/cloud_functions.dart';
+import 'package:spikers_app/core/errors/account_action_exception.dart';
 import 'package:spikers_app/features/auth/domain/entities/user_model.dart';
 import '../../domain/entities/player_summary.dart';
 import '../../domain/repositories/players_repository.dart';
@@ -33,7 +35,13 @@ class PlayersRepositoryImpl implements PlayersRepository {
       _remote.markUnpaid(playerUid, coachUid: coachUid, coachName: coachName);
 
   @override
-  Future<void> deletePlayer(String uid) => _remote.deletePlayer(uid);
+  Future<void> deletePlayer(String uid) async {
+    try {
+      await _remote.deletePlayer(uid);
+    } on FirebaseFunctionsException catch (e) {
+      throw AccountActionException(e.code);
+    }
+  }
 
   @override
   Future<void> renamePlayer(String uid, String name) =>
