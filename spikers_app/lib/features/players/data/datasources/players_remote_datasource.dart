@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
+import '../../../../core/firebase/firebase_providers.dart' show kCallableOptions;
 import 'package:spikers_app/features/auth/domain/entities/user_model.dart';
 import '../../domain/entities/player_summary.dart';
 
@@ -157,7 +158,7 @@ class PlayersRemoteDataSource {
   /// caller is a coach/admin server-side and refuses admin accounts and
   /// lifetime members (failed-precondition).
   Future<void> deletePlayer(String uid) =>
-      _functions.httpsCallable('adminDeleteUser').call({'userId': uid});
+      _functions.httpsCallable('adminDeleteUser', options: kCallableOptions).call({'userId': uid});
 
   /// Coach/admin uploads a new profile photo for [uid] and points that user's
   /// photoUrl at it. Same storage path and downscaled image as the self-flow
@@ -175,6 +176,6 @@ class PlayersRemoteDataSource {
   /// that the caller is staff and that the target is a plain player (staff
   /// accounts can't be renamed by others).
   Future<void> renamePlayer(String uid, String name) => _functions
-      .httpsCallable('coachRenamePlayer')
+      .httpsCallable('coachRenamePlayer', options: kCallableOptions)
       .call({'userId': uid, 'name': name.trim()});
 }

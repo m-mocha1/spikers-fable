@@ -30,6 +30,22 @@ class SessionsHistoryScreen extends ConsumerStatefulWidget {
 
 class _SessionsHistoryScreenState
     extends ConsumerState<SessionsHistoryScreen> {
+  /// Loaded-session count at the last page bump. If a bump doesn't grow the
+  /// list, the archive is exhausted and paging stops. (The loaded count can't
+  /// be compared to the limit directly: players' lists drop custom sessions
+  /// they weren't in, so a full page can arrive short.)
+  int? _loadedAtLastBump;
+
+  /// Grows the history page once the end of the list is reached.
+  void _maybeLoadMore(int loaded) {
+    if (loaded == _loadedAtLastBump) return;
+    _loadedAtLastBump = loaded;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref.read(historyLimitProvider.notifier).state += kHistoryPageSize;
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -50,6 +66,9 @@ class _SessionsHistoryScreenState
     return Scaffold(
       appBar: AppBar(title: Text(l.sessionsHistory)),
       body: historyAsync.when(
+        // Growing the page re-runs the provider; keep the loaded list on
+        // screen meanwhile instead of flashing the shimmer.
+        skipLoadingOnReload: true,
         loading: () => const ListShimmer(itemHeight: 110),
         error: (e, _) => ErrorView(
             onRetry: () => ref.invalidate(sessionsHistoryProvider)),
@@ -57,23 +76,34 @@ class _SessionsHistoryScreenState
           final filtered = !isCoach || genderFilter == 'all'
               ? sessions
               : sessions.where((s) => s.gender == genderFilter).toList();
+          // A coach's gender filter can empty a whole page; fetch further
+          // back rather than claiming there's no history.
+          if (filtered.isEmpty && sessions.isNotEmpty) {
+            _maybeLoadMore(sessions.length);
+          }
 
           final Widget list = filtered.isEmpty
               ? EmptyStateView(icon: Icons.history, title: l.noSessionsHistory)
               : ListView.builder(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
                   itemCount: filtered.length,
-                  itemBuilder: (_, i) => AppStaggeredItem(
-                    // Key by session identity so switching the gender filter
-                    // reorders cards instead of recycling one session's
-                    // avatar-state onto another (see _HistoryCardState).
-                    key: ValueKey(filtered[i].id),
-                    index: i,
-                    child: _HistoryCard(
+                  itemBuilder: (_, i) {
+                    if (i == filtered.length - 1) {
+                      _maybeLoadMore(sessions.length);
+                    }
+                    return AppStaggeredItem(
+                      // Key by session identity so switching the gender
+                      // filter reorders cards instead of recycling one
+                      // session's avatar-state onto another (see
+                      // _HistoryCardState).
                       key: ValueKey(filtered[i].id),
-                      session: filtered[i],
-                    ),
-                  ),
+                      index: i,
+                      child: _HistoryCard(
+                        key: ValueKey(filtered[i].id),
+                        session: filtered[i],
+                      ),
+                    );
+                  },
                 );
 
           // Players' lists are already gender-scoped by the query, so only

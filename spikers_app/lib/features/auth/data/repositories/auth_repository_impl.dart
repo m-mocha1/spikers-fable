@@ -79,6 +79,13 @@ class AuthRepositoryImpl implements AuthRepository {
     _userController.add(user);
   }
 
+  /// Upper bound on how long startup waits for the first user snapshot and
+  /// the token check before releasing [ready]. On a slow network the splash
+  /// would otherwise sit on these round trips; past this the app opens and
+  /// the still-running user listener fills the user in when it arrives.
+  @visibleForTesting
+  static Duration startupTimeout = const Duration(seconds: 4);
+
   /// Restores the session and starts the auth-state pipeline. Idempotent.
   Future<void> init() async {
     if (_initStarted) return;
@@ -91,12 +98,14 @@ class AuthRepositoryImpl implements AuthRepository {
     final user = _remote.auth.currentUser;
     if (user != null) {
       try {
-        await _listenToUser(user.uid);
-        await _refreshTokenIfVerified();
-        _updateFcmToken(user.uid);
+        await Future(() async {
+          await _listenToUser(user.uid);
+          await _refreshTokenIfVerified();
+        }).timeout(startupTimeout);
       } catch (e) {
-        debugPrint('auth: initial user listen/FCM setup failed — $e');
+        debugPrint('auth: initial user listen/token check failed — $e');
       }
+      _updateFcmToken(user.uid);
     }
 
     if (!_readyCompleter.isCompleted) _readyCompleter.complete();
@@ -170,10 +179,17 @@ class AuthRepositoryImpl implements AuthRepository {
   /// shell's verified-only listeners (peers, announcements) hit
   /// PERMISSION_DENIED, and a failed Firestore listen never recovers.
   /// Mirror of the getIdToken(true) call in reloadAndCheckVerified.
+  ///
+  /// The forced refresh is a network round trip, so it only runs when the
+  /// cached token actually lacks the claim — the common case (claim already
+  /// present) costs no network and doesn't hold up the splash screen.
   Future<void> _refreshTokenIfVerified() async {
     try {
       final user = _remote.auth.currentUser;
-      if (user?.emailVerified == true) await user!.getIdToken(true);
+      if (user?.emailVerified != true) return;
+      final claims = (await user!.getIdTokenResult()).claims;
+      if (claims?['email_verified'] == true) return;
+      await user.getIdToken(true);
     } catch (_) {
       // Non-fatal — reads may flash an error until the next token refresh.
     }
@@ -182,11 +198,6 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<void> _updateFcmToken(String uid) async {
     final messaging = _messaging;
     if (messaging == null) return;
-
-    // TEMP DIAGNOSTIC — see _writeFcmDebug. Accumulates the outcome of each
-    // step so a failure is visible in the Firestore console even on release
-    // builds (which strip the [FCM] debugPrints). Remove once iOS is verified.
-    final diag = <String, dynamic>{'platform': defaultTargetPlatform.name};
 
     // Attach the refresh listener FIRST, before the getToken() attempt below.
     // On iOS the first getToken() can throw `apns-token-not-set`; if the
@@ -209,45 +220,23 @@ class AuthRepositoryImpl implements AuthRepository {
       // so getToken() doesn't throw. Android returns immediately and is
       // unaffected.
       if (defaultTargetPlatform == TargetPlatform.iOS) {
-        final settings = await messaging.requestPermission(
+        await messaging.requestPermission(
             alert: true, badge: true, sound: true);
-        diag['authorizationStatus'] = settings.authorizationStatus.name;
 
         // Poll for the APNs token (up to ~5s) so the getToken() below doesn't
-        // throw `apns-token-not-set`. Record whether it ever arrived.
-        String? apns;
-        var polls = 0;
-        for (; polls < 10; polls++) {
-          apns = await messaging.getAPNSToken();
-          if (apns != null) break;
+        // throw `apns-token-not-set`.
+        for (var polls = 0; polls < 10; polls++) {
+          if (await messaging.getAPNSToken() != null) break;
           await Future<void>.delayed(const Duration(milliseconds: 500));
         }
-        diag['apnsToken'] = apns == null ? 'NULL' : 'len ${apns.length}';
-        diag['apnsPolls'] = polls;
       }
       final token = await messaging.getToken();
-      diag['getToken'] = token == null ? 'NULL' : 'len ${token.length}';
       debugPrint(
         '[FCM] getToken for $uid -> ${token == null ? 'NULL' : '${token.substring(0, 12)}… (len ${token.length})'}',
       );
       if (token != null) await _writeToken(uid, token);
     } catch (e) {
-      diag['error'] = e.toString();
       debugPrint('[FCM] token update failed — $e');
-    } finally {
-      await _writeFcmDebug(uid, diag);
-    }
-  }
-
-  // TEMP DIAGNOSTIC — writes the FCM token-path outcome to
-  // users/{uid}/private/fcm_debug so it can be inspected from the Firestore
-  // console. Remove once iOS token registration is confirmed working.
-  Future<void> _writeFcmDebug(String uid, Map<String, dynamic> diag) async {
-    try {
-      await _remote.writeFcmDebug(uid, diag);
-      debugPrint('[FCM] debug WRITTEN to users/$uid/private/fcm_debug -> $diag');
-    } catch (e) {
-      debugPrint('[FCM] debug write FAILED — $e');
     }
   }
 

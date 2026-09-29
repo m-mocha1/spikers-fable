@@ -5,6 +5,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../../../core/constants/app_assets.dart';
+import '../../../../core/firebase/firebase_providers.dart' show kCallableOptions;
 import 'package:spikers_app/features/sessions/domain/entities/chat_message_model.dart';
 import 'package:spikers_app/features/sessions/domain/entities/player_group_model.dart';
 import 'package:spikers_app/features/sessions/domain/entities/recurring_session_model.dart';
@@ -98,8 +99,8 @@ class SessionsRemoteDataSource {
     });
   }
 
-  Future<Map<String, PublicProfile>> fetchPublicProfiles(
-      List<String> uids) async {
+  Future<Map<String, PublicProfile>> fetchPublicProfiles(List<String> uids,
+      [GetOptions options = const GetOptions()]) async {
     if (uids.isEmpty) return {};
     // whereIn caps at 30 ids per query; fetch all chunks in parallel so a
     // large session costs one round trip, not one per chunk.
@@ -109,7 +110,7 @@ class SessionsRemoteDataSource {
             .collection('users_public')
             .where(FieldPath.documentId,
                 whereIn: uids.sublist(i, min(i + 30, uids.length)))
-            .get(),
+            .get(options),
     ]);
     return {
       for (final snap in snaps)
@@ -148,17 +149,20 @@ class SessionsRemoteDataSource {
   /// The history query (array-contains + orderBy) is backed by the composite
   /// index on (attendedIds, startTime) in firestore.indexes.json.
   Future<List<DateTime>> fetchAttendedTimes(String uid,
-      {int limit = 100}) async {
+      {int limit = 100, GetOptions options = const GetOptions()}) async {
     final results = await Future.wait([
       _db
           .collection('sessions_history')
           .where('attendedIds', arrayContains: uid)
           .orderBy('startTime', descending: true)
           .limit(limit)
-          .get(),
+          .get(options),
       // Live collection is small (upcoming + today's sessions), so a plain
       // array-contains needs no ordering or composite index.
-      _db.collection('sessions').where('attendedIds', arrayContains: uid).get(),
+      _db
+          .collection('sessions')
+          .where('attendedIds', arrayContains: uid)
+          .get(options),
     ]);
     return [
       for (final snap in results)
@@ -207,15 +211,18 @@ class SessionsRemoteDataSource {
   /// on the small `sessions` collection. Feeds the coach take-attendance prompt
   /// and badge, which filter these down to the ones still needing attendance.
   Future<List<SessionModel>> fetchCoachRecentSessions(String coachUid,
-      {int limit = 20}) async {
+      {int limit = 20, GetOptions options = const GetOptions()}) async {
     final results = await Future.wait([
       _db
           .collection('sessions_history')
           .where('coachId', isEqualTo: coachUid)
           .orderBy('endTime', descending: true)
           .limit(limit)
-          .get(),
-      _db.collection('sessions').where('coachId', isEqualTo: coachUid).get(),
+          .get(options),
+      _db
+          .collection('sessions')
+          .where('coachId', isEqualTo: coachUid)
+          .get(options),
     ]);
     return [
       for (final snap in results)
@@ -269,19 +276,19 @@ class SessionsRemoteDataSource {
 
   Future<String> join(String sessionId) async {
     final res =
-        await _fns.httpsCallable('joinSession').call({'sessionId': sessionId});
+        await _fns.httpsCallable('joinSession', options: kCallableOptions).call({'sessionId': sessionId});
     return (res.data?['status'] as String?) ?? '';
   }
 
   Future<void> leave(String sessionId) =>
-      _fns.httpsCallable('leaveSession').call({'sessionId': sessionId});
+      _fns.httpsCallable('leaveSession', options: kCallableOptions).call({'sessionId': sessionId});
 
   Future<void> cancel(String sessionId) =>
-      _fns.httpsCallable('cancelSession').call({'sessionId': sessionId});
+      _fns.httpsCallable('cancelSession', options: kCallableOptions).call({'sessionId': sessionId});
 
   Future<void> updateCapacity(String sessionId,
           {int? newMaxPlayers, int? newWaitlistSize}) =>
-      _fns.httpsCallable('updateSessionCapacity').call({
+      _fns.httpsCallable('updateSessionCapacity', options: kCallableOptions).call({
         'sessionId': sessionId,
         'newMaxPlayers': ?newMaxPlayers,
         'newWaitlistSize': ?newWaitlistSize,
@@ -291,7 +298,7 @@ class SessionsRemoteDataSource {
           {required String gender,
           required int minAge,
           required int maxAge}) =>
-      _fns.httpsCallable('makeSessionPublic').call({
+      _fns.httpsCallable('makeSessionPublic', options: kCallableOptions).call({
         'sessionId': sessionId,
         'gender': gender,
         'minAge': minAge,
@@ -299,13 +306,13 @@ class SessionsRemoteDataSource {
       });
 
   Future<void> updateSessionMembers(String sessionId, List<String> memberIds) =>
-      _fns.httpsCallable('updateSessionMembers').call({
+      _fns.httpsCallable('updateSessionMembers', options: kCallableOptions).call({
         'sessionId': sessionId,
         'memberIds': memberIds,
       });
 
   Future<void> updateSessionCoaches(String sessionId, List<String> coachIds) =>
-      _fns.httpsCallable('updateSessionCoaches').call({
+      _fns.httpsCallable('updateSessionCoaches', options: kCallableOptions).call({
         'sessionId': sessionId,
         'coachIds': coachIds,
       });
@@ -315,38 +322,38 @@ class SessionsRemoteDataSource {
   /// Only the start crosses the wire — the end is recomputed server-side from
   /// the stored duration.
   Future<void> updateSessionTime(String sessionId, DateTime newStart) =>
-      _fns.httpsCallable('updateSessionTime').call({
+      _fns.httpsCallable('updateSessionTime', options: kCallableOptions).call({
         'sessionId': sessionId,
         'newStartMs': newStart.millisecondsSinceEpoch,
       });
 
   Future<void> markAttended(String sessionId, String userId, bool attended) =>
-      _fns.httpsCallable('markAttended').call({
+      _fns.httpsCallable('markAttended', options: kCallableOptions).call({
         'sessionId': sessionId,
         'userId': userId,
         'attended': attended,
       });
 
   Future<void> removeAttendee(String sessionId, String userId) =>
-      _fns.httpsCallable('removeAttendee').call({
+      _fns.httpsCallable('removeAttendee', options: kCallableOptions).call({
         'sessionId': sessionId,
         'userId': userId,
       });
 
   Future<void> addAttendees(String sessionId, List<String> userIds) =>
-      _fns.httpsCallable('addAttendees').call({
+      _fns.httpsCallable('addAttendees', options: kCallableOptions).call({
         'sessionId': sessionId,
         'userIds': userIds,
       });
 
   Future<void> confirmAttendance(String sessionId, List<String> presentUids) =>
-      _fns.httpsCallable('confirmAttendance').call({
+      _fns.httpsCallable('confirmAttendance', options: kCallableOptions).call({
         'sessionId': sessionId,
         'presentUids': presentUids,
       });
 
   Future<void> endorse(String sessionId, String userId) =>
-      _fns.httpsCallable('endorsePlayer').call({
+      _fns.httpsCallable('endorsePlayer', options: kCallableOptions).call({
         'sessionId': sessionId,
         'userId': userId,
       });
@@ -366,7 +373,7 @@ class SessionsRemoteDataSource {
 
   Future<void> archiveExpiredNow() async {
     try {
-      await _fns.httpsCallable('archiveExpiredSessionsNow').call();
+      await _fns.httpsCallable('archiveExpiredSessionsNow', options: kCallableOptions).call();
     } catch (e) {
       // Non-fatal: the scheduled sessionCleanup function archives it anyway.
       debugPrint('sessions: on-demand archival failed — $e');

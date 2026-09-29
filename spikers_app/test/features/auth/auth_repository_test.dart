@@ -111,6 +111,27 @@ void main() {
       verify(() => remote.signIn('a@b.c', 'secret')).called(1);
     });
 
+    // Slow-network regression: the splash awaits `ready`, so a user doc that
+    // never arrives must not hold the app on the splash screen.
+    test('ready completes within the startup timeout when the user doc stalls',
+        () async {
+      mockAuth = MockFirebaseAuth(
+          signedIn: true, mockUser: MockUser(uid: 'u1', email: 'a@b.c'));
+      when(() => remote.auth).thenReturn(mockAuth);
+      when(() => remote.userDocStream(any())).thenAnswer((_) =>
+          const Stream<DocumentSnapshot<Map<String, dynamic>>>.empty()
+              .asBroadcastStream());
+      final saved = AuthRepositoryImpl.startupTimeout;
+      AuthRepositoryImpl.startupTimeout = const Duration(milliseconds: 50);
+      addTearDown(() => AuthRepositoryImpl.startupTimeout = saved);
+
+      final repo = makeRepo();
+      await repo.init().timeout(const Duration(seconds: 2));
+      await repo.ready.timeout(const Duration(seconds: 2));
+
+      expect(repo.isSignedIn, isTrue);
+    });
+
     test('failed restore clears stored credentials', () async {
       credentials.stored = const StoredCredentials('a@b.c', 'stale');
       when(() => remote.signIn(any(), any()))

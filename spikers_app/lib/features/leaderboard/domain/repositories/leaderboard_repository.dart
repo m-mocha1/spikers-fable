@@ -19,4 +19,12 @@ abstract class LeaderboardRepository {
   /// signal is the aggregate count. Same gender visibility rule as
   /// [fetchAllTime].
   Future<List<LeaderboardEntry>> fetchEndorsements(UserModel viewer);
+
+  /// Cache-first streams of the boards above: the on-device copy from the
+  /// last visit is emitted immediately (when there is one), then the fresh
+  /// server result replaces it — so a slow network shows the previous board
+  /// instead of a spinner.
+  Stream<List<LeaderboardEntry>> watchAllTime(UserModel viewer);
+  Stream<List<LeaderboardEntry>> watchMonthly(UserModel viewer);
+  Stream<List<LeaderboardEntry>> watchEndorsements(UserModel viewer);
 }

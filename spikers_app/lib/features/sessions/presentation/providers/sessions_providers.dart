@@ -45,7 +45,7 @@ final recurringSessionsRepositoryProvider =
 /// Not autoDispose: the sessions tab is the home screen's default tab and
 /// the old controller kept this listener alive for the whole session.
 final upcomingSessionsProvider = StreamProvider<List<SessionModel>>((ref) {
-  final viewer = ref.watch(currentUserProvider).value;
+  final viewer = ref.watch(queryViewerProvider);
   if (viewer == null) return Stream.value(const []);
   final repo = ref.watch(sessionsRepositoryProvider);
   final emailVerified = ref.watch(authRepositoryProvider).isEmailVerified;
@@ -59,20 +59,21 @@ final sessionProvider = StreamProvider.autoDispose.family<SessionModel?, String>
 /// Public profiles for a card facepile, keyed by a comma-joined uid string —
 /// family params need value equality, which a `List<String>` doesn't have.
 /// Returns profiles in the same order as the incoming uids (attendee order).
-final facepileProfilesProvider = FutureProvider.autoDispose
-    .family<List<PublicProfile>, String>((ref, joinedUids) async {
+final facepileProfilesProvider = StreamProvider.autoDispose
+    .family<List<PublicProfile>, String>((ref, joinedUids) {
   final uids = joinedUids.split(',').where((u) => u.isNotEmpty).toList();
-  if (uids.isEmpty) return const [];
+  if (uids.isEmpty) return Stream.value(const []);
   // Cached variant: facepiles tolerate slightly stale names/photos, and the
   // shared cache stops every card (and every rebuild) re-reading the same
-  // players from Firestore.
-  final map = await ref
+  // players from Firestore. Streamed so the on-device copy paints first on a
+  // cold start instead of every card waiting on the network.
+  return ref
       .watch(sessionsRepositoryProvider)
-      .fetchPublicProfilesCached(uids);
-  return [
-    for (final uid in uids)
-      if (map[uid] != null) map[uid]!,
-  ];
+      .watchPublicProfilesCached(uids)
+      .map((map) => [
+            for (final uid in uids)
+              if (map[uid] != null) map[uid]!,
+          ]);
 });
 
 final archivedSessionProvider =
@@ -85,7 +86,7 @@ final archivedSessionProvider =
 /// detail screen.
 final myEndorsementsProvider =
     StreamProvider.autoDispose.family<Set<String>, String>((ref, sessionId) {
-  final uid = ref.watch(currentUserProvider).value?.uid;
+  final uid = ref.watch(queryViewerProvider)?.uid;
   if (uid == null) return Stream.value(const <String>{});
   return ref
       .watch(sessionsRepositoryProvider)
@@ -94,29 +95,44 @@ final myEndorsementsProvider =
 
 /// Archived sessions visible to the signed-in user: players only see their
 /// own gender (or mixed); coaches/admins see all. Empty while signed out.
+///
+/// Paged: streams the newest [historyLimitProvider] sessions, which the
+/// history screen grows as the user reaches the end of the list.
 final sessionsHistoryProvider =
     StreamProvider.autoDispose<List<SessionModel>>((ref) {
-  final viewer = ref.watch(currentUserProvider).value;
+  final viewer = ref.watch(queryViewerProvider);
   if (viewer == null) return Stream.value(const []);
-  return ref.watch(sessionsRepositoryProvider).watchHistory(viewer);
+  final limit = ref.watch(historyLimitProvider);
+  return ref
+      .watch(sessionsRepositoryProvider)
+      .watchHistory(viewer, limit: limit);
 });
+
+/// Sessions per history page. Small so a slow network paints the first
+/// screenful quickly instead of downloading the whole archive up front.
+const kHistoryPageSize = 20;
+
+/// How many history sessions [sessionsHistoryProvider] streams. Resets with
+/// the history screen (autoDispose).
+final historyLimitProvider =
+    StateProvider.autoDispose<int>((ref) => kHistoryPageSize);
 
 /// Sessions the signed-in coach still needs to take attendance for — ended
 /// recently, owned by them, and not yet confirmed. Empty for players/signed
 /// out. Drives the "N sessions need attendance" banner on the sessions tab;
 /// invalidate it after a confirm to refresh the count.
 final coachAttendanceTodoProvider =
-    FutureProvider.autoDispose<List<SessionModel>>((ref) async {
-  final viewer = ref.watch(currentUserProvider).value;
-  if (viewer == null || !viewer.isCoach) return const [];
-  final sessions = await ref
+    StreamProvider.autoDispose<List<SessionModel>>((ref) {
+  final viewer = ref.watch(queryViewerProvider);
+  if (viewer == null || !viewer.isCoach) return Stream.value(const []);
+  return ref
       .watch(sessionsRepositoryProvider)
-      .fetchCoachRecentSessions(viewer.uid);
-  return coachSessionsNeedingAttendance(
-    sessions: sessions,
-    uid: viewer.uid,
-    now: DateTime.now(),
-  );
+      .watchCoachRecentSessions(viewer.uid)
+      .map((sessions) => coachSessionsNeedingAttendance(
+            sessions: sessions,
+            uid: viewer.uid,
+            now: DateTime.now(),
+          ));
 });
 
 /// The shared team library of player groups, most-recently-updated first.
@@ -125,14 +141,14 @@ final coachAttendanceTodoProvider =
 /// and the member picker.
 final playerGroupsProvider =
     StreamProvider.autoDispose<List<PlayerGroup>>((ref) {
-  final user = ref.watch(currentUserProvider).value;
+  final user = ref.watch(queryViewerProvider);
   if (user == null || !user.isCoach) return Stream.value(const []);
   return ref.watch(playerGroupsRepositoryProvider).watch();
 });
 
 final recurringSessionsProvider =
     StreamProvider.autoDispose<List<RecurringSessionModel>>((ref) {
-  final uid = ref.watch(currentUserProvider).value?.uid;
+  final uid = ref.watch(queryViewerProvider)?.uid;
   if (uid == null) return Stream.value(const []);
   return ref.watch(recurringSessionsRepositoryProvider).watchForCoach(uid);
 });

@@ -51,10 +51,23 @@ abstract class SessionsRepository {
   /// attendee lists — pair with [fetchPublicProfiles] for the fresh copy.
   Map<String, PublicProfile> cachedProfiles(List<String> uids);
 
+  /// Stale-while-revalidate variant of [fetchPublicProfiles]: emits the
+  /// on-device Firestore copy first (when there is one), then the fresh
+  /// server copy. Both emissions feed the in-memory profile cache.
+  Stream<Map<String, PublicProfile>> watchPublicProfiles(List<String> uids);
+
   /// Like [fetchPublicProfiles] but serves cached uids from memory and only
-  /// queries Firestore for the missing ones. Use where slight staleness is
-  /// acceptable (facepiles, history avatars, chat sender names).
+  /// queries Firestore for the missing ones — from the on-device cache when
+  /// it has them (refreshed from the server in the background), otherwise
+  /// from the server. Use where slight staleness is acceptable (history
+  /// avatars, chat sender names, sheets).
   Future<Map<String, PublicProfile>> fetchPublicProfilesCached(
+      List<String> uids);
+
+  /// Stream form of [fetchPublicProfilesCached] for widgets that can redraw:
+  /// memory/on-device hits first, then the server copy of anything that
+  /// wasn't already in memory. Powers the session-card facepiles.
+  Stream<Map<String, PublicProfile>> watchPublicProfilesCached(
       List<String> uids);
 
   /// Live single users_public profile for [uid]; null until the mirror exists.
@@ -65,6 +78,9 @@ abstract class SessionsRepository {
   /// Start times of sessions where [uid] was marked attended (recent first,
   /// bounded) — drives the weekly attendance streak on the profile.
   Future<List<DateTime>> fetchAttendedTimes(String uid);
+
+  /// Cache-first stream of [fetchAttendedTimes] (on-device copy, then server).
+  Stream<List<DateTime>> watchAttendedTimes(String uid);
 
   /// Start time of the most recent session [uid] attended, or null if they
   /// never attended — feeds the attendance export's "last session" column.
@@ -79,6 +95,11 @@ abstract class SessionsRepository {
   /// the coach take-attendance prompt/badge filter these to the ones that have
   /// ended without attendance being taken.
   Future<List<SessionModel>> fetchCoachRecentSessions(String coachUid,
+      {int limit});
+
+  /// Cache-first stream of [fetchCoachRecentSessions] (on-device copy, then
+  /// server) — the "needs attendance" banner shouldn't wait on the network.
+  Stream<List<SessionModel>> watchCoachRecentSessions(String coachUid,
       {int limit});
 
   /// Creates the session. [designIndex] pins a specific card design (admin art

@@ -264,7 +264,7 @@ void main() {
       final callable = _MockCallable();
       when(() => callable.call<dynamic>(any()))
           .thenAnswer((_) async => _FakeResult({'success': true}));
-      when(() => fns.httpsCallable('adminDeleteUser')).thenReturn(callable);
+      when(() => fns.httpsCallable('adminDeleteUser', options: any(named: 'options'))).thenReturn(callable);
 
       await repo.deletePlayer('p1');
 
@@ -278,7 +278,7 @@ void main() {
           FirebaseFunctionsException(
               message: 'Admin accounts cannot be deleted',
               code: 'failed-precondition'));
-      when(() => fns.httpsCallable('adminDeleteUser')).thenReturn(callable);
+      when(() => fns.httpsCallable('adminDeleteUser', options: any(named: 'options'))).thenReturn(callable);
 
       await expectLater(
         repo.deletePlayer('admin1'),

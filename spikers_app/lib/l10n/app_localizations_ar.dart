@@ -414,6 +414,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get unknownError => 'حدث خطأ ما. حاول مجدداً.';
 
   @override
+  String get slowConnection =>
+      'الاتصال بطيء جداً الآن. تحقق من الشبكة وحاول مجدداً.';
+
+  @override
   String get cameraPermissionTitle => 'إذن الكاميرا مطلوب';
 
   @override

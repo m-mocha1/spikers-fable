@@ -1,7 +1,11 @@
+import 'dart:async';
+
+import 'package:cloud_firestore/cloud_firestore.dart' show GetOptions, Source;
 import 'package:cloud_functions/cloud_functions.dart';
 
 import 'package:spikers_app/features/sessions/domain/entities/session_model.dart';
 import 'package:spikers_app/features/auth/domain/entities/user_model.dart';
+import '../../../../core/firebase/cache_first.dart';
 import '../../domain/repositories/sessions_repository.dart';
 import '../datasources/sessions_remote_datasource.dart';
 
@@ -62,16 +66,66 @@ class SessionsRepositoryImpl implements SessionsRepository {
       };
 
   @override
+  Stream<Map<String, PublicProfile>> watchPublicProfiles(List<String> uids) =>
+      cacheThenServer(
+        (options) => _remote.fetchPublicProfiles(uids, options),
+        isUsable: (profiles) => profiles.isNotEmpty,
+      ).map((profiles) {
+        _profileCache.addAll(profiles);
+        return profiles;
+      });
+
+  @override
   Future<Map<String, PublicProfile>> fetchPublicProfilesCached(
       List<String> uids) async {
-    final missing = [
-      for (final uid in {...uids})
-        if (!_profileCache.containsKey(uid)) uid,
+    final missing = _missingFromMemory(uids);
+    if (missing.isEmpty) return cachedProfiles(uids);
+
+    // On-device copy first: after a cold start the memory cache is empty, and
+    // waiting on the server for every avatar is what makes a slow network
+    // feel broken. Whatever the disk had is refreshed in the background so
+    // the next read is fresh; only uids the disk lacks block on the server.
+    final fromDisk = await _diskProfiles(missing);
+    _profileCache.addAll(fromDisk);
+    if (fromDisk.isNotEmpty) {
+      unawaited(fetchPublicProfiles(fromDisk.keys.toList())
+          .then((_) {}, onError: (_) {}));
+    }
+    final stillMissing = [
+      for (final uid in missing)
+        if (!fromDisk.containsKey(uid)) uid,
     ];
-    if (missing.isNotEmpty) {
-      _profileCache.addAll(await _remote.fetchPublicProfiles(missing));
+    if (stillMissing.isNotEmpty) {
+      _profileCache.addAll(await _remote.fetchPublicProfiles(stillMissing));
     }
     return cachedProfiles(uids);
+  }
+
+  @override
+  Stream<Map<String, PublicProfile>> watchPublicProfilesCached(
+      List<String> uids) async* {
+    final missing = _missingFromMemory(uids);
+    if (missing.isEmpty) {
+      yield cachedProfiles(uids);
+      return;
+    }
+    await for (final _ in watchPublicProfiles(missing)) {
+      yield cachedProfiles(uids);
+    }
+  }
+
+  List<String> _missingFromMemory(List<String> uids) => [
+        for (final uid in {...uids})
+          if (!_profileCache.containsKey(uid)) uid,
+      ];
+
+  Future<Map<String, PublicProfile>> _diskProfiles(List<String> uids) async {
+    try {
+      return await _remote.fetchPublicProfiles(
+          uids, const GetOptions(source: Source.cache));
+    } catch (_) {
+      return const {};
+    }
   }
 
   @override
@@ -86,6 +140,12 @@ class SessionsRepositoryImpl implements SessionsRepository {
       _remote.fetchAttendedTimes(uid);
 
   @override
+  Stream<List<DateTime>> watchAttendedTimes(String uid) => cacheThenServer(
+        (options) => _remote.fetchAttendedTimes(uid, options: options),
+        isUsable: (times) => times.isNotEmpty,
+      );
+
+  @override
   Future<DateTime?> fetchLastAttendedTime(String uid) =>
       _remote.fetchLastAttendedTime(uid);
 
@@ -98,6 +158,15 @@ class SessionsRepositoryImpl implements SessionsRepository {
   Future<List<SessionModel>> fetchCoachRecentSessions(String coachUid,
           {int limit = 20}) =>
       _remote.fetchCoachRecentSessions(coachUid, limit: limit);
+
+  @override
+  Stream<List<SessionModel>> watchCoachRecentSessions(String coachUid,
+          {int limit = 20}) =>
+      cacheThenServer(
+        (options) => _remote.fetchCoachRecentSessions(coachUid,
+            limit: limit, options: options),
+        isUsable: (sessions) => sessions.isNotEmpty,
+      );
 
   @override
   Future<void> create(SessionModel session, {int? designIndex}) =>

@@ -414,7 +414,7 @@ void main() {
       final callable = _MockCallable();
       when(() => callable.call<dynamic>(any()))
           .thenAnswer((_) async => _FakeResult(result));
-      when(() => fns.httpsCallable('joinSession')).thenReturn(callable);
+      when(() => fns.httpsCallable('joinSession', options: any(named: 'options'))).thenReturn(callable);
       return callable;
     }
 
@@ -434,7 +434,7 @@ void main() {
       when(() => callable.call<dynamic>(any())).thenThrow(
           FirebaseFunctionsException(
               message: 'full', code: 'failed-precondition'));
-      when(() => fns.httpsCallable('joinSession')).thenReturn(callable);
+      when(() => fns.httpsCallable('joinSession', options: any(named: 'options'))).thenReturn(callable);
 
       await expectLater(
         repo.join('s1'),
@@ -453,7 +453,7 @@ void main() {
         sent = invocation.positionalArguments.first as Map<String, dynamic>;
         return _FakeResult({'success': true});
       });
-      when(() => fns.httpsCallable('makeSessionPublic')).thenReturn(callable);
+      when(() => fns.httpsCallable('makeSessionPublic', options: any(named: 'options'))).thenReturn(callable);
 
       await repo.makeSessionPublic('s1', gender: 'female', minAge: 18, maxAge: 30);
 
@@ -473,7 +473,7 @@ void main() {
         sent = invocation.positionalArguments.first as Map<String, dynamic>;
         return _FakeResult({'success': true});
       });
-      when(() => fns.httpsCallable('updateSessionMembers')).thenReturn(callable);
+      when(() => fns.httpsCallable('updateSessionMembers', options: any(named: 'options'))).thenReturn(callable);
 
       await repo.updateSessionMembers('s1', ['u2', 'u3']);
 
@@ -489,7 +489,7 @@ void main() {
       when(() => callable.call<dynamic>(any())).thenThrow(
           FirebaseFunctionsException(
               message: 'not your session', code: 'permission-denied'));
-      when(() => fns.httpsCallable('makeSessionPublic')).thenReturn(callable);
+      when(() => fns.httpsCallable('makeSessionPublic', options: any(named: 'options'))).thenReturn(callable);
 
       await expectLater(
         repo.makeSessionPublic('s1', gender: 'mixed', minAge: 0, maxAge: 99),
@@ -507,7 +507,7 @@ void main() {
         sent = invocation.positionalArguments.first as Map<String, dynamic>;
         return _FakeResult({'added': ['p1', 'p2']});
       });
-      when(() => fns.httpsCallable('addAttendees')).thenReturn(callable);
+      when(() => fns.httpsCallable('addAttendees', options: any(named: 'options'))).thenReturn(callable);
 
       await repo.addAttendees('s1', ['p1', 'p2']);
 
@@ -523,7 +523,7 @@ void main() {
       when(() => callable.call<dynamic>(any())).thenThrow(
           FirebaseFunctionsException(
               message: 'not a member', code: 'failed-precondition'));
-      when(() => fns.httpsCallable('addAttendees')).thenReturn(callable);
+      when(() => fns.httpsCallable('addAttendees', options: any(named: 'options'))).thenReturn(callable);
 
       await expectLater(
         repo.addAttendees('s1', ['outsider']),
@@ -541,7 +541,7 @@ void main() {
         sent = invocation.positionalArguments.first as Map<String, dynamic>;
         return _FakeResult({'success': true});
       });
-      when(() => fns.httpsCallable('updateSessionCoaches')).thenReturn(callable);
+      when(() => fns.httpsCallable('updateSessionCoaches', options: any(named: 'options'))).thenReturn(callable);
 
       await repo.updateSessionCoaches('s1', ['c2', 'c3']);
 
@@ -559,7 +559,7 @@ void main() {
         sent = invocation.positionalArguments.first as Map<String, dynamic>;
         return _FakeResult({'success': true});
       });
-      when(() => fns.httpsCallable('updateSessionCoaches')).thenReturn(callable);
+      when(() => fns.httpsCallable('updateSessionCoaches', options: any(named: 'options'))).thenReturn(callable);
 
       await repo.updateSessionCoaches('s1', const []);
 
@@ -572,7 +572,7 @@ void main() {
       when(() => callable.call<dynamic>(any())).thenThrow(
           FirebaseFunctionsException(
               message: 'not your session', code: 'permission-denied'));
-      when(() => fns.httpsCallable('updateSessionCoaches')).thenReturn(callable);
+      when(() => fns.httpsCallable('updateSessionCoaches', options: any(named: 'options'))).thenReturn(callable);
 
       await expectLater(
         repo.updateSessionCoaches('s1', ['c2']),
@@ -590,7 +590,7 @@ void main() {
         sent = invocation.positionalArguments.first as Map<String, dynamic>;
         return _FakeResult({'success': true});
       });
-      when(() => fns.httpsCallable('updateSessionTime')).thenReturn(callable);
+      when(() => fns.httpsCallable('updateSessionTime', options: any(named: 'options'))).thenReturn(callable);
 
       final newStart = DateTime.utc(2026, 9, 8, 20, 0);
       await repo.updateSessionTime('s1', newStart);
@@ -611,7 +611,7 @@ void main() {
         sentAll.add(invocation.positionalArguments.first as Map<String, dynamic>);
         return _FakeResult({'success': true});
       });
-      when(() => fns.httpsCallable('updateSessionTime')).thenReturn(callable);
+      when(() => fns.httpsCallable('updateSessionTime', options: any(named: 'options'))).thenReturn(callable);
 
       final utc = DateTime.utc(2026, 9, 8, 20, 0);
       await repo.updateSessionTime('s1', utc);
@@ -627,7 +627,7 @@ void main() {
           FirebaseFunctionsException(
               message: 'Session already started',
               code: 'failed-precondition'));
-      when(() => fns.httpsCallable('updateSessionTime')).thenReturn(callable);
+      when(() => fns.httpsCallable('updateSessionTime', options: any(named: 'options'))).thenReturn(callable);
 
       await expectLater(
         repo.updateSessionTime(
@@ -642,7 +642,7 @@ void main() {
       when(() => callable.call<dynamic>(any())).thenThrow(
           FirebaseFunctionsException(
               message: 'not your session', code: 'permission-denied'));
-      when(() => fns.httpsCallable('updateSessionTime')).thenReturn(callable);
+      when(() => fns.httpsCallable('updateSessionTime', options: any(named: 'options'))).thenReturn(callable);
 
       await expectLater(
         repo.updateSessionTime(
@@ -658,7 +658,7 @@ void main() {
       final callable = _MockCallable();
       when(() => callable.call<dynamic>(any()))
           .thenAnswer((_) async => _FakeResult({'success': true}));
-      when(() => fns.httpsCallable('endorsePlayer')).thenReturn(callable);
+      when(() => fns.httpsCallable('endorsePlayer', options: any(named: 'options'))).thenReturn(callable);
 
       await repo.endorse('s1', 'u2');
 
@@ -671,7 +671,7 @@ void main() {
       when(() => callable.call<dynamic>(any())).thenThrow(
           FirebaseFunctionsException(
               message: 'did not attend', code: 'failed-precondition'));
-      when(() => fns.httpsCallable('endorsePlayer')).thenReturn(callable);
+      when(() => fns.httpsCallable('endorsePlayer', options: any(named: 'options'))).thenReturn(callable);
 
       await expectLater(
         repo.endorse('s1', 'u2'),

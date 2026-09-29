@@ -5,6 +5,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
+import '../../../../core/firebase/firebase_providers.dart' show kCallableOptions;
 import 'package:spikers_app/features/auth/domain/entities/user_model.dart';
 
 /// Raw Firebase operations for the auth feature. No error mapping, no
@@ -62,26 +63,11 @@ class AuthRemoteDataSource {
   Future<void> deleteFcmToken(String uid) =>
       db.collection('users').doc(uid).collection('private').doc('fcm').delete();
 
-  // TEMP DIAGNOSTIC — remove once iOS FCM token registration is verified.
-  // Records where the FCM token path got to on this device so it can be read
-  // straight from the Firestore console at users/{uid}/private/fcm_debug
-  // (release builds strip the [FCM] debugPrints, so this is the only on-device
-  // signal). The private subcollection allows the owner to read/write even
-  // while unverified.
-  Future<void> writeFcmDebug(String uid, Map<String, dynamic> data) =>
-      db.collection('users').doc(uid).collection('private').doc('fcm_debug').set(
-        {
-          ...data,
-          'updatedAt': FieldValue.serverTimestamp(),
-        },
-        SetOptions(merge: true),
-      );
-
   /// Returns whether the backend accepted the coach key and promoted the
   /// caller. Throws on network/function errors.
   Future<bool> validateCoachKey(String key) async {
     final result =
-        await functions.httpsCallable('validateCoachKey').call({'key': key});
+        await functions.httpsCallable('validateCoachKey', options: kCallableOptions).call({'key': key});
     return (result.data?['valid'] ?? false) as bool;
   }
 
@@ -89,5 +75,5 @@ class AuthRemoteDataSource {
   /// session memberships) via the deleteMyAccount callable. Authorization is
   /// enforced server-side (authenticated + email-verified). Throws on failure.
   Future<void> deleteMyAccount() =>
-      functions.httpsCallable('deleteMyAccount').call();
+      functions.httpsCallable('deleteMyAccount', options: kCallableOptions).call();
 }

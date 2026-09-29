@@ -11,6 +11,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 const kFunctionsRegion = 'europe-west1';
 
+/// Options for every callable. The SDK default timeout is 60s, which on a bad
+/// network leaves a spinner up for a minute before any feedback. A client
+/// timeout does NOT cancel the server call, so it stays generous enough not
+/// to report failures for calls that were merely slow; the callables are
+/// idempotent, so retrying after a timeout is safe.
+final kCallableOptions =
+    HttpsCallableOptions(timeout: const Duration(seconds: 30));
+
 final firebaseAuthProvider =
     Provider<FirebaseAuth>((ref) => FirebaseAuth.instance);
 

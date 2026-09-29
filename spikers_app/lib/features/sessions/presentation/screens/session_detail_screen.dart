@@ -57,6 +57,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
   SessionModel? _session;
   String _sessionId = '';
   StreamSubscription? _sub;
+  StreamSubscription? _profilesSub;
   Map<String, PublicProfile> _userMap = {};
   List<String> _lastFetchedIds = [];
   List<String> _lastAttendedIds = const [];
@@ -205,9 +206,11 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
         if (session.coachId.isNotEmpty) session.coachId,
       }.toList();
 
-  /// Stale-while-revalidate profile load: cached rows appear immediately,
-  /// then one fresh batched fetch replaces the whole map (a full replace so
-  /// players removed from the session drop out).
+  /// Stale-while-revalidate profile load: in-memory rows appear immediately,
+  /// then the on-device Firestore copy, then one fresh batched server fetch.
+  /// Each emission is merged over the current rows and restricted to [ids],
+  /// so players removed from the session drop out while rows the disk copy
+  /// lacked keep what they showed.
   Future<void> _fetchProfiles(SessionModel session) async {
     final ids = _profileIds(session);
     final sorted = [...ids]..sort();
@@ -227,16 +230,20 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
       });
     }
 
-    try {
-      final fresh = await _repo.fetchPublicProfiles(ids);
-      if (!mounted) return;
-      setState(() {
-        _userMap = fresh;
-        _coachName = fresh[session.coachId]?.name ?? '';
-      });
-    } catch (_) {
+    await _profilesSub?.cancel();
+    _profilesSub = _repo.watchPublicProfiles(ids).listen(
+      (profiles) {
+        if (!mounted) return;
+        setState(() {
+          _userMap = {
+            for (final uid in ids) uid: ?(profiles[uid] ?? _userMap[uid]),
+          };
+          _coachName = _userMap[session.coachId]?.name ?? '';
+        });
+      },
       // Keep the seeded/previous map; unresolved rows stay as placeholders.
-    }
+      onError: (_) {},
+    );
   }
 
   bool _listsEqual(List<String> a, List<String> b) {
@@ -250,6 +257,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
   @override
   void dispose() {
     _sub?.cancel();
+    _profilesSub?.cancel();
     _archiveTimer?.cancel();
     _scrollCtrl.dispose();
     super.dispose();

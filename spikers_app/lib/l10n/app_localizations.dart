@@ -794,6 +794,12 @@ abstract class AppLocalizations {
   /// **'Something went wrong. Please try again.'**
   String get unknownError;
 
+  /// No description provided for @slowConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'The connection is too slow right now. Check your network and try again.'**
+  String get slowConnection;
+
   /// No description provided for @cameraPermissionTitle.
   ///
   /// In en, this message translates to:

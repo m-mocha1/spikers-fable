@@ -25,12 +25,14 @@ final myAttendanceCountProvider =
 
 /// Consecutive attended weeks for the signed-in user (see [AttendanceStreak]
 /// for the week/grace semantics). Built on the repo's bounded attended-times
-/// query, so it costs one indexed read per profile visit.
+/// query, so it costs one indexed read per profile visit. Cache-first, so the
+/// last known streak shows immediately on a slow network.
 final myStreakProvider =
-    FutureProvider.autoDispose.family<int, String>((ref, uid) async {
-  final times =
-      await ref.watch(sessionsRepositoryProvider).fetchAttendedTimes(uid);
-  return AttendanceStreak.weeklyStreak(times);
+    StreamProvider.autoDispose.family<int, String>((ref, uid) {
+  return ref
+      .watch(sessionsRepositoryProvider)
+      .watchAttendedTimes(uid)
+      .map(AttendanceStreak.weeklyStreak);
 });
 
 /// The signed-in user's lifetime endorsement count, derived live from

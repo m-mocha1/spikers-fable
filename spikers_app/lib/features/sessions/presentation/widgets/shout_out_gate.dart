@@ -44,9 +44,13 @@ class _ShoutOutGateState extends ConsumerState<ShoutOutGate> {
 
     final List<SessionModel> sessions;
     try {
-      sessions = await repo.fetchAttendedSessions(uid);
+      sessions = await repo.fetchAttendedSessions(uid)
+          .timeout(const Duration(seconds: 8));
     } catch (_) {
-      return; // best-effort: a prompt is never worth surfacing an error
+      // Best-effort: a prompt is never worth surfacing an error, and on a slow
+      // network one popping up long after launch would be worse than none.
+      // Nothing is marked prompted, so the next launch tries again.
+      return;
     }
 
     final prefs = await SharedPreferences.getInstance();

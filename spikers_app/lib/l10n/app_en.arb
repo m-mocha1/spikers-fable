@@ -151,6 +151,7 @@
   "userDisabled": "This account has been disabled. Contact support.",
   "networkError": "No internet connection. Check your network.",
   "unknownError": "Something went wrong. Please try again.",
+  "slowConnection": "The connection is too slow right now. Check your network and try again.",
   "cameraPermissionTitle": "Camera access needed",
   "cameraPermissionMessage": "Allow camera access in Settings to take a profile photo.",
   "permissionDenied": "Permission denied. You can enable it anytime in Settings.",

@@ -394,6 +394,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get unknownError => 'Something went wrong. Please try again.';
 
   @override
+  String get slowConnection =>
+      'The connection is too slow right now. Check your network and try again.';
+
+  @override
   String get cameraPermissionTitle => 'Camera access needed';
 
   @override

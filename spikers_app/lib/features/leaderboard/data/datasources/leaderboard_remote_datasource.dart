@@ -9,7 +9,8 @@ class LeaderboardRemoteDataSource {
 
   LeaderboardRemoteDataSource(this._db);
 
-  Future<List<LeaderboardEntry>> fetchAllTime() async {
+  Future<List<LeaderboardEntry>> fetchAllTime(
+      [GetOptions options = const GetOptions()]) async {
     // Top players by attendance. orderBy+limit keeps this bounded as the
     // roster grows (docs missing attendanceCount are excluded, which is fine
     // since we skip non-positive counts anyway).
@@ -17,7 +18,7 @@ class LeaderboardRemoteDataSource {
         .collection('users_public')
         .orderBy('attendanceCount', descending: true)
         .limit(200)
-        .get();
+        .get(options);
     final entries = <LeaderboardEntry>[];
     for (final doc in snap.docs) {
       final data = doc.data();
@@ -35,7 +36,8 @@ class LeaderboardRemoteDataSource {
     return entries;
   }
 
-  Future<List<LeaderboardEntry>> fetchEndorsements() async {
+  Future<List<LeaderboardEntry>> fetchEndorsements(
+      [GetOptions options = const GetOptions()]) async {
     // Top players by lifetime endorsements received. Only the aggregate
     // endorsementCount is public (users_public, maintained server-side by
     // endorsePlayer + mirrorUserPublic) — individual endorsement docs are
@@ -44,7 +46,7 @@ class LeaderboardRemoteDataSource {
         .collection('users_public')
         .orderBy('endorsementCount', descending: true)
         .limit(200)
-        .get();
+        .get(options);
     final entries = <LeaderboardEntry>[];
     for (final doc in snap.docs) {
       final data = doc.data();
@@ -62,7 +64,8 @@ class LeaderboardRemoteDataSource {
     return entries;
   }
 
-  Future<List<LeaderboardEntry>> fetchMonthly() async {
+  Future<List<LeaderboardEntry>> fetchMonthly(
+      [GetOptions options = const GetOptions()]) async {
     final now = DateTime.now();
     final cutoff = Timestamp.fromDate(DateTime(now.year, now.month));
 
@@ -70,11 +73,11 @@ class LeaderboardRemoteDataSource {
       _db
           .collection('sessions_history')
           .where('startTime', isGreaterThanOrEqualTo: cutoff)
-          .get(),
+          .get(options),
       _db
           .collection('sessions')
           .where('startTime', isGreaterThanOrEqualTo: cutoff)
-          .get(),
+          .get(options),
     ]);
 
     final counts = <String, int>{};
@@ -97,7 +100,7 @@ class LeaderboardRemoteDataSource {
             .collection('users_public')
             .where(FieldPath.documentId,
                 whereIn: uids.sublist(i, min(i + 30, uids.length)))
-            .get(),
+            .get(options),
     ]);
     final profiles = <String, Map<String, dynamic>>{
       for (final snap in snaps)
