@@ -1592,7 +1592,8 @@ export const makeSessionPublic = onCall({ region: REGION }, async (request) => {
 // updateSessionMembers — owner-coach or staff edits the member list of a
 // custom (members-only) session, e.g. to remove someone added by mistake.
 // Anyone dropped from the list also loses their attendee/waitlist spot (they
-// can no longer see the session); freed spots promote the head of the
+// can no longer see the session) — except the owning coach and staff, who may
+// attend without being members (see joinSession); freed spots promote the head of the
 // remaining waitlist, matching updateSessionCapacity.
 // ---------------------------------------------------------------------------
 export const updateSessionMembers = onCall({ region: REGION }, async (request) => {
@@ -1639,13 +1640,31 @@ export const updateSessionMembers = onCall({ region: REGION }, async (request) =
     }
     sessionTitle = (session["title"] as string) ?? "";
 
+    // Mirror joinSession: the owning coach and staff may sit in a custom
+    // session without being members, so dropping them from the member list
+    // (they are never in it — the client only sends the picked players) must
+    // not unseat them. Only non-members need a role lookup.
     const allowed = new Set(memberIds);
-    const attendeeIds = ((session["attendeeIds"] ?? []) as string[]).filter(
-      (id) => allowed.has(id)
-    );
-    let waitlistIds = ((session["waitlistIds"] ?? []) as string[]).filter(
-      (id) => allowed.has(id)
-    );
+    const currentAttendees = (session["attendeeIds"] ?? []) as string[];
+    const currentWaitlist = (session["waitlistIds"] ?? []) as string[];
+    const nonMembers = [
+      ...new Set([...currentAttendees, ...currentWaitlist]),
+    ].filter((id) => !allowed.has(id));
+    if (nonMembers.length > 0) {
+      const userDocs = await tx.getAll(
+        ...nonMembers.map((id) => db.collection("users").doc(id))
+      );
+      for (const userDoc of userDocs) {
+        const role = userDoc.data()?.["role"];
+        if (role === "admin" || role === "coach") allowed.add(userDoc.id);
+      }
+    }
+    if (typeof session["coachId"] === "string") {
+      allowed.add(session["coachId"] as string);
+    }
+
+    const attendeeIds = currentAttendees.filter((id) => allowed.has(id));
+    let waitlistIds = currentWaitlist.filter((id) => allowed.has(id));
     const maxPlayers = (session["maxPlayers"] ?? 0) as number;
 
     const freeSpots = maxPlayers - attendeeIds.length;
