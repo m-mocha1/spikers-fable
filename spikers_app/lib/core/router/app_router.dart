@@ -21,6 +21,7 @@ import '../../features/sessions/domain/entities/recurring_session_model.dart';
 import '../../features/sessions/domain/entities/session_model.dart';
 import '../../features/sessions/presentation/screens/create_recurring_session_screen.dart';
 import '../../features/sessions/presentation/screens/create_session_screen.dart';
+import '../../features/sessions/presentation/screens/lineup_screen.dart';
 import '../../features/sessions/presentation/screens/recurring_sessions_screen.dart';
 import '../../features/sessions/presentation/screens/session_chat_screen.dart';
 import '../../features/sessions/presentation/screens/session_detail_screen.dart';
@@ -37,6 +38,7 @@ abstract class Routes {
   static const sessionDetail = '/session-detail';
   static const createSession = '/create-session';
   static const sessionChat = '/session-chat';
+  static const sessionLineup = '/session-lineup';
   static const playerProfile = '/player-profile';
   static const announcements = '/announcements';
   static const createAnnouncement = '/create-announcement';
@@ -103,6 +105,13 @@ final appRouter = GoRouter(
           sessionTitle: args['title']?.toString() ?? '',
         );
       },
+    ),
+    // No _coachOnly redirect: everyone may view a line-up; LineupScreen
+    // itself limits editing to coaches/admins.
+    GoRoute(
+      path: Routes.sessionLineup,
+      builder: (_, state) =>
+          LineupScreen(sessionId: state.extra as String? ?? ''),
     ),
     // No _coachOnly redirect: any signed-in user may open a player profile.
     // PlayerProfileScreen itself branches by viewer role — non-coaches get the

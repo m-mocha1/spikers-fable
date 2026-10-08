@@ -739,5 +739,16 @@
     "placeholders": {
       "count": { "type": "int" }
     }
-  }
+  },
+  "lineup": "Line-up",
+  "lineupShuffle": "Shuffle",
+  "lineupClear": "Clear",
+  "lineupSubs": "Subs",
+  "lineupAvailable": "Available players",
+  "lineupAllPlaced": "Everyone is placed.",
+  "lineupViewOnly": "View only. Coaches set the line-up.",
+  "lineupHowTo": "Drag and drop players onto the court",
+  "lineupEmpty": "No players have joined this session yet.",
+  "lineupTeamA": "Team A",
+  "lineupTeamB": "Team B"
 }

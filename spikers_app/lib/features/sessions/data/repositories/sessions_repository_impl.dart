@@ -6,6 +6,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:spikers_app/features/sessions/domain/entities/session_model.dart';
 import 'package:spikers_app/features/auth/domain/entities/user_model.dart';
 import '../../../../core/firebase/cache_first.dart';
+import '../../domain/lineup.dart';
 import '../../domain/repositories/sessions_repository.dart';
 import '../datasources/sessions_remote_datasource.dart';
 
@@ -25,11 +26,10 @@ class SessionsRepositoryImpl implements SessionsRepository {
   @override
   Stream<List<SessionModel>> watchUpcoming(UserModel viewer,
       {required bool emailVerified}) {
-    // Firestore rules require email_verified == true to read sessions, and
-    // unpaid players are not allowed in — return an empty list instead of
-    // hitting PERMISSION_DENIED.
+    // Firestore rules require email_verified == true to read sessions —
+    // return an empty list instead of hitting PERMISSION_DENIED. Inactive
+    // (unpaid) players still see sessions; joinSession refuses them.
     if (!emailVerified) return Stream.value(const []);
-    if (!viewer.isCoach && !viewer.isPaid) return Stream.value(const []);
     // Players must provide gender + date of birth before we can match them to
     // gender-/age-gated sessions. Coaches manage all sessions, so they're
     // exempt. The sessions tab surfaces a "complete your profile" prompt.
@@ -178,7 +178,7 @@ class SessionsRepositoryImpl implements SessionsRepository {
     try {
       status = await _remote.join(sessionId);
     } on FirebaseFunctionsException catch (e) {
-      throw SessionActionException(e.code);
+      throw SessionActionException(e.code, e.message);
     }
     switch (status) {
       case 'waitlisted':
@@ -250,6 +250,15 @@ class SessionsRepositoryImpl implements SessionsRepository {
   @override
   Stream<Set<String>> watchMyEndorsements(String sessionId, String myUid) =>
       _remote.watchMyEndorsements(sessionId, myUid);
+
+  @override
+  Stream<Lineup> watchLineup(String sessionId) => _remote
+      .watchLineup(sessionId)
+      .map((lineup) => lineup ?? Lineup.empty());
+
+  @override
+  Future<void> saveLineup(String sessionId, Lineup lineup, String byUid) =>
+      _remote.saveLineup(sessionId, lineup, byUid);
 
   @override
   Future<void> archiveExpiredNow() => _remote.archiveExpiredNow();

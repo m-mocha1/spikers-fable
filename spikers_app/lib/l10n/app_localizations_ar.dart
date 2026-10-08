@@ -1588,4 +1588,37 @@ class AppLocalizationsAr extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get lineup => 'التشكيلة';
+
+  @override
+  String get lineupShuffle => 'خلط عشوائي';
+
+  @override
+  String get lineupClear => 'مسح';
+
+  @override
+  String get lineupSubs => 'البدلاء';
+
+  @override
+  String get lineupAvailable => 'اللاعبون المتاحون';
+
+  @override
+  String get lineupAllPlaced => 'تم توزيع الجميع.';
+
+  @override
+  String get lineupViewOnly => 'للعرض فقط. المدربون يحددون التشكيلة.';
+
+  @override
+  String get lineupHowTo => 'اسحب اللاعبين وأفلتهم على الملعب';
+
+  @override
+  String get lineupEmpty => 'لم ينضم أي لاعب إلى هذه الجلسة بعد.';
+
+  @override
+  String get lineupTeamA => 'الفريق أ';
+
+  @override
+  String get lineupTeamB => 'الفريق ب';
 }

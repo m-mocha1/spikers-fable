@@ -11,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_decorations.dart';
 import '../../../../core/constants/app_gradients.dart';
 import '../../../../core/constants/app_motion.dart';
 import '../../../../core/router/app_router.dart';
@@ -35,6 +36,7 @@ import '../providers/sessions_providers.dart';
 import '../utils/session_error_l10n.dart';
 import '../utils/session_time_picker.dart';
 import '../widgets/coach_picker_sheet.dart';
+import '../widgets/lineup/lineup_preview_card.dart';
 import '../widgets/member_picker_sheet.dart';
 
 /// What the viewer's membership optimistically becomes the instant they tap
@@ -346,7 +348,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
       }
     } on SessionActionException catch (e) {
       if (mounted) setState(() => _optimistic = null); // roll back the flip
-      showAppSnackbar(joinErrorMessage(l, e.code));
+      showAppSnackbar(joinErrorMessage(l, e.code, e.message));
     } catch (_) {
       if (mounted) setState(() => _optimistic = null);
       showAppSnackbar(l.unknownError);
@@ -852,6 +854,14 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
                       ),
                       const SizedBox(height: 18),
                     ],
+                    // Line-up preview: everyone can open it, only staff edit.
+                    if (session.attendeeIds.isNotEmpty && !_isArchived) ...[
+                      DecoratedBox(
+                        decoration: _panelDecoration(),
+                        child: LineupPreviewCard(session: session),
+                      ),
+                      const SizedBox(height: 18),
+                    ],
                     _AttendeesSection(
                       session: session,
                       l: l,
@@ -884,6 +894,10 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
                       isJoined: isJoined,
                       isWaitlisted: isWaitlisted,
                       viewerUid: uid,
+                      // Inactive players may browse but not join (joinSession
+                      // enforces the same rule server-side). While the profile
+                      // is still loading, don't flash the locked state.
+                      canJoin: me == null || isCoach || me.isPaid,
                       onJoin: () => _join(l),
                       onLeave: () => _leave(l),
                       l: l,
@@ -1314,23 +1328,7 @@ class _TimeTile extends StatelessWidget {
 
 /// Shared surface for the detail page's panels — the list card's premium
 /// treatment (hairline border + layered shadows) on a plain navy body.
-BoxDecoration _panelDecoration() => BoxDecoration(
-      color: AppColors.navyLight,
-      borderRadius: BorderRadius.circular(20),
-      border: Border.all(color: AppColors.white.withValues(alpha: 0.08)),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withValues(alpha: 0.30),
-          blurRadius: 18,
-          offset: const Offset(0, 8),
-        ),
-        BoxShadow(
-          color: Colors.black.withValues(alpha: 0.18),
-          blurRadius: 5,
-          offset: const Offset(0, 2),
-        ),
-      ],
-    );
+BoxDecoration _panelDecoration() => AppDecorations.panel();
 
 /// Hairline rule used inside the panels instead of full-width [Divider]s.
 Widget _hairline() =>
@@ -2583,6 +2581,10 @@ class _JoinButton extends StatelessWidget {
   final bool isJoined;
   final bool isWaitlisted;
   final String viewerUid;
+
+  /// False for players whose membership is inactive: they see the session
+  /// but get a locked button instead of Join.
+  final bool canJoin;
   final VoidCallback onJoin;
   final VoidCallback onLeave;
   final AppLocalizations l;
@@ -2591,6 +2593,7 @@ class _JoinButton extends StatelessWidget {
     required this.isJoined,
     required this.isWaitlisted,
     required this.viewerUid,
+    required this.canJoin,
     required this.onJoin,
     required this.onLeave,
     required this.l,
@@ -2654,6 +2657,36 @@ class _JoinButton extends StatelessWidget {
               Icons.hourglass_bottom,
               l.leaveWaitlist,
               AppColors.gold,
+            ),
+          ),
+        ],
+      );
+    }
+
+    if (!canJoin) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Text(
+              l.paymentRequiredDesc,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: AppColors.grey,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          _ActionShell(
+            onTap: null,
+            fill: AppColors.white.withValues(alpha: 0.06),
+            borderColor: AppColors.white.withValues(alpha: 0.10),
+            child: _actionRow(
+              Icons.lock_outline,
+              l.paymentRequired,
+              AppColors.grey,
             ),
           ),
         ],

@@ -55,6 +55,12 @@ function isPaid(p: FirebaseFirestore.DocumentData): boolean {
   return !!paidUntil && paidUntil.toMillis() > Date.now();
 }
 
+// Membership gate for joining: lifetime members never expire, everyone else
+// needs a paidUntil in the future. Mirrors the client's UserModel.isPaid.
+function hasActiveMembership(p: FirebaseFirestore.DocumentData): boolean {
+  return p["lifetimeMember"] === true || isPaid(p);
+}
+
 // Reads a user's display name from users/{uid}.name. Returns '' if missing.
 async function fetchUserName(uid: string): Promise<string> {
   if (!uid) return "";
@@ -1025,6 +1031,15 @@ export const joinSession = onCall({ region: REGION }, async (request) => {
 
     const session = sessionDoc.data()!;
 
+    // Inactive players can see sessions but not join them — any session type,
+    // custom ones included. Staff are exempt (they play without a membership).
+    const userDoc = await tx.get(db.collection("users").doc(uid));
+    const user = userDoc.data() ?? {};
+    const isStaff = user["role"] === "coach" || user["role"] === "admin";
+    if (!isStaff && !hasActiveMembership(user)) {
+      throw new HttpsError("failed-precondition", "Membership inactive");
+    }
+
     // Custom (members-only) sessions are stored with a wide-open gender/age
     // audience and are only hidden client-side, so the member list must be
     // enforced here. Staff and the owning coach may still join — they can
@@ -1036,7 +1051,7 @@ export const joinSession = onCall({ region: REGION }, async (request) => {
       memberIds.length > 0 &&
       !memberIds.includes(uid) &&
       session["coachId"] !== uid &&
-      !(await isStaffUid(uid))
+      !isStaff
     ) {
       throw new HttpsError("permission-denied", "Members-only session");
     }

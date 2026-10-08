@@ -1,12 +1,17 @@
 import 'package:spikers_app/features/sessions/domain/entities/session_model.dart';
 import 'package:spikers_app/features/auth/domain/entities/user_model.dart';
+import '../lineup.dart';
 
 /// Thrown when a session Cloud Function call is rejected. [code] is the
 /// FirebaseFunctionsException code — presentation maps it to a localized
 /// message.
 class SessionActionException implements Exception {
   final String code;
-  const SessionActionException(this.code);
+
+  /// The server's error message, when it disambiguates a shared [code]
+  /// (e.g. 'Membership inactive' vs a full session, both failed-precondition).
+  final String? message;
+  const SessionActionException(this.code, [this.message]);
 
   @override
   String toString() => 'SessionActionException($code)';
@@ -176,6 +181,13 @@ abstract class SessionsRepository {
   /// Target uids the signed-in user ([myUid]) has already endorsed in
   /// [sessionId] — drives the endorse-button state. Live via snapshots.
   Stream<Set<String>> watchMyEndorsements(String sessionId, String myUid);
+
+  /// The session's shared line-up, live; [Lineup.empty] until a coach saves
+  /// one. Firestore latency compensation emits a coach's own saves instantly.
+  Stream<Lineup> watchLineup(String sessionId);
+
+  /// Replaces the session's line-up (staff-only, enforced by rules).
+  Future<void> saveLineup(String sessionId, Lineup lineup, String byUid);
 
   /// Best-effort on-demand archival; never throws (the scheduled cleanup
   /// function archives expired sessions anyway).

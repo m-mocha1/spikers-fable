@@ -8,6 +8,7 @@ import 'package:spikers_app/features/sessions/data/datasources/sessions_remote_d
 import 'package:spikers_app/features/sessions/data/repositories/player_groups_repository_impl.dart';
 import 'package:spikers_app/features/sessions/data/repositories/session_chat_repository_impl.dart';
 import 'package:spikers_app/features/sessions/data/repositories/sessions_repository_impl.dart';
+import 'package:spikers_app/features/sessions/domain/lineup.dart';
 import 'package:spikers_app/features/sessions/domain/repositories/sessions_repository.dart';
 import 'package:spikers_app/features/sessions/domain/entities/player_group_model.dart';
 import 'package:spikers_app/features/sessions/domain/entities/session_model.dart';
@@ -78,12 +79,13 @@ void main() {
       expect(list, isEmpty);
     });
 
-    test('unpaid players get an empty list', () async {
+    test('unpaid players still see sessions (joining is gated server-side)',
+        () async {
       await seedSession('s1');
       final list = await repo
           .watchUpcoming(user(paid: false), emailVerified: true)
           .first;
-      expect(list, isEmpty);
+      expect(list.map((s) => s.id), ['s1']);
     });
 
     test('players with an incomplete profile get an empty list', () async {
@@ -889,6 +891,30 @@ void main() {
 
       final list = await groups.watch().first;
       expect(list.map((g) => g.name), ['Newer', 'Older']);
+    });
+  });
+
+  group('line-up', () {
+    test('is empty until saved, then streams the saved line-up', () async {
+      expect((await repo.watchLineup('s1').first).isEmpty, isTrue);
+
+      final lineup = Lineup.empty()
+          .reconcile([for (var i = 0; i < 15; i++) 'p$i'])
+          .move('p1', const LineupSlot(LineupArea.teamA, 0))
+          .move('p2', const LineupSlot(LineupArea.bench, 2));
+      await repo.saveLineup('s1', lineup, 'c1');
+
+      final back = await repo.watchLineup('s1').first;
+      expect(back.teamA.first, 'p1');
+      expect(back.bench[2], 'p2');
+      final doc = await db
+          .collection('sessions')
+          .doc('s1')
+          .collection('lineup')
+          .doc('current')
+          .get();
+      expect(doc.data()!['updatedBy'], 'c1');
+      expect((doc.data()!['teamA'] as List), hasLength(6));
     });
   });
 }

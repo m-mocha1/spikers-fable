@@ -20,4 +20,19 @@ class AppColors {
   static const navyElevated = Color(0xFF22376B);
   /// Warm end of the gold gradient — still reads as gold, adds richness.
   static const goldAmber    = Color(0xFFFF9500);
+
+  // ── Volleyball court (line-up screen) ─────────────────────────────────────
+  /// Playing area of the court (light centre → darker edge gradient).
+  static const courtSurface     = Color(0xFFE79A5C);
+  static const courtSurfaceEdge = Color(0xFFD27A3C);
+  /// Free zone / sideline around the court.
+  static const courtFreeZone    = Color(0xFF1C5F6E);
+  static const courtFreeZoneDeep = Color(0xFF123F4C);
+  /// Team jersey colours: Team A blue, Team B orange, subs teal.
+  static const teamA     = Color(0xFF2F6BE8);
+  static const teamADeep = Color(0xFF1A3E9E);
+  static const teamB     = Color(0xFFFF7A2E);
+  static const teamBDeep = Color(0xFFC2410C);
+  static const teamSub     = Color(0xFF1FA3A8);
+  static const teamSubDeep = Color(0xFF0E6670);
 }

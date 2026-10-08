@@ -43,13 +43,6 @@ class SessionsTab extends ConsumerWidget {
               ),
             );
           }
-          if (user != null && !user.isCoach && !user.isPaid) {
-            return EmptyStateView(
-              icon: Icons.lock_outline,
-              title: l.paymentRequired,
-              subtitle: l.paymentRequiredDesc,
-            );
-          }
           return EmptyStateView(
             icon: Icons.sports_volleyball_outlined,
             title: l.noSessions,

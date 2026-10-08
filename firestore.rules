@@ -162,6 +162,28 @@ service cloud.firestore {
                           || uid() in sessionData(sessionId).attendeeIds);
         allow update, delete: if false;
       }
+
+      // One shared line-up per session (doc id 'current'): everyone verified
+      // can view it, only staff may set it. Shape is fixed — two 6-slot team
+      // uid lists plus a bench sized to the roster (one slot per player beyond
+      // twelve, capped at 100), null = empty spot, plus who/when.
+      match /lineup/{docId} {
+        allow read: if isVerified();
+        allow create, update: if isVerified() && isCoach()
+                              && docId == 'current'
+                              && request.resource.data.keys().hasOnly(
+                                   ['teamA', 'teamB', 'bench',
+                                    'updatedAt', 'updatedBy'])
+                              && request.resource.data.teamA is list
+                              && request.resource.data.teamA.size() == 6
+                              && request.resource.data.teamB is list
+                              && request.resource.data.teamB.size() == 6
+                              && request.resource.data.bench is list
+                              && request.resource.data.bench.size() <= 100
+                              && request.resource.data.updatedBy == uid()
+                              && request.resource.data.updatedAt == request.time;
+        allow delete: if false;
+      }
     }
 
     match /sessions_history/{sessionId} {

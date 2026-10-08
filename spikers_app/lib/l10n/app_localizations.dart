@@ -2527,6 +2527,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, one{1 session needs attendance} other{{count} sessions need attendance}}'**
   String sessionsNeedAttendance(int count);
+
+  /// No description provided for @lineup.
+  ///
+  /// In en, this message translates to:
+  /// **'Line-up'**
+  String get lineup;
+
+  /// No description provided for @lineupShuffle.
+  ///
+  /// In en, this message translates to:
+  /// **'Shuffle'**
+  String get lineupShuffle;
+
+  /// No description provided for @lineupClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get lineupClear;
+
+  /// No description provided for @lineupSubs.
+  ///
+  /// In en, this message translates to:
+  /// **'Subs'**
+  String get lineupSubs;
+
+  /// No description provided for @lineupAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Available players'**
+  String get lineupAvailable;
+
+  /// No description provided for @lineupAllPlaced.
+  ///
+  /// In en, this message translates to:
+  /// **'Everyone is placed.'**
+  String get lineupAllPlaced;
+
+  /// No description provided for @lineupViewOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'View only. Coaches set the line-up.'**
+  String get lineupViewOnly;
+
+  /// No description provided for @lineupHowTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag and drop players onto the court'**
+  String get lineupHowTo;
+
+  /// No description provided for @lineupEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No players have joined this session yet.'**
+  String get lineupEmpty;
+
+  /// No description provided for @lineupTeamA.
+  ///
+  /// In en, this message translates to:
+  /// **'Team A'**
+  String get lineupTeamA;
+
+  /// No description provided for @lineupTeamB.
+  ///
+  /// In en, this message translates to:
+  /// **'Team B'**
+  String get lineupTeamB;
 }
 
 class _AppLocalizationsDelegate

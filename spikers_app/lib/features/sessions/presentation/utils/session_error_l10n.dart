@@ -11,10 +11,13 @@ String? _networkErrorMessage(AppLocalizations l, String code) =>
 /// Maps SessionActionException codes from the join/leave path to localized
 /// messages. Unknown codes surface the raw code so unexpected failures stay
 /// diagnosable during early-stage testing.
-String joinErrorMessage(AppLocalizations l, String code) {
+String joinErrorMessage(AppLocalizations l, String code, [String? message]) {
   switch (code) {
     case 'failed-precondition':
-      return l.sessionFull;
+      // joinSession reuses this code for an inactive membership.
+      return message == 'Membership inactive'
+          ? l.paymentRequiredDesc
+          : l.sessionFull;
     case 'not-found':
       return l.sessionMissing;
     case 'unauthenticated':

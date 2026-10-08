@@ -630,5 +630,16 @@
   "present": "حاضر",
   "absent": "غائب",
   "takeAttendanceSkip": "لاحقًا",
-  "sessionsNeedAttendance": "{count, plural, =0{لا جلسات بحاجة لتسجيل الحضور} one{جلسة واحدة بحاجة لتسجيل الحضور} two{جلستان بحاجة لتسجيل الحضور} few{{count} جلسات بحاجة لتسجيل الحضور} many{{count} جلسة بحاجة لتسجيل الحضور} other{{count} جلسة بحاجة لتسجيل الحضور}}"
+  "sessionsNeedAttendance": "{count, plural, =0{لا جلسات بحاجة لتسجيل الحضور} one{جلسة واحدة بحاجة لتسجيل الحضور} two{جلستان بحاجة لتسجيل الحضور} few{{count} جلسات بحاجة لتسجيل الحضور} many{{count} جلسة بحاجة لتسجيل الحضور} other{{count} جلسة بحاجة لتسجيل الحضور}}",
+  "lineup": "التشكيلة",
+  "lineupShuffle": "خلط عشوائي",
+  "lineupClear": "مسح",
+  "lineupSubs": "البدلاء",
+  "lineupAvailable": "اللاعبون المتاحون",
+  "lineupAllPlaced": "تم توزيع الجميع.",
+  "lineupViewOnly": "للعرض فقط. المدربون يحددون التشكيلة.",
+  "lineupHowTo": "اسحب اللاعبين وأفلتهم على الملعب",
+  "lineupEmpty": "لم ينضم أي لاعب إلى هذه الجلسة بعد.",
+  "lineupTeamA": "الفريق أ",
+  "lineupTeamB": "الفريق ب"
 }

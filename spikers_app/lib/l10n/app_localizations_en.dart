@@ -1509,4 +1509,37 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get lineup => 'Line-up';
+
+  @override
+  String get lineupShuffle => 'Shuffle';
+
+  @override
+  String get lineupClear => 'Clear';
+
+  @override
+  String get lineupSubs => 'Subs';
+
+  @override
+  String get lineupAvailable => 'Available players';
+
+  @override
+  String get lineupAllPlaced => 'Everyone is placed.';
+
+  @override
+  String get lineupViewOnly => 'View only. Coaches set the line-up.';
+
+  @override
+  String get lineupHowTo => 'Drag and drop players onto the court';
+
+  @override
+  String get lineupEmpty => 'No players have joined this session yet.';
+
+  @override
+  String get lineupTeamA => 'Team A';
+
+  @override
+  String get lineupTeamB => 'Team B';
 }

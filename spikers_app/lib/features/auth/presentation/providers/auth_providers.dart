@@ -32,7 +32,6 @@ final queryViewerProvider = Provider<UserModel?>((ref) {
       u.isCoach,
       u.gender,
       u.age,
-      u.isPaid,
       u.hasCompleteProfile,
       // Not a user-doc field, but sampled on every user emission — this keeps
       // the old "re-subscribe once verification flips" behavior.

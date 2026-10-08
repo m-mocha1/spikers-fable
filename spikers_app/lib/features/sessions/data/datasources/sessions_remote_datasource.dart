@@ -11,6 +11,7 @@ import 'package:spikers_app/features/sessions/domain/entities/player_group_model
 import 'package:spikers_app/features/sessions/domain/entities/recurring_session_model.dart';
 import 'package:spikers_app/features/sessions/domain/entities/session_model.dart';
 import 'package:spikers_app/features/auth/domain/entities/user_model.dart';
+import '../../domain/lineup.dart';
 import '../../domain/repositories/sessions_repository.dart'
     show PublicProfile;
 
@@ -462,4 +463,29 @@ class SessionsRemoteDataSource {
 
   Future<void> deleteRecurring(String id) =>
       _db.collection('recurring_sessions').doc(id).delete();
+
+  // --- line-up -------------------------------------------------------------
+
+  /// The session's single shared line-up doc. A subcollection rather than a
+  /// field on the session so drag-edits don't re-emit every sessions-list
+  /// listener.
+  DocumentReference<Map<String, dynamic>> _lineupRef(String sessionId) => _db
+      .collection('sessions')
+      .doc(sessionId)
+      .collection('lineup')
+      .doc('current');
+
+  /// Null until a coach first saves a line-up.
+  Stream<Lineup?> watchLineup(String sessionId) =>
+      _lineupRef(sessionId).snapshots().map((doc) {
+        final data = doc.data();
+        return data == null ? null : Lineup.fromMap(data);
+      });
+
+  Future<void> saveLineup(String sessionId, Lineup lineup, String byUid) =>
+      _lineupRef(sessionId).set({
+        ...lineup.toMap(),
+        'updatedAt': FieldValue.serverTimestamp(),
+        'updatedBy': byUid,
+      });
 }
