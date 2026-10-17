@@ -460,6 +460,31 @@ export const cleanupUnverifiedUsers = onSchedule(
 // FIXED sessionCleanup function — replace your current one with this
 
 // ---------------------------------------------------------------------------
+// deleteSessionSubcollections — Firestore never cascades deletes, so removing
+// a sessions/{id} doc leaves its line-up and chat behind as orphaned
+// "phantom" docs (italic in the console, invisible to the app). Call this
+// after deleting/archiving a session. Best-effort: a failure is logged, never
+// thrown, so it can't undo or block the archive/cancel that already happened.
+// ---------------------------------------------------------------------------
+const SESSION_SUBCOLLECTIONS = ["lineup", "messages"];
+
+async function deleteSessionSubcollections(
+  sessionRef: admin.firestore.DocumentReference
+): Promise<void> {
+  await Promise.all(
+    SESSION_SUBCOLLECTIONS.map((name) =>
+      db.recursiveDelete(sessionRef.collection(name)).catch((e) => {
+        logger.warn("deleteSessionSubcollections failed", {
+          sessionId: sessionRef.id,
+          subcollection: name,
+          error: e,
+        });
+      })
+    )
+  );
+}
+
+// ---------------------------------------------------------------------------
 // sessionCleanup — runs every 5 minutes, archives sessions that ended 1+ min ago
 // ---------------------------------------------------------------------------
 export const sessionCleanup = onSchedule(
@@ -491,6 +516,9 @@ export const sessionCleanup = onSchedule(
         batch.delete(doc.ref);
       });
       await batch.commit();
+      await Promise.all(
+        snap.docs.map((doc) => deleteSessionSubcollections(doc.ref))
+      );
       logger.info("sessionCleanup: archived and deleted", {
         count: snap.size,
       });
@@ -532,6 +560,9 @@ export const archiveExpiredSessionsNow = onCall(
       batch.delete(doc.ref);
     });
     await batch.commit();
+    await Promise.all(
+      snap.docs.map((doc) => deleteSessionSubcollections(doc.ref))
+    );
     logger.info("archiveExpiredSessionsNow: archived and deleted", {
       count: snap.size,
     });
@@ -741,6 +772,7 @@ export const cancelSession = onCall({ region: REGION }, async (request) => {
   }
 
   await sessionRef.delete();
+  await deleteSessionSubcollections(sessionRef);
   return { success: true };
 });
 
